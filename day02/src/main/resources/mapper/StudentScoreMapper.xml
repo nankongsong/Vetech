@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.day02.mapper.StudentScoreMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="StudentScoreMap" type="com.example.day02.dto.StudentScoreDTO">
+        <result property="studentName" column="student_name"/>
+        <result property="courseName" column="course_name"/>
+        <result property="score" column="score"/>
+        <result property="age" column="age"/>
+        <result property="studentId" column="student_id"/>
+        <result property="courseId" column="course_id"/>
+    </resultMap>
+
+    <!-- (2) 查询所有学生姓名、对应课程名、考试分数，支持分页 -->
+    <select id="selectStudentScorePage" resultMap="StudentScoreMap">
+        SELECT
+            s.id   AS student_id,
+            s.name AS student_name,
+            s.age  AS age,
+            c.id   AS course_id,
+            c.name AS course_name,
+            sc.score
+        FROM student s
+                 INNER JOIN sc ON s.id = sc.student_id
+                 INNER JOIN course c ON sc.course_id = c.id
+        ORDER BY s.id, c.id
+    </select>
+
+    <!-- (3) 查询张三的各科课程名称和对应成绩 -->
+    <select id="selectZhangSanScores" resultMap="StudentScoreMap">
+        SELECT
+            s.id   AS student_id,
+            s.name AS student_name,
+            s.age  AS age,
+            c.id   AS course_id,
+            c.name AS course_name,
+            sc.score
+        FROM student s
+                 INNER JOIN sc ON s.id = sc.student_id
+                 INNER JOIN course c ON sc.course_id = c.id
+        WHERE s.name = #{studentName}
+        ORDER BY c.name
+    </select>
+
+    <!-- (4) 查询数学成绩大于 80 分的学生姓名 -->
+    <select id="selectMathScoreGt80" resultMap="StudentScoreMap">
+        SELECT
+            s.id   AS student_id,
+            s.name AS student_name,
+            s.age  AS age,
+            c.id   AS course_id,
+            c.name AS course_name,
+            sc.score
+        FROM student s
+                 INNER JOIN sc ON s.id = sc.student_id
+                 INNER JOIN course c ON sc.course_id = c.id
+        WHERE c.name = '数学'
+          AND sc.score > #{score}
+        ORDER BY sc.score DESC
+    </select>
+
+    <!-- (5) 搜索分页查询：按学生编号、姓名(模糊)、年龄筛选 -->
+    <select id="selectStudentScorePageWithSearch" resultMap="StudentScoreMap">
+        SELECT
+            s.id   AS student_id,
+            s.name AS student_name,
+            s.age  AS age,
+            c.id   AS course_id,
+            c.name AS course_name,
+            sc.score
+        FROM student s
+                 INNER JOIN sc ON s.id = sc.student_id
+                 INNER JOIN course c ON sc.course_id = c.id
+        <where>
+            <if test="studentId != null">
+                AND s.id = #{studentId}
+            </if>
+            <if test="name != null and name != ''">
+                AND s.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="age != null">
+                AND s.age = #{age}
+            </if>
+        </where>
+        ORDER BY s.id, c.id
+    </select>
+
+</mapper>

@@ -1,0 +1,30 @@
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Maven
+target/
+*.jar
+*.war
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temp files (image extraction test files)
+img*.png
+img*.jpg
+dd_img*.png
+dd_img*.jpg
+
+# Project docs - keep only final .docx, not generation scripts
+项目文档/*.js
+项目文档/images/
