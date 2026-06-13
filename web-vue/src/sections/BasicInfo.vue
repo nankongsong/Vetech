@@ -3,13 +3,19 @@ import PanelHeader from '@/components/PanelHeader.vue'
 import BaseSelect from '@/components/BaseSelect.vue'
 import BusinessTypeSelect from '@/components/BusinessTypeSelect.vue'
 import { useReimbursementStore } from '@/stores/reimbursement'
-import { employees, departments, companies } from '@/data/mock'
+import { computed } from 'vue'
 
 const store = useReimbursementStore()
 
-const empOptions = employees.map(e => ({ id: e.reimburserId, name: `${e.reimburserName}/${e.reimburserNo}` }))
-const deptOptions = departments.map(d => ({ id: d.reimDepartmentId, name: `${d.reimDepartmentName}/${d.reimDepartmentNo}` }))
-const compOptions = companies.map(c => ({ id: c.reimCompanyId, name: `${c.reimCompanyName}/${c.reimCompanyNo}` }))
+const empOptions = computed(() =>
+  store.employees.map(e => ({ id: e.reimburserId, name: `${e.reimburserName}/${e.reimburserNo}` }))
+)
+const deptOptions = computed(() =>
+  store.departments.map(d => ({ id: d.reimDepartmentId, name: `${d.reimDepartmentName}/${d.reimDepartmentNo}` }))
+)
+const compOptions = computed(() =>
+  store.companies.map(c => ({ id: c.reimCompanyId, name: `${c.reimCompanyName}/${c.reimCompanyNo}` }))
+)
 
 function onTitle(v: string) { store.setBasic({ title: v.slice(0, 500) }) }
 function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }

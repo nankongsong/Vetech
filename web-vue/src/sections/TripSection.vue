@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import PanelHeader from '@/components/PanelHeader.vue'
 import TripModal from '@/components/TripModal.vue'
 import { useReimbursementStore } from '@/stores/reimbursement'
-import { employees, cities } from '@/data/mock'
 import { parseDate, fmtDate } from '@/utils/format'
 import { useConfirm } from '@/composables/useConfirm'
 import type { Trip, TripMode } from '@/types/models'
@@ -48,7 +47,7 @@ async function onSave(data: Omit<Trip, 'id'>) {
     return !(parseDate(data.endDate)! < parseDate(t.startDate)! || parseDate(data.startDate)! > parseDate(t.endDate)!)
   })
   if (conflict) {
-    const emp = employees.find(e => e.reimburserId === data.reimburserId)
+    const emp = store.employees.find(e => e.reimburserId === data.reimburserId)
     await confirm.alert(`出行人 ${emp ? emp.reimburserName : ''} 在 ${conflict.startDate} 至 ${conflict.endDate} 已存在行程，不可重复`)
     return
   }
@@ -59,14 +58,14 @@ async function onSave(data: Omit<Trip, 'id'>) {
   }
 }
 
-function empLabel(id: string) {
-  const e = employees.find(x => x.reimburserId === id)
+const empLabel = computed(() => (id: string) => {
+  const e = store.employees.find(x => x.reimburserId === id)
   return e ? `${e.reimburserName}/${e.reimburserNo}` : '-'
-}
-function cityName(no: string) {
-  const c = cities.find(x => x.cityNo === no)
+})
+const cityName = computed(() => (no: string) => {
+  const c = store.cities.find(x => x.cityNo === no)
   return c ? c.cityName : '-'
-}
+})
 </script>
 
 <template>

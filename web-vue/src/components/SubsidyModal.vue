@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue'
 import BaseModal from './BaseModal.vue'
-import { employees, cities } from '@/data/mock'
 import { money, weekdayCn } from '@/utils/format'
 import { useConfirm } from '@/composables/useConfirm'
+import { useReimbursementStore } from '@/stores/reimbursement'
 import type { Subsidy, SubsidyRow } from '@/types/models'
+
+const store = useReimbursementStore()
 
 const props = defineProps<{
   modelValue: boolean
@@ -99,10 +101,10 @@ function onAmountInput(idx: number, key: 'meal' | 'traffic' | 'comm', v: string)
   calendar.value[idx][key].value = n
 }
 
-const startCity = cities.find(c => c.cityNo === props.subsidy.startCity)
-const endCity = cities.find(c => c.cityNo === props.subsidy.endCity)
-const trip = `${startCity ? startCity.cityName : ''}-${endCity ? endCity.cityName : ''}`
-const emp = employees.find(e => e.reimburserId === props.subsidy.reimburserId)
+const startCity = computed(() => store.cities.find(c => c.cityNo === props.subsidy.startCity))
+const endCity = computed(() => store.cities.find(c => c.cityNo === props.subsidy.endCity))
+const trip = computed(() => `${startCity.value ? startCity.value.cityName : ''}-${endCity.value ? endCity.value.cityName : ''}`)
+const emp = computed(() => store.employees.find(e => e.reimburserId === props.subsidy.reimburserId))
 
 const allChecked = ['meal', 'traffic', 'comm'].every(k => checkAllColumn(k as 'meal' | 'traffic' | 'comm'))
 const partial = !allChecked && anyChecked()

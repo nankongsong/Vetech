@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import { useReimbursementStore } from '@/stores/reimbursement'
 import DocHeader from './sections/DocHeader.vue'
 import DocFooter from './sections/DocFooter.vue'
 import BasicInfo from './sections/BasicInfo.vue'
@@ -11,6 +13,12 @@ import ConfirmModal from './components/ConfirmModal.vue'
 import { useConfirm } from './composables/useConfirm'
 
 const confirm = useConfirm()
+const store = useReimbursementStore()
+
+// 挂载时加载基础数据（公司/部门/员工/业务类型/城市/项目）
+onMounted(() => {
+  store.loadBaseData()
+})
 </script>
 
 <template>

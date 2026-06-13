@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
-import { businessTypes, buildBusinessTypeTree } from '@/data/mock'
+import { useReimbursementStore } from '@/stores/reimbursement'
 
 interface TreeNode {
   businessTypeId: string
   businessTypeName: string
   thereSubordinateNode: '0' | '1'
+  superiorId: string
   children: TreeNode[]
 }
+
+const store = useReimbursementStore()
 
 const props = defineProps<{
   modelValue: string
@@ -22,7 +25,21 @@ const wrap = ref<HTMLElement | null>(null)
 const open = ref(false)
 const collapsedMap = ref<Record<string, boolean>>({})
 
-const tree = computed<TreeNode[]>(() => buildBusinessTypeTree() as unknown as TreeNode[])
+const tree = computed<TreeNode[]>(() => buildTree(store.businessTypes))
+
+function buildTree(list: any[]): TreeNode[] {
+  const map = new Map<string, TreeNode>()
+  list.forEach(n => map.set(n.businessTypeId, { ...n, children: [] }))
+  const roots: TreeNode[] = []
+  map.forEach(n => {
+    if (n.superiorId === 'none' || !map.has(n.superiorId)) {
+      roots.push(n)
+    } else {
+      map.get(n.superiorId)!.children.push(n)
+    }
+  })
+  return roots
+}
 
 function toggle() { open.value = !open.value }
 
@@ -44,7 +61,7 @@ onMounted(() => document.addEventListener('click', onDocClick))
 onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 
 const displayValue = computed(() => {
-  const f = businessTypes.find(o => o.businessTypeId === props.modelValue)
+  const f = store.businessTypes.find(o => o.businessTypeId === props.modelValue)
   return f ? f.businessTypeName : ''
 })
 

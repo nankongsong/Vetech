@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, computed } from 'vue'
 import BaseModal from './BaseModal.vue'
 import BaseSelect from './BaseSelect.vue'
-import { employees, cities } from '@/data/mock'
 import { parseDate, fmtDate } from '@/utils/format'
 import { useConfirm } from '@/composables/useConfirm'
+import { useReimbursementStore } from '@/stores/reimbursement'
 import type { Trip, TripMode } from '@/types/models'
+
+const store = useReimbursementStore()
 
 const props = defineProps<{
   modelValue: boolean
@@ -54,8 +56,12 @@ watch(
   { immediate: true }
 )
 
-const empOptions = employees.map(e => ({ id: e.reimburserId, name: `${e.reimburserName}/${e.reimburserNo}` }))
-const cityOptions = cities.map(c => ({ id: c.cityNo, name: c.cityName }))
+const empOptions = computed(() =>
+  store.employees.map(e => ({ id: e.reimburserId, name: `${e.reimburserName}/${e.reimburserNo}` }))
+)
+const cityOptions = computed(() =>
+  store.cities.map(c => ({ id: c.cityNo, name: c.cityName }))
+)
 
 function close() { emit('update:modelValue', false) }
 

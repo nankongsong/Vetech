@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import PanelHeader from '@/components/PanelHeader.vue'
 import SubsidyModal from '@/components/SubsidyModal.vue'
 import { useReimbursementStore } from '@/stores/reimbursement'
-import { employees, cities, businessTypes } from '@/data/mock'
 import { money } from '@/utils/format'
 import type { Subsidy, SubsidyRow } from '@/types/models'
 
@@ -12,13 +11,13 @@ const store = useReimbursementStore()
 const modalVisible = ref(false)
 const currentSub = ref<Subsidy | null>(null)
 const btName = computed(() => {
-  const bt = businessTypes.find(b => b.businessTypeId === store.basic.businessType)
+  const bt = store.businessTypes.find(b => b.businessTypeId === store.basic.businessType)
   return bt ? bt.businessTypeName : ''
 })
 
 const tipText = computed(() => {
   return store.subsidies.map(s => {
-    const e = employees.find(x => x.reimburserId === s.reimburserId)
+    const e = store.employees.find(x => x.reimburserId === s.reimburserId)
     return `${e ? e.reimburserName : ''}${s.days}天`
   }).join(' ')
 })
@@ -31,11 +30,11 @@ function onSave(calendar: SubsidyRow[]) {
   if (currentSub.value) store.updateSubsidyCalendar(currentSub.value.id, calendar)
 }
 function empLabel(id: string) {
-  const e = employees.find(x => x.reimburserId === id)
+  const e = store.employees.find(x => x.reimburserId === id)
   return e ? `${e.reimburserName}/${e.reimburserNo}` : '-'
 }
 function cityName(no: string) {
-  const c = cities.find(x => x.cityNo === no)
+  const c = store.cities.find(x => x.cityNo === no)
   return c ? c.cityName : '-'
 }
 </script>

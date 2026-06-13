@@ -7,11 +7,25 @@ import type {
   Subsidy,
   SubsidyRow,
   Allocation,
-  UiState
+  UiState,
+  Company,
+  Department,
+  Employee,
+  City,
+  Project,
+  BusinessType
 } from '@/types/models'
 import { cityMealStandard, cityTrafficStandard, cityCommStandard } from '@/data/mock'
 import { dateRange, diffDays } from '@/utils/format'
 import { uid } from '@/utils/id'
+import {
+  fetchCompanies,
+  fetchDepartments,
+  fetchEmployees,
+  fetchBusinessTypes,
+  fetchCities,
+  fetchProjects
+} from '@/api/service'
 
 interface ReimbursementState {
   meta: DocMeta
@@ -21,6 +35,13 @@ interface ReimbursementState {
   allocation: Allocation[]
   remark: string
   ui: UiState
+  // 基础数据
+  companies: Company[]
+  departments: Department[]
+  employees: Employee[]
+  cities: City[]
+  projects: Project[]
+  businessTypes: BusinessType[]
 }
 
 function buildSubsidyFromTrip(tripId: string, trip: Trip): Subsidy {
@@ -80,7 +101,14 @@ export const useReimbursementStore = defineStore('reimbursement', {
         { id: 'a_1', company: '成本中心-管理层类', project: '', ratio: 1.0, amount: 0 }
       ],
       remark: '',
-      ui: { collapsed: { basic: false, trip: false, subsidy: false, total: false, allocation: false, remark: false } }
+      ui: { collapsed: { basic: false, trip: false, subsidy: false, total: false, allocation: false, remark: false } },
+      // 基础数据（初始为空，由 loadBaseData 填充）
+      companies: [],
+      departments: [],
+      employees: [],
+      cities: [],
+      projects: [],
+      businessTypes: []
     }
   },
 
@@ -167,6 +195,36 @@ export const useReimbursementStore = defineStore('reimbursement', {
 
     togglePanel(key: string) {
       this.ui.collapsed[key] = !this.ui.collapsed[key]
+    },
+
+    /** 并行加载所有基础数据 */
+    async loadBaseData() {
+      const [companies, departments, employees, btRaw, cities, projects] = await Promise.all([
+        fetchCompanies(),
+        fetchDepartments(),
+        fetchEmployees(),
+        fetchBusinessTypes(),
+        fetchCities(),
+        fetchProjects()
+      ])
+      this.companies = companies
+      this.departments = departments
+      this.employees = employees
+      // 后端 BusinessTypeTreeVO 字段 → 前端 BusinessType 字段映射
+      this.businessTypes = (btRaw as any[]).map((bt: any) => ({
+        businessTypeId: bt.businessTypeId,
+        businessTypeNo: bt.businessTypeNo,
+        businessTypeName: bt.businessTypeName,
+        thereSubordinateNode: (bt.hasSubordinate === 1 || bt.hasSubordinate === true ? '1' : '0') as '0' | '1',
+        superiorId: bt.superiorId
+      }))
+      // cityType: Integer → string union
+      this.cities = (cities as any[]).map((c: any) => ({
+        cityNo: c.cityNo,
+        cityName: c.cityName,
+        cityType: String(c.cityType) as '1' | '2' | '3'
+      }))
+      this.projects = projects
     }
   }
 })
