@@ -207,9 +207,21 @@ export const useReimbursementStore = defineStore('reimbursement', {
         fetchCities(),
         fetchProjects()
       ])
-      this.companies = companies
-      this.departments = departments
-      this.employees = employees
+      this.companies = (companies as any[]).map((c: any) => ({
+        reimCompanyId: c.companyId,
+        reimCompanyNo: c.companyNo,
+        reimCompanyName: c.companyName
+      }))
+      this.departments = (departments as any[]).map((d: any) => ({
+        reimDepartmentId: d.departmentId,
+        reimDepartmentNo: d.departmentNo,
+        reimDepartmentName: d.departmentName
+      }))
+      this.employees = (employees as any[]).map((e: any) => ({
+        reimburserId: e.employeeId,
+        reimburserNo: e.employeeNo,
+        reimburserName: e.employeeName
+      }))
       // 后端 BusinessTypeTreeVO 字段 → 前端 BusinessType 字段映射
       this.businessTypes = (btRaw as any[]).map((bt: any) => ({
         businessTypeId: bt.businessTypeId,
