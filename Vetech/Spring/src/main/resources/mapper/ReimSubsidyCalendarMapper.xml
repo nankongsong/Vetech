@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.spring.mapper.ReimSubsidyCalendarMapper">
+
+    <!-- 批量插入补助日历（单条SQL，避免循环逐条INSERT） -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO reim_subsidy_calendar
+        (subsidy_id, subsidy_date, day_of_week,
+         meal_standard, transport_standard, phone_standard,
+         is_meal_selected, is_transport_selected, is_phone_selected,
+         meal_apply_amount, transport_apply_amount, phone_apply_amount,
+         creation_time)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+        (#{item.subsidyId}, #{item.subsidyDate}, #{item.dayOfWeek},
+         #{item.mealStandard}, #{item.transportStandard}, #{item.phoneStandard},
+         #{item.isMealSelected}, #{item.isTransportSelected}, #{item.isPhoneSelected},
+         #{item.mealApplyAmount}, #{item.transportApplyAmount}, #{item.phoneApplyAmount},
+         NOW())
+        </foreach>
+    </insert>
+
+    <!-- 按补助ID列表批量删除 -->
+    <delete id="batchDeleteBySubsidyIds">
+        DELETE FROM reim_subsidy_calendar
+        WHERE subsidy_id IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 批量更新补助日历 -->
+    <update id="batchUpdate" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE reim_subsidy_calendar
+            SET is_meal_selected = #{item.isMealSelected},
+                is_transport_selected = #{item.isTransportSelected},
+                is_phone_selected = #{item.isPhoneSelected},
+                meal_apply_amount = #{item.mealApplyAmount},
+                transport_apply_amount = #{item.transportApplyAmount},
+                phone_apply_amount = #{item.phoneApplyAmount}
+            WHERE id = #{item.id}
+        </foreach>
+    </update>
+
+    <!-- 按主表ID聚合统计各补助项合计（避免N+1循环查询） -->
+    <select id="sumAllowanceByMainId" resultType="java.util.Map">
+        SELECT
+            COALESCE(SUM(CASE WHEN c.is_meal_selected = 1 THEN c.meal_apply_amount ELSE 0 END), 0) AS meal_total,
+            COALESCE(SUM(CASE WHEN c.is_transport_selected = 1 THEN c.transport_apply_amount ELSE 0 END), 0) AS transport_total,
+            COALESCE(SUM(CASE WHEN c.is_phone_selected = 1 THEN c.phone_apply_amount ELSE 0 END), 0) AS phone_total,
+            COALESCE(SUM(CASE WHEN c.is_meal_selected = 1 THEN c.meal_apply_amount ELSE 0 END)
+                   + SUM(CASE WHEN c.is_transport_selected = 1 THEN c.transport_apply_amount ELSE 0 END)
+                   + SUM(CASE WHEN c.is_phone_selected = 1 THEN c.phone_apply_amount ELSE 0 END), 0) AS subsidy_total
+        FROM reim_subsidy_calendar c
+        INNER JOIN reim_subsidy s ON c.subsidy_id = s.id
+        WHERE s.main_id = #{mainId}
+    </select>
+
+</mapper>
