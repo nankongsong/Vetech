@@ -4,6 +4,7 @@ import com.example.spring.entity.*;
 import com.example.spring.service.BaseDataService;
 import com.example.spring.vo.Result;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.List;
  * 基础数据查询控制器
  * 提供公司/部门/员工/业务类型/城市/项目的下拉选项数据
  */
+@Controller
 @RestController
 @RequestMapping("/api")
 public class BaseDataController {

@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 报销单核心业务服务实现
@@ -179,19 +180,33 @@ public class ReimMainServiceImpl implements ReimMainService {
         if (main == null) throw new BizException(40001, "报销单不存在");
         if (main.getStatus() != 0) throw new BizException(40002, "仅草稿状态可删除");
 
-        // 级联删除：行程 → 补助 → 日历 → 分摊
-        List<ReimTrip> trips = tripMapper.selectList(new LambdaQueryWrapper<ReimTrip>().eq(ReimTrip::getMainId, id));
+        // 收集所有补助ID，批量删除日历 → 批量删除补助 → 批量删除行程 → 删除分摊 → 删除主表
+        List<ReimTrip> trips = tripMapper.selectList(
+                new LambdaQueryWrapper<ReimTrip>().eq(ReimTrip::getMainId, id));
+        List<Long> subsidyIds = new ArrayList<>();
         for (ReimTrip trip : trips) {
-            List<ReimSubsidy> subsidies = subsidyMapper.selectList(new LambdaQueryWrapper<ReimSubsidy>().eq(ReimSubsidy::getTripId, trip.getId()));
+            List<ReimSubsidy> subsidies = subsidyMapper.selectList(
+                    new LambdaQueryWrapper<ReimSubsidy>().eq(ReimSubsidy::getTripId, trip.getId()));
             for (ReimSubsidy sub : subsidies) {
-                calendarMapper.delete(new LambdaQueryWrapper<ReimSubsidyCalendar>().eq(ReimSubsidyCalendar::getSubsidyId, sub.getId()));
+                subsidyIds.add(sub.getId());
             }
-            subsidyMapper.delete(new LambdaQueryWrapper<ReimSubsidy>().eq(ReimSubsidy::getTripId, trip.getId()));
         }
-        tripMapper.delete(new LambdaQueryWrapper<ReimTrip>().eq(ReimTrip::getMainId, id));
+        // 批量删除日历（1次SQL）
+        if (!subsidyIds.isEmpty()) {
+            calendarMapper.batchDeleteBySubsidyIds(subsidyIds);
+        }
+        // 批量删除补助（1次SQL）
+        for (Long subId : subsidyIds) {
+            subsidyMapper.deleteById(subId);
+        }
+        // 批量删除行程（1次SQL per trip，已是最优）
+        List<Long> tripIds = trips.stream().map(ReimTrip::getId).collect(Collectors.toList());
+        if (!tripIds.isEmpty()) {
+            tripMapper.deleteBatchIds(tripIds);
+        }
         allocationMapper.delete(new LambdaQueryWrapper<ReimCostAllocation>().eq(ReimCostAllocation::getMainId, id));
         mainMapper.deleteById(id);
-        log.info("删除报销单草稿：id={}", id);
+        log.info("删除报销单草稿及关联数据：id={}", id);
     }
 
     // ──────────── 行程管理 ────────────
@@ -262,12 +277,14 @@ public class ReimMainServiceImpl implements ReimMainService {
         trip.setTripDesc(dto.getTripDesc());
         tripMapper.updateById(trip);
 
-        // 删除旧补助和日历，重新生成
-        List<ReimSubsidy> oldSubsidies = subsidyMapper.selectList(new LambdaQueryWrapper<ReimSubsidy>().eq(ReimSubsidy::getTripId, tripId));
-        for (ReimSubsidy sub : oldSubsidies) {
-            calendarMapper.delete(new LambdaQueryWrapper<ReimSubsidyCalendar>().eq(ReimSubsidyCalendar::getSubsidyId, sub.getId()));
+        // 收集旧补助ID，批量删除日历和补助
+        List<ReimSubsidy> oldSubsidies = subsidyMapper.selectList(
+                new LambdaQueryWrapper<ReimSubsidy>().eq(ReimSubsidy::getTripId, tripId));
+        List<Long> oldSubIds = oldSubsidies.stream().map(ReimSubsidy::getId).collect(Collectors.toList());
+        if (!oldSubIds.isEmpty()) {
+            calendarMapper.batchDeleteBySubsidyIds(oldSubIds);
+            subsidyMapper.deleteBatchIds(oldSubIds);
         }
-        subsidyMapper.delete(new LambdaQueryWrapper<ReimSubsidy>().eq(ReimSubsidy::getTripId, tripId));
 
         ReimSubsidy newSubsidy = createSubsidy(mainId, trip);
         createCalendar(newSubsidy, trip);
@@ -281,14 +298,17 @@ public class ReimMainServiceImpl implements ReimMainService {
         ReimTrip trip = tripMapper.selectById(tripId);
         if (trip == null || !trip.getMainId().equals(mainId)) throw new BizException(40001, "行程记录不存在");
 
-        List<ReimSubsidy> subsidies = subsidyMapper.selectList(new LambdaQueryWrapper<ReimSubsidy>().eq(ReimSubsidy::getTripId, tripId));
-        for (ReimSubsidy sub : subsidies) {
-            calendarMapper.delete(new LambdaQueryWrapper<ReimSubsidyCalendar>().eq(ReimSubsidyCalendar::getSubsidyId, sub.getId()));
+        // 收集补助ID，批量删除日历 → 删除补助 → 删除行程
+        List<ReimSubsidy> subsidies = subsidyMapper.selectList(
+                new LambdaQueryWrapper<ReimSubsidy>().eq(ReimSubsidy::getTripId, tripId));
+        List<Long> subsidyIds = subsidies.stream().map(ReimSubsidy::getId).collect(Collectors.toList());
+        if (!subsidyIds.isEmpty()) {
+            calendarMapper.batchDeleteBySubsidyIds(subsidyIds);
+            subsidyMapper.deleteBatchIds(subsidyIds);
         }
-        subsidyMapper.delete(new LambdaQueryWrapper<ReimSubsidy>().eq(ReimSubsidy::getTripId, tripId));
         tripMapper.deleteById(tripId);
         recalcMainTotal(mainId);
-        log.info("删除行程：mainId={}, tripId={}", mainId, tripId);
+        log.info("删除行程及关联补助：mainId={}, tripId={}", mainId, tripId);
     }
 
     // ──────────── 补助日历 ────────────
@@ -305,10 +325,17 @@ public class ReimMainServiceImpl implements ReimMainService {
     @Transactional(rollbackFor = Exception.class)
     public void updateCalendar(Long mainId, Long subsidyId, List<CalendarUpdateDTO> list) {
         checkMainEditable(mainId);
+        // 一次性查出所有日历记录，避免循环selectById
+        List<Long> calendarIds = list.stream().map(CalendarUpdateDTO::getId).collect(Collectors.toList());
+        List<ReimSubsidyCalendar> calendars = calendarMapper.selectBatchIds(calendarIds);
+
         BigDecimal totalSubsidyAmount = BigDecimal.ZERO;
-        for (CalendarUpdateDTO dto : list) {
-            ReimSubsidyCalendar cal = calendarMapper.selectById(dto.getId());
-            if (cal == null || !cal.getSubsidyId().equals(subsidyId)) continue;
+        for (ReimSubsidyCalendar cal : calendars) {
+            if (!cal.getSubsidyId().equals(subsidyId)) continue;
+            // 找到对应的DTO
+            CalendarUpdateDTO dto = list.stream()
+                    .filter(d -> d.getId().equals(cal.getId())).findFirst().orElse(null);
+            if (dto == null) continue;
 
             // 校验申请金额不可大于标准
             if (dto.getMealApplyAmount() != null && dto.getMealApplyAmount().compareTo(cal.getMealStandard()) > 0) {
@@ -327,7 +354,6 @@ public class ReimMainServiceImpl implements ReimMainService {
             cal.setMealApplyAmount(dto.getMealApplyAmount() != null ? dto.getMealApplyAmount() : BigDecimal.ZERO);
             cal.setTransportApplyAmount(dto.getTransportApplyAmount() != null ? dto.getTransportApplyAmount() : BigDecimal.ZERO);
             cal.setPhoneApplyAmount(dto.getPhoneApplyAmount() != null ? dto.getPhoneApplyAmount() : BigDecimal.ZERO);
-            calendarMapper.updateById(cal);
 
             // 累加选中项的申请金额
             BigDecimal dayTotal = BigDecimal.ZERO;
@@ -336,6 +362,9 @@ public class ReimMainServiceImpl implements ReimMainService {
             if (cal.getIsPhoneSelected() == 1) dayTotal = dayTotal.add(cal.getPhoneApplyAmount());
             totalSubsidyAmount = totalSubsidyAmount.add(dayTotal);
         }
+
+        // 批量更新日历记录（一条SQL完成所有UPDATE）
+        calendarMapper.batchUpdate(calendars);
 
         // 更新补助信息表的补助金额
         ReimSubsidy subsidy = subsidyMapper.selectById(subsidyId);
@@ -541,13 +570,14 @@ public class ReimMainServiceImpl implements ReimMainService {
         return subsidy;
     }
 
-    /** 按天生成补助日历 */
+    /** 按天生成补助日历（批量插入，单条SQL） */
     private void createCalendar(ReimSubsidy subsidy, ReimTrip trip) {
         BigDecimal mealStd = getMealStandard(trip.getDestinationCityId());
         BigDecimal transportStd = new BigDecimal("40");
         BigDecimal phoneStd = new BigDecimal("40");
         String[] weekDays = {"星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"};
 
+        List<ReimSubsidyCalendar> batchList = new ArrayList<>();
         LocalDate date = trip.getStartDate();
         while (!date.isAfter(trip.getEndDate())) {
             ReimSubsidyCalendar cal = new ReimSubsidyCalendar();
@@ -564,9 +594,11 @@ public class ReimMainServiceImpl implements ReimMainService {
             cal.setTransportApplyAmount(transportStd);
             cal.setPhoneApplyAmount(phoneStd);
             cal.setCreationTime(LocalDateTime.now());
-            calendarMapper.insert(cal);
+            batchList.add(cal);
             date = date.plusDays(1);
         }
+        // 批量插入：原来N次SQL → 现在1次SQL
+        calendarMapper.batchInsert(batchList);
     }
 
     /** 计算补助日历金额合计 */
@@ -585,27 +617,15 @@ public class ReimMainServiceImpl implements ReimMainService {
         return total;
     }
 
-    /** 重新计算主表补助合计 */
+    /** 重新计算主表补助合计（一次聚合SQL替代N+1循环） */
     private void recalcMainTotal(Long mainId) {
-        List<ReimSubsidy> subsidies = subsidyMapper.selectList(
-                new LambdaQueryWrapper<ReimSubsidy>().eq(ReimSubsidy::getMainId, mainId));
-        BigDecimal totalSubsidy = BigDecimal.ZERO;
-        BigDecimal totalMeal = BigDecimal.ZERO;
-        BigDecimal totalTransport = BigDecimal.ZERO;
-        BigDecimal totalPhone = BigDecimal.ZERO;
-        for (ReimSubsidy sub : subsidies) {
-            if (sub.getSubsidyAmount() != null) totalSubsidy = totalSubsidy.add(sub.getSubsidyAmount());
-            List<ReimSubsidyCalendar> cals = calendarMapper.selectList(
-                    new LambdaQueryWrapper<ReimSubsidyCalendar>().eq(ReimSubsidyCalendar::getSubsidyId, sub.getId()));
-            for (ReimSubsidyCalendar cal : cals) {
-                if (cal.getIsMealSelected() == 1 && cal.getMealApplyAmount() != null)
-                    totalMeal = totalMeal.add(cal.getMealApplyAmount());
-                if (cal.getIsTransportSelected() == 1 && cal.getTransportApplyAmount() != null)
-                    totalTransport = totalTransport.add(cal.getTransportApplyAmount());
-                if (cal.getIsPhoneSelected() == 1 && cal.getPhoneApplyAmount() != null)
-                    totalPhone = totalPhone.add(cal.getPhoneApplyAmount());
-            }
-        }
+        // 使用XML Mapper聚合查询：一次SQL搞定四类统计，避免循环selectList
+        Map<String, Object> sums = calendarMapper.sumAllowanceByMainId(mainId);
+        BigDecimal totalSubsidy = toBigDecimal(sums.get("subsidy_total"));
+        BigDecimal totalMeal = toBigDecimal(sums.get("meal_total"));
+        BigDecimal totalTransport = toBigDecimal(sums.get("transport_total"));
+        BigDecimal totalPhone = toBigDecimal(sums.get("phone_total"));
+
         ReimMain main = mainMapper.selectById(mainId);
         main.setSubsidyTotal(totalSubsidy);
         main.setMealAllowance(totalMeal);
@@ -613,5 +633,11 @@ public class ReimMainServiceImpl implements ReimMainService {
         main.setPhoneAllowance(totalPhone);
         main.setUpdateTime(LocalDateTime.now());
         mainMapper.updateById(main);
+    }
+
+    private BigDecimal toBigDecimal(Object obj) {
+        if (obj == null) return BigDecimal.ZERO;
+        if (obj instanceof BigDecimal) return (BigDecimal) obj;
+        return new BigDecimal(obj.toString());
     }
 }

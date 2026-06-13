@@ -34,9 +34,9 @@ public class GlobalExceptionHandler {
     /**
      * 通用异常处理
      */
-    @ExceptionHandler(Exception.class)
-    public Result<Void> handleException(Exception e) {
-        log.error("未知异常：", e);
-        return Result.error("系统内部错误，请联系管理员");
-    }
+//    @ExceptionHandler(Exception.class)
+//    public Result<Void> handleException(Exception e) {
+//        log.error("未知异常：", e);
+//        return Result.error("系统内部错误，请联系管理员");
+//    }
 }
