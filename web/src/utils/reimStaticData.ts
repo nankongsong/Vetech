@@ -54,11 +54,11 @@ export const STATIC_BUSINESS_TYPE_FLAT = [
 
 // ==================== 5.3.5 城市数据 ====================
 export const STATIC_CITY_DATA = [
-  { cityNo: '10119', cityName: '北京', cityType: '1' as const },
-  { cityNo: '10621', cityName: '上海', cityType: '1' as const },
-  { cityNo: '10458', cityName: '武汉', cityType: '2' as const },
-  { cityNo: '10216', cityName: '杭州', cityType: '2' as const },
-  { cityNo: '10455', cityName: '荆州', cityType: '3' as const },
+  { cityNo: '10119', cityName: '北京', cityType: 1 as const },
+  { cityNo: '10621', cityName: '上海', cityType: 1 as const },
+  { cityNo: '10458', cityName: '武汉', cityType: 2 as const },
+  { cityNo: '10216', cityName: '杭州', cityType: 2 as const },
+  { cityNo: '10455', cityName: '荆州', cityType: 3 as const },
 ]
 
 // ==================== 5.3.6 项目数据 ====================

@@ -33,6 +33,7 @@ export interface BackendReimMain {
 // ── 行程 ──
 
 export interface BackendTripDTO {
+  id?: number
   travelerId: string
   travelerNo: string
   travelerName: string

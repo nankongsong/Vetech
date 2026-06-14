@@ -105,5 +105,5 @@ export function buildTree(
 export function buildBusinessTypeTree(
   flatList: { businessTypeId: string; businessTypeName: string; superiorId: string; [k: string]: any }[],
 ): TreeNode[] {
-  return buildTree(flatList as FlatNode[], 'none', 'businessTypeId', 'businessTypeName', 'superiorId')
+  return buildTree(flatList as unknown as FlatNode[], 'none', 'businessTypeId', 'businessTypeName', 'superiorId')
 }
