@@ -1,15 +1,3 @@
-<<<<<<< HEAD
-# 差旅报销单前端项目
-分支：ttang
-技术栈：Vue3 + TypeScript + Vite
-## 启动步骤
-1. cd web-vue-tt
-2. npm install
-3. npm run dev
-## 功能模块
-1. 报销单列表页面
-2. 报销单编辑新增页面
-=======
 # 差旅费用报销单系统
 
 差旅费用报销单系统，实现出差行程管理、补助日历计算、费用分摊等核心功能，涵盖前后端全链路。
@@ -18,10 +6,16 @@
 
 ```
 Vetech/
-├── Vetech/Spring/          # 后端 - Spring Boot 3 (Java 17)
-├── web-vue/                # 前端 - Vue 3 + TypeScript
-├── .trae/documents/        # 项目文档 (PRD / 技术架构)
-└── README.md               # 本文件
+├── backend/                # 后端 - Spring Boot 3 (Java 17)
+│   └── Spring/
+│       └── src/main/resources/
+│           ├── application.yaml   # 应用配置（数据库连接等）
+│           └── init.sql           # 数据库初始化脚本
+├── web/                  # 前端 - Vue 3 + TypeScript + Element Plus
+│   ├── src/              # 源代码
+│   ├── vite.config.ts    # Vite 配置（含 API 代理）
+│   └── package.json
+└── README.md
 ```
 
 ## 技术栈
@@ -41,10 +35,12 @@ Vetech/
 | 技术 | 版本 | 说明 |
 |------|------|------|
 | Vue | 3.4 | 渐进式框架 (Composition API + `<script setup>`) |
-| TypeScript | 5.5 | 类型安全 |
+| TypeScript | 5.4 | 类型安全 |
 | Vite | 5.4 | 构建工具 |
-| Pinia | 2.2 | 状态管理 |
+| Pinia | 2.1 | 状态管理 |
+| Element Plus | 2.14 | UI 组件库 |
 | Axios | 1.17 | HTTP 客户端 |
+| Vue Router | 4.3 | 路由管理 |
 
 ## 快速开始
 
@@ -58,13 +54,13 @@ Vetech/
 
 ```bash
 # 执行 init.sql 创建数据库表
-mysql -u root -p < Vetech/Spring/src/main/resources/init.sql
+mysql -u root -p < backend/Spring/src/main/resources/init.sql
 ```
 
 ### 2. 启动后端
 
 ```bash
-cd Vetech/Spring
+cd backend/Spring
 # 修改 application.yaml 中的数据库连接信息
 mvn spring-boot:run
 ```
@@ -74,12 +70,14 @@ mvn spring-boot:run
 ### 3. 启动前端
 
 ```bash
-cd web-vue
+cd web
 npm install
 npm run dev
 ```
 
 前端启动后访问：http://localhost:5173
+
+> 前端通过 Vite proxy 将 `/api/*` 请求转发到 `http://localhost:8080`，解决跨域问题。
 
 ## 功能特性
 
@@ -101,7 +99,7 @@ npm run dev
 
 ## 数据库
 
-`Vetech/Spring/src/main/resources/init.sql` 包含完整的建表语句，覆盖以下实体：
+`backend/Spring/src/main/resources/init.sql` 包含完整的建表语句，覆盖以下实体：
 
 | 表名 | 说明 |
 |------|------|
@@ -117,25 +115,20 @@ npm run dev
 | reim_business_type | 业务类型 |
 | reim_city | 城市及补助标准配置 |
 
-## 前后端联调
-
-前端通过 Axios 调用后端 REST API，跨域配置在 `web-vue/vite.config.ts` 中。
-
 ## 构建部署
 
 ### 前端构建
 
 ```bash
-cd web-vue
-npm run build    # 生产构建
-npm run preview   # 本地预览构建产物
+cd web
+npm run build      # 生产构建
+npm run preview     # 本地预览构建产物
 ```
 
 ### 后端构建
 
 ```bash
-cd Vetech/Spring
+cd backend/Spring
 mvn clean package -DskipTests
 java -jar target/Spring-0.0.1-SNAPSHOT.jar
 ```
->>>>>>> origin/master
