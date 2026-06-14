@@ -111,7 +111,7 @@ function handleDelete(row: ReimburseListRow) {
     '删除确认',
     { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning', confirmButtonClass: 'el-button--danger' },
   ).then(async () => {
-    try { await deleteReim(row.id); ElMessage.success('删除成功'); fetchList() } catch {}
+    try { await deleteReim(row.id); ElMessage.success('删除成功'); fetchList() } catch (e) { if (e) throw e }
   }).catch(() => {})
 }
 
@@ -128,7 +128,6 @@ function handlePageChange(page: number) { currentPage.value = page; fetchList() 
 onMounted(async () => { await initDictData(); fetchList() })
 
 // ==================== 工具 ====================
-function formatAmount(amount: number): string { return `¥${(amount ?? 0).toFixed(2)}` }
 /** 截取日期部分 */
 function formatDate(dateTime: string): string {
   if (!dateTime) return ''

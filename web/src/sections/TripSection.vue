@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import PanelHeader from '@/components/PanelHeader.vue'
 import TripModal from '@/components/TripModal.vue'
 import { useReimbursementStore } from '@/stores/reimbursement'
-import { parseDate, fmtDate } from '@/utils/format'
+import { parseDate } from '@/utils/format'
 import { useConfirm } from '@/composables/useConfirm'
 import type { Trip, TripMode } from '@/types/models'
 

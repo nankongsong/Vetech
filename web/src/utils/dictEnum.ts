@@ -41,7 +41,7 @@ export function getRowActions(status: number) {
   const isDraft = status === 0       // 草稿
   const isApproving = status === 1   // 审批中
   const isApproved = status === 2    // 审批通过
-  const isVoided = status === 3      // 已作废
+  // const isVoided = status === 3   // 已作废（预留）
 
   return {
     // 提交：仅 草稿/审批中/审批通过 可操作？不 — 草稿置灰（截图要求），审批中/审批通过已提交过也置灰
