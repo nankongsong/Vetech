@@ -107,7 +107,7 @@ async function onSubmit() {
       transportApplyAmount: row.traffic.checked ? Number(row.traffic.value || 0) : 0,
       phoneApplyAmount: row.comm.checked ? Number(row.comm.value || 0) : 0
     }))
-    await updateCalendar(reimId, ds.id, calendarDTOs)
+    await updateCalendar(reimId, Number(ds.id), calendarDTOs)
   }
 
   // 6. 更新分摊
