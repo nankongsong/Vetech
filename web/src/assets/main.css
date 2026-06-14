@@ -1,0 +1,7 @@
+/* 全局重置：去掉 Vite 默认宽度限制，页面撑满全屏 */
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
