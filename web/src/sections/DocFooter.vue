@@ -8,7 +8,6 @@ import {
   updateAllocation,
   fetchReimDetail,
   submitReim,
-  getCalendar,
   updateCalendar
 } from '@/api/service'
 import type { BackendReimMain, BackendTripDTO, BackendCalendarDTO, BackendAllocationDTO } from '@/api/types'

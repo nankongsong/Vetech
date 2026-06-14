@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, computed } from 'vue'
+import { ref, watch, computed } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { money, weekdayCn } from '@/utils/format'
 import { useConfirm } from '@/composables/useConfirm'

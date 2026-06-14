@@ -3,8 +3,8 @@
  * 内部使用 ElMessageBox（Element Plus 全局引入），
  * 同时暴露 reactive state 以兼容 ConfirmModal 的 v-model 模式
  */
-import { reactive, ref } from 'vue'
-import { ElMessageBox, ElMessage } from 'element-plus'
+import { reactive } from 'vue'
+import { ElMessageBox } from 'element-plus'
 
 export interface ConfirmState {
   visible: boolean
