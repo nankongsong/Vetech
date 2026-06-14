@@ -1,7 +1,7 @@
 /**
  * 报销单模块 —— 字典枚举 / 基础数据类型定义
- * 对齐审批流程：code 0草稿 / 1审批中 / 2审批通过 / 3已作废
- * 状态文字统一为系统主题蓝色
+ * 对齐审批流程：code 0草稿 / 1已完成 / 2已作废
+ * 状态标签统一为白底+蓝色字体，由列表页 CSS 控制
  */
 
 // ==================== 单据状态（Integer 型） ====================
@@ -9,23 +9,14 @@
 export interface StatusOption {
   label: string
   value: number
-  /** el-tag 背景色 */
-  color: '' | 'success' | 'warning' | 'danger' | 'info'
 }
 
-/** 状态码：0草稿 / 1审批中 / 2审批通过 / 3已作废 */
+/** 状态码：0草稿 / 1已完成 / 2已作废 */
 export const STATUS_OPTIONS: StatusOption[] = [
-  { label: '草稿', value: 0, color: 'info' },
-  { label: '审批中', value: 1, color: 'warning' },
-  { label: '审批通过', value: 2, color: 'success' },
-  { label: '已作废', value: 3, color: 'danger' },
+  { label: '草稿', value: 0 },
+  { label: '已完成', value: 1 },
+  { label: '已作废', value: 2 },
 ]
-
-/** 根据状态 value (Integer) 获取 el-tag 颜色 */
-export function getStatusColor(value: number): StatusOption['color'] {
-  const item = STATUS_OPTIONS.find((s) => s.value === value)
-  return item?.color ?? 'info'
-}
 
 /** 根据状态 value (Integer) 获取 label */
 export function getStatusLabel(value: number): string {
@@ -34,20 +25,19 @@ export function getStatusLabel(value: number): string {
 }
 
 /**
- * 操作列权限判断
- * @returns { submit, edit, delete, push, copy } 是否可用
+ * 操作列权限判断（三状态：0草稿 / 1已完成 / 2已作废）
+ * @param status              单据状态
+ * @param isAllRequiredFilled 草稿页必填项是否全部填写（仅影响草稿态的提交按钮）
+ * @returns { submit, edit, delete, manualPush, copy, void } 是否可用（true=可用，false=置灰禁用）
  */
-export function getRowActions(status: number) {
+export function getRowActions(status: number, isAllRequiredFilled: boolean = false) {
   const isDraft = status === 0       // 草稿
-  const isApproving = status === 1   // 审批中
-  const isApproved = status === 2    // 审批通过
-  // const isVoided = status === 3   // 已作废（预留）
+  const isDone = status === 1        // 已完成
+  const isVoided = status === 2      // 已作废
 
   return {
-    // 提交：仅 草稿/审批中/审批通过 可操作？不 — 草稿置灰（截图要求），审批中/审批通过已提交过也置灰
-    // 实际上：草稿阶段提交灰色（未补录行程不可提交），其他状态均已提交过 → 全部置灰
-    // 按规范：草稿置灰禁用；审批中/审批通过/已作废 均已提交或终态→置灰
-    submit: false,  // 提交始终不可用（草稿未补录行程、其他状态已提交或终态）
+    // 提交/查看：草稿且必填项完成时可提交；仅已完成可查看；已作废完全禁用
+    submit: (isDraft && isAllRequiredFilled) || isDone,
 
     // 编辑：仅草稿可用
     edit: isDraft,
@@ -55,11 +45,14 @@ export function getRowActions(status: number) {
     // 删除：仅草稿可用
     delete: isDraft,
 
-    // 手工推送：审批中、审批通过可用
-    manualPush: isApproving || isApproved,
+    // 手工推送：仅已完成可用
+    manualPush: isDone,
 
-    // 复制：草稿、审批中、审批通过可用
-    copy: isDraft || isApproving || isApproved,
+    // 复制：仅草稿、已完成可用；已作废禁用
+    copy: isDraft || isDone,
+
+    // 作废：仅已完成可用
+    void: isDone,
   }
 }
 

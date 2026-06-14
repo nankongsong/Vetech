@@ -3,7 +3,7 @@
 // ── 报销单头 ──
 
 export interface BackendReimMain {
-  id?: number
+  id?: string
   reimbursementNo?: string
   reimbursementTitle: string
   businessTripReason: string
@@ -50,9 +50,9 @@ export interface BackendTripDTO {
 // ── 补助信息 ──
 
 export interface BackendSubsidy {
-  id: number
-  mainId: number
-  tripId: number
+  id: string
+  mainId: string
+  tripId: string
   travelerId: string
   travelerNo: string
   travelerName: string
@@ -69,8 +69,8 @@ export interface BackendSubsidy {
 // ── 补助日历单条 ──
 
 export interface BackendSubsidyCalendar {
-  id: number
-  subsidyId: number
+  id: string
+  subsidyId: string
   subsidyDate: string
   dayOfWeek: string
   mealStandard: number
@@ -87,7 +87,7 @@ export interface BackendSubsidyCalendar {
 // ── 日历更新 DTO（前端 → 后端） ──
 
 export interface BackendCalendarDTO {
-  id?: number
+  id?: string
   isMealSelected: number
   isTransportSelected: number
   isPhoneSelected: number
@@ -99,7 +99,7 @@ export interface BackendCalendarDTO {
 // ── 费用分摊 ──
 
 export interface BackendAllocationDTO {
-  id?: number
+  id?: string
   companyId: string
   companyNo: string
   companyName: string

@@ -1,6 +1,7 @@
 package com.example.spring.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.spring.dto.*;
@@ -168,9 +169,8 @@ public class ReimMainServiceImpl implements ReimMainService {
         validateAllocationRatio(allocations);
         validateAllocationAmount(main.getSubsidyTotal(), allocations);
 
-        // 6. 更新状态
+        // 6. 更新状态（@Version 自动处理乐观锁版本号递增）
         main.setStatus(1);
-        main.setVersion(version + 1);
         main.setUpdateTime(LocalDateTime.now());
         int rows = mainMapper.updateById(main);
         if (rows == 0) throw new BizException(40006, "数据已被他人修改，请刷新后重试");
@@ -190,7 +190,6 @@ public class ReimMainServiceImpl implements ReimMainService {
         if (!main.getVersion().equals(version)) throw new BizException(40006, "数据已被他人修改，请刷新后重试");
         if (main.getStatus() != 1) throw new BizException(40002, "仅已完成状态可作废");
         main.setStatus(2);
-        main.setVersion(version + 1);
         main.setUpdateTime(LocalDateTime.now());
         mainMapper.updateById(main);
         auditLog(main, "VOID", 1, 2, "作废报销单");
@@ -702,7 +701,7 @@ public class ReimMainServiceImpl implements ReimMainService {
         return total;
     }
 
-    /** 重新计算主表补助合计（一次聚合SQL替代N+1循环） */
+    /** 重新计算主表补助合计（仅更新补助字段，不触发@Version递增） */
     private void recalcMainTotal(Long mainId) {
         // 使用XML Mapper聚合查询：一次SQL搞定四类统计，避免循环selectList
         Map<String, Object> sums = calendarMapper.sumAllowanceByMainId(mainId);
@@ -711,13 +710,15 @@ public class ReimMainServiceImpl implements ReimMainService {
         BigDecimal totalTransport = toBigDecimal(sums.get("transport_total"));
         BigDecimal totalPhone = toBigDecimal(sums.get("phone_total"));
 
-        ReimMain main = mainMapper.selectById(mainId);
-        main.setSubsidyTotal(totalSubsidy);
-        main.setMealAllowance(totalMeal);
-        main.setTransportationAllowance(totalTransport);
-        main.setPhoneAllowance(totalPhone);
-        main.setUpdateTime(LocalDateTime.now());
-        mainMapper.updateById(main);
+        // 使用 LambdaUpdateWrapper 只更新补助字段，绕过 @Version 自动递增
+        LambdaUpdateWrapper<ReimMain> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(ReimMain::getId, mainId)
+                .set(ReimMain::getSubsidyTotal, totalSubsidy)
+                .set(ReimMain::getMealAllowance, totalMeal)
+                .set(ReimMain::getTransportationAllowance, totalTransport)
+                .set(ReimMain::getPhoneAllowance, totalPhone)
+                .set(ReimMain::getUpdateTime, LocalDateTime.now());
+        mainMapper.update(null, updateWrapper);
     }
 
     private BigDecimal toBigDecimal(Object obj) {
@@ -731,16 +732,20 @@ public class ReimMainServiceImpl implements ReimMainService {
      * 操作人暂用 SYSTEM，接入登录后从 token/session 中获取
      */
     private void auditLog(ReimMain main, String operation, Integer fromStatus, Integer toStatus, String remark) {
-        ReimAuditLog auditLog = new ReimAuditLog();
-        auditLog.setMainId(main.getId());
-        auditLog.setReimbursementNo(main.getReimbursementNo());
-        auditLog.setOperation(operation);
-        auditLog.setFromStatus(fromStatus);
-        auditLog.setToStatus(toStatus);
-        auditLog.setOperatorId("SYSTEM");   // TODO: 接入登录后替换为真实用户ID
-        auditLog.setOperatorName("SYSTEM");
-        auditLog.setRemark(remark);
-        auditLog.setCreationTime(LocalDateTime.now());
-        auditLogMapper.insert(auditLog);
+        try {
+            ReimAuditLog auditLog = new ReimAuditLog();
+            auditLog.setMainId(main.getId());
+            auditLog.setReimbursementNo(main.getReimbursementNo());
+            auditLog.setOperation(operation);
+            auditLog.setFromStatus(fromStatus);
+            auditLog.setToStatus(toStatus);
+            auditLog.setOperatorId("SYSTEM");   // TODO: 接入登录后替换为真实用户ID
+            auditLog.setOperatorName("SYSTEM");
+            auditLog.setRemark(remark);
+            auditLog.setCreationTime(LocalDateTime.now());
+            auditLogMapper.insert(auditLog);
+        } catch (Exception e) {
+            log.error("审计日志写入失败（不影响主流程）: operation={}, reimbursementNo={}", operation, main.getReimbursementNo(), e);
+        }
     }
 }

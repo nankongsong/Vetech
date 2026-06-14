@@ -9,8 +9,8 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Edit, MoreFilled, Document } from '@element-plus/icons-vue'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
-import { getStatusColor, getStatusLabel, getRowActions } from '@/utils/dictEnum'
-import { getReimPage, deleteReim, type ReimburseListRow } from '@/api/reimburse'
+import { getStatusLabel, getRowActions } from '@/utils/dictEnum'
+import { getReimPage, deleteReim, voidReim, type ReimburseListRow } from '@/api/reimburse'
 import {
   initDictData,
   companyList,
@@ -56,7 +56,17 @@ async function fetchList() {
       ...(filterForm.reimburserId && { reimburserId: filterForm.reimburserId }),
       ...(filterForm.businessTypeId && { businessTypeId: filterForm.businessTypeId }),
     })
-    tableData.value = res.data.records
+
+    // 前端计算 isAllRequiredFilled：草稿状态下必填项是否完整（含事由，后端提交时强制校验）
+    tableData.value = res.data.records.map(row => ({
+      ...row,
+      isAllRequiredFilled: row.status === 0 &&
+                           !!row.reimbursementTitle &&
+                           !!row.reimburserName &&
+                           !!row.businessTypeName &&
+                           !!row.businessTripReason
+    }))
+
     total.value = res.data.total
   } catch {
     tableData.value = []
@@ -92,10 +102,24 @@ function handleEdit(row: ReimburseListRow) {
   router.push({ name: 'reimburseEdit', params: { id: row.id } })
 }
 
-/** 提交：预留（草稿页面补录行程后可提交） */
-function handleSubmit(row: ReimburseListRow) { ElMessage.info(`提交报销单：${fmtNo(row.reimbursementNo)}`) }
+/** 提交/查看：草稿跳转编辑页补录行程后提交，已完成/已作废跳转只读页 */
+function handleSubmit(row: ReimburseListRow) {
+  // 所有状态统一跳转到单据详情页（草稿可补录行程后提交，已完成/已作废只读查看）
+  router.push({ name: 'reimburseEdit', params: { id: row.id } })
+}
 
-/** 手工推送：审批中/审批通过 → 跳转推送确认页 */
+/** 获取提交按钮的智能提示文字 */
+function getSubmitTooltip(row: ReimburseListRow): string {
+  if (row.status === 0) {
+    return row.isAllRequiredFilled ? '提交' : '请先完善必填项'
+  } else if (row.status === 1) {
+    return '查看详情'
+  } else {
+    return '已作废，不可操作'
+  }
+}
+
+/** 手工推送：仅已完成单据可推送 */
 function handleManualPush(row: ReimburseListRow) { router.push({ name: 'reimbursePush', params: { id: row.id }, query: { mode: 'push' } }) }
 
 /** 复制：创建副本草稿 */
@@ -115,11 +139,23 @@ function handleDelete(row: ReimburseListRow) {
   }).catch(() => {})
 }
 
+/** 作废：仅已完成单据可手动作废 */
+function handleVoid(row: ReimburseListRow) {
+  ElMessageBox.confirm(
+    `确定要作废报销单号【${fmtNo(row.reimbursementNo)}】吗？作废后不可恢复。`,
+    '作废确认',
+    { confirmButtonText: '确定作废', cancelButtonText: '取消', type: 'warning', confirmButtonClass: 'el-button--danger' },
+  ).then(async () => {
+    try { await voidReim(row.id, row.version ?? 0); ElMessage.success('作废成功'); fetchList() } catch {}
+  }).catch(() => {})
+}
+
 /** 更多下拉命令分发 */
 function handleMoreCommand(cmd: string, row: ReimburseListRow) {
   if (cmd === 'delete') handleDelete(row)
   else if (cmd === 'manualPush') handleManualPush(row)
   else if (cmd === 'copy') handleCopy(row)
+  else if (cmd === 'void') handleVoid(row)
 }
 
 function handleSizeChange(size: number) { pageSize.value = size; currentPage.value = 1; fetchList() }
@@ -135,6 +171,7 @@ function formatDate(dateTime: string): string {
 }
 /** 报销单号去横线：BX-20260612-0007 → BX202606120007 */
 function fmtNo(no: string): string { return no.replace(/-/g, '') }
+
 </script>
 
 <template>
@@ -187,8 +224,8 @@ function fmtNo(no: string): string { return no.replace(/-/g, '') }
           <!-- 操作列 -->
           <el-table-column label="操作" width="105" align="center">
             <template #default="{ row }">
-              <el-tooltip :content="getRowActions(row.status).submit?'提交':'不可提交'" placement="top">
-                <el-button type="primary" link size="small" :icon="Document" :disabled="!getRowActions(row.status).submit" class="action-icon-btn" @click="handleSubmit(row)" />
+              <el-tooltip :content="getSubmitTooltip(row)" placement="top">
+                <el-button type="primary" link size="small" :icon="Document" :disabled="!getRowActions(row.status, row.isAllRequiredFilled).submit" class="action-icon-btn" @click="handleSubmit(row)" />
               </el-tooltip>
               <el-tooltip :content="getRowActions(row.status).edit?'编辑':'不可编辑'" placement="top">
                 <el-button type="primary" link size="small" :icon="Edit" :disabled="!getRowActions(row.status).edit" class="action-icon-btn" @click="handleEdit(row)" />
@@ -201,6 +238,7 @@ function fmtNo(no: string): string { return no.replace(/-/g, '') }
                     <el-dropdown-item command="delete" :disabled="!getRowActions(row.status).delete" :class="getRowActions(row.status).delete?'':'dd-disabled'">删除</el-dropdown-item>
                     <el-dropdown-item command="manualPush" :disabled="!getRowActions(row.status).manualPush" :class="getRowActions(row.status).manualPush?'':'dd-disabled'">手工推送</el-dropdown-item>
                     <el-dropdown-item command="copy" :disabled="!getRowActions(row.status).copy" :class="getRowActions(row.status).copy?'':'dd-disabled'">复制</el-dropdown-item>
+                    <el-dropdown-item command="void" :disabled="!getRowActions(row.status).void" :class="getRowActions(row.status).void?'':'dd-disabled'">作废</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -213,14 +251,10 @@ function fmtNo(no: string): string { return no.replace(/-/g, '') }
           <!-- 单据状态 -->
           <el-table-column label="单据状态" width="90" align="center">
             <template #default="{row}">
-              <el-tag :type="getStatusColor(row.status)" size="small" effect="light">
-                <span class="text-blue">{{ getStatusLabel(row.status) }}</span>
+              <el-tag class="status-tag" size="small" effect="plain">
+                {{ getStatusLabel(row.status) }}
               </el-tag>
             </template>
-          </el-table-column>
-          <!-- 单据类型 -->
-          <el-table-column label="单据类型" width="100" show-overflow-tooltip>
-            <template #default="{row}">{{ row.docType || '差旅报销单' }}</template>
           </el-table-column>
           <!-- 报销人 -->
           <el-table-column label="报销人" width="115" show-overflow-tooltip>
@@ -312,6 +346,13 @@ function fmtNo(no: string): string { return no.replace(/-/g, '') }
 .table-card :deep(.el-card__body) { padding: 12px 20px; }
 
 .text-blue { color: #409eff; }
+
+/* 状态标签：白底 + 蓝色字体 + 蓝色边框（三状态统一） */
+.status-tag {
+  background-color: #fff !important;
+  color: #409eff !important;
+  border: 1px solid #409eff !important;
+}
 .link-text { cursor: pointer; }
 .link-text:hover { text-decoration: underline; }
 

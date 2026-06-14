@@ -82,7 +82,7 @@ export interface ReimbursePageQuery {
 /** 列表单行记录（对齐后端 records[] 结构） */
 export interface ReimburseListRow {
   /** 主键ID */
-  id: number
+  id: string
   /** 报销单号 */
   reimbursementNo: string
   /** 报销标题 */
@@ -97,8 +97,6 @@ export interface ReimburseListRow {
   reimDepartmentNo?: string
   /** 费用归属公司名称 */
   reimCompanyName: string
-  /** 单据类型 */
-  docType?: string
   /** 业务类型名称 */
   businessTypeName: string
   /** 出差事由 */
@@ -107,6 +105,10 @@ export interface ReimburseListRow {
   subsidyTotal: number
   /** 状态：0草稿/1已完成/2已作废 */
   status: number
+  /** 乐观锁版本号（作废/提交时必传） */
+  version?: number
+  /** 草稿页必填项是否全部填写（仅草稿态影响提交按钮可用性） */
+  isAllRequiredFilled?: boolean
   /** 创建时间 (yyyy-MM-dd HH:mm:ss) */
   creationTime: string
 }
@@ -124,7 +126,7 @@ export interface ReimbursePageData {
 
 /** 报销单主信息（详情用，含全部字段） */
 export interface ReimburseMain {
-  id: number
+  id: string
   reimbursementNo: string
   reimbursementTitle: string
   businessTripReason: string
@@ -153,8 +155,8 @@ export interface ReimburseMain {
 
 /** 行程明细 */
 export interface ReimburseTrip {
-  id: number
-  mainId: number
+  id: string
+  mainId: string
   travelerId: string
   travelerNo: string
   travelerName: string
@@ -171,9 +173,9 @@ export interface ReimburseTrip {
 
 /** 补助信息 */
 export interface ReimburseSubsidy {
-  id: number
-  mainId: number
-  tripId: number
+  id: string
+  mainId: string
+  tripId: string
   travelerId: string
   travelerNo: string
   travelerName: string
@@ -190,8 +192,8 @@ export interface ReimburseSubsidy {
 
 /** 补助日历 */
 export interface SubsidyCalendar {
-  id: number
-  subsidyId: number
+  id: string
+  subsidyId: string
   subsidyDate: string
   dayOfWeek: string
   mealStandard: number
@@ -209,8 +211,8 @@ export interface SubsidyCalendar {
 
 /** 费用分摊 */
 export interface CostAllocation {
-  id: number
-  mainId: number
+  id: string
+  mainId: string
   companyId: string
   companyNo: string
   companyName: string
@@ -302,32 +304,32 @@ export function getReimPage(query: ReimbursePageQuery): Promise<ApiResponse<Reim
 }
 
 /** 2.2 查询报销单详情 */
-export function getReimDetail(id: number): Promise<ApiResponse<ReimburseDetailData>> {
+export function getReimDetail(id: string): Promise<ApiResponse<ReimburseDetailData>> {
   return request.get(`/reim/${id}`)
 }
 
 /** 2.3 新增报销单（保存草稿） */
-export function createReim(body: ReimburseSaveBody): Promise<ApiResponse<{ id: number }>> {
+export function createReim(body: ReimburseSaveBody): Promise<ApiResponse<{ id: string }>> {
   return request.post('/reim', body)
 }
 
 /** 2.4 更新报销单（保存草稿） */
-export function updateReim(id: number, body: ReimburseSaveBody): Promise<ApiResponse<null>> {
+export function updateReim(id: string, body: ReimburseSaveBody): Promise<ApiResponse<null>> {
   return request.put(`/reim/${id}`, body)
 }
 
 /** 2.5 提交报销单（草稿→已完成） */
-export function submitReim(id: number, version: number): Promise<ApiResponse<{ success: boolean }>> {
+export function submitReim(id: string, version: number): Promise<ApiResponse<{ success: boolean }>> {
   return request.put(`/reim/${id}/submit`, { version })
 }
 
 /** 2.6 作废报销单（已完成→已作废） */
-export function voidReim(id: number, version: number): Promise<ApiResponse<null>> {
+export function voidReim(id: string, version: number): Promise<ApiResponse<null>> {
   return request.put(`/reim/${id}/void`, { version })
 }
 
 /** 2.7 删除草稿（物理删除） */
-export function deleteReim(id: number): Promise<ApiResponse<null>> {
+export function deleteReim(id: string): Promise<ApiResponse<null>> {
   return request.delete(`/reim/${id}`)
 }
 
@@ -349,23 +351,23 @@ export interface TripSaveBody {
 
 /** 3.1 新增行程 */
 export function createTrip(
-  mainId: number,
+  mainId: string,
   body: TripSaveBody,
-): Promise<ApiResponse<{ tripId: number; subsidyId: number }>> {
+): Promise<ApiResponse<{ tripId: string; subsidyId: string }>> {
   return request.post(`/reim/${mainId}/trip`, body)
 }
 
 /** 3.2 更新行程 */
 export function updateTrip(
-  mainId: number,
-  tripId: number,
+  mainId: string,
+  tripId: string,
   body: TripSaveBody,
 ): Promise<ApiResponse<null>> {
   return request.put(`/reim/${mainId}/trip/${tripId}`, body)
 }
 
 /** 3.3 删除行程 */
-export function deleteTrip(mainId: number, tripId: number): Promise<ApiResponse<null>> {
+export function deleteTrip(mainId: string, tripId: string): Promise<ApiResponse<null>> {
   return request.delete(`/reim/${mainId}/trip/${tripId}`)
 }
 
@@ -373,7 +375,7 @@ export function deleteTrip(mainId: number, tripId: number): Promise<ApiResponse<
 
 /** 补助日历更新请求体 */
 export interface CalendarUpdateBody {
-  id: number
+  id: string
   isMealSelected: 0 | 1
   isTransportSelected: 0 | 1
   isPhoneSelected: 0 | 1
@@ -384,16 +386,16 @@ export interface CalendarUpdateBody {
 
 /** 4.1 查询补助日历 */
 export function getSubsidyCalendar(
-  mainId: number,
-  subsidyId: number,
-): Promise<ApiResponse<{ subsidyId: number; calendarData: SubsidyCalendar[] }>> {
+  mainId: string,
+  subsidyId: string,
+): Promise<ApiResponse<{ subsidyId: string; calendarData: SubsidyCalendar[] }>> {
   return request.get(`/reim/${mainId}/subsidy/${subsidyId}/calendar`)
 }
 
 /** 4.2 更新补助日历 */
 export function updateSubsidyCalendar(
-  mainId: number,
-  subsidyId: number,
+  mainId: string,
+  subsidyId: string,
   calendarData: CalendarUpdateBody[],
 ): Promise<ApiResponse<{ applyAmount: number; subsidyAmount: number }>> {
   return request.put(`/reim/${mainId}/subsidy/${subsidyId}/calendar`, { calendarData })
@@ -403,7 +405,7 @@ export function updateSubsidyCalendar(
 
 /** 分摊更新请求体 */
 export interface AllocationUpdateItem {
-  id?: number
+  id?: string
   companyId: string
   projectId: string
   allocationRatio: number
@@ -412,14 +414,14 @@ export interface AllocationUpdateItem {
 
 /** 5.1 查询分摊信息 */
 export function getAllocationList(
-  mainId: number,
-): Promise<ApiResponse<{ mainId: number; allocations: CostAllocation[] }>> {
+  mainId: string,
+): Promise<ApiResponse<{ mainId: string; allocations: CostAllocation[] }>> {
   return request.get(`/reim/${mainId}/allocation`)
 }
 
 /** 5.2 更新分摊信息 */
 export function updateAllocation(
-  mainId: number,
+  mainId: string,
   allocations: AllocationUpdateItem[],
 ): Promise<ApiResponse<null>> {
   return request.put(`/reim/${mainId}/allocation`, { allocations })
@@ -427,7 +429,7 @@ export function updateAllocation(
 
 /** 5.3 均摊计算 */
 export function equalSplitAllocation(
-  mainId: number,
+  mainId: string,
   allocations: AllocationUpdateItem[],
 ): Promise<ApiResponse<{ allocations: CostAllocation[] }>> {
   return request.put(`/reim/${mainId}/allocation/equal-split`, { allocations })
