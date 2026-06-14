@@ -16,14 +16,20 @@ const router = createRouter({
     {
       path: '/reimburse/add',
       name: 'reimburseAdd',
-      component: () => import('../views/reimburse/ReimbursementEdit.vue'),
+      component: () => import('../views/reimburse/ReimbursementDetail.vue'),
       meta: { title: '新增报销单' },
     },
     {
       path: '/reimburse/:id/edit',
       name: 'reimburseEdit',
-      component: () => import('../views/reimburse/ReimbursementEdit.vue'),
+      component: () => import('../views/reimburse/ReimbursementDetail.vue'),
       meta: { title: '编辑报销单' },
+    },
+    {
+      path: '/reimburse/:id/push',
+      name: 'reimbursePush',
+      component: () => import('../views/reimburse/ReimbursementDetail.vue'),
+      meta: { title: '手工推送' },
     },
   ],
 })

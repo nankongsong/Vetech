@@ -95,8 +95,8 @@ function handleEdit(row: ReimburseListRow) {
 /** 提交：预留（草稿页面补录行程后可提交） */
 function handleSubmit(row: ReimburseListRow) { ElMessage.info(`提交报销单：${fmtNo(row.reimbursementNo)}`) }
 
-/** 手工推送：审批中/审批通过 → 推送结算模块 */
-function handleManualPush(row: ReimburseListRow) { ElMessage.info(`手工推送：${fmtNo(row.reimbursementNo)}`) }
+/** 手工推送：审批中/审批通过 → 跳转推送确认页 */
+function handleManualPush(row: ReimburseListRow) { router.push({ name: 'reimbursePush', params: { id: row.id }, query: { mode: 'push' } }) }
 
 /** 复制：创建副本草稿 */
 function handleCopy(row: ReimburseListRow) {
