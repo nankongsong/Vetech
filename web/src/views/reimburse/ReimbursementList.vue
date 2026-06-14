@@ -129,25 +129,37 @@ function handleCopy(row: ReimburseListRow) {
 }
 
 /** 删除草稿 */
-function handleDelete(row: ReimburseListRow) {
-  ElMessageBox.confirm(
-    `确定要删除报销单号【${fmtNo(row.reimbursementNo)}】吗？`,
-    '删除确认',
-    { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning', confirmButtonClass: 'el-button--danger' },
-  ).then(async () => {
-    try { await deleteReim(row.id); ElMessage.success('删除成功'); fetchList() } catch (e) { if (e) throw e }
-  }).catch(() => {})
+async function handleDelete(row: ReimburseListRow) {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除报销单号【${fmtNo(row.reimbursementNo)}】吗？`,
+      '删除确认',
+      { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'warning', confirmButtonClass: 'el-button--danger' },
+    )
+    await deleteReim(row.id)
+    ElMessage.success('删除成功')
+    await fetchList()
+  } catch (e) {
+    // 用户取消或请求失败，静默处理
+    if (e && e !== 'cancel') throw e
+  }
 }
 
 /** 作废：仅已完成单据可手动作废 */
-function handleVoid(row: ReimburseListRow) {
-  ElMessageBox.confirm(
-    `确定要作废报销单号【${fmtNo(row.reimbursementNo)}】吗？作废后不可恢复。`,
-    '作废确认',
-    { confirmButtonText: '确定作废', cancelButtonText: '取消', type: 'warning', confirmButtonClass: 'el-button--danger' },
-  ).then(async () => {
-    try { await voidReim(row.id, row.version ?? 0); ElMessage.success('作废成功'); fetchList() } catch {}
-  }).catch(() => {})
+async function handleVoid(row: ReimburseListRow) {
+  try {
+    await ElMessageBox.confirm(
+      `确定要作废报销单号【${fmtNo(row.reimbursementNo)}】吗？作废后不可恢复。`,
+      '作废确认',
+      { confirmButtonText: '确定作废', cancelButtonText: '取消', type: 'warning', confirmButtonClass: 'el-button--danger' },
+    )
+    await voidReim(row.id, row.version ?? 0)
+    ElMessage.success('作废成功')
+    await fetchList()
+  } catch (e) {
+    // 用户取消或请求失败，静默处理
+    if (e && e !== 'cancel') throw e
+  }
 }
 
 /** 更多下拉命令分发 */
@@ -161,7 +173,7 @@ function handleMoreCommand(cmd: string, row: ReimburseListRow) {
 function handleSizeChange(size: number) { pageSize.value = size; currentPage.value = 1; fetchList() }
 function handlePageChange(page: number) { currentPage.value = page; fetchList() }
 
-onMounted(async () => { await initDictData(); fetchList() })
+onMounted(async () => { await initDictData(); await fetchList() })
 
 // ==================== 工具 ====================
 /** 截取日期部分 */
