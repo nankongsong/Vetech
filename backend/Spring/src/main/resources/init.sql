@@ -83,14 +83,14 @@ CREATE TABLE reim_project (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目基础数据表';
 
 -- ============================================================
--- 二、业务主表（5张）
+-- 二、业务主表（6张）
 -- ============================================================
 
 -- 7. 报销单主表
 DROP TABLE IF EXISTS reim_main;
 CREATE TABLE reim_main (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    reimbursement_no VARCHAR(32) NOT NULL COMMENT '报销单号，格式：BX-YYYYMMDD-XXXX',
+    reimbursement_no VARCHAR(32) NOT NULL COMMENT '报销单号，格式：BXyyyyMMddXXXX',
     reimbursement_title VARCHAR(200) DEFAULT NULL COMMENT '报销标题',
     business_trip_reason VARCHAR(500) DEFAULT NULL COMMENT '出差事由',
     reimburser_id VARCHAR(32) DEFAULT NULL COMMENT '报销人ID',
@@ -203,6 +203,24 @@ CREATE TABLE reim_cost_allocation (
     PRIMARY KEY (id),
     KEY idx_main_id (main_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='费用分摊表';
+
+-- 12. 异动日志表（审计追溯）
+DROP TABLE IF EXISTS reim_audit_log;
+CREATE TABLE reim_audit_log (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    main_id BIGINT NOT NULL COMMENT '报销单主表ID',
+    reimbursement_no VARCHAR(32) NOT NULL COMMENT '报销单号',
+    operation VARCHAR(20) NOT NULL COMMENT '操作类型：SUBMIT-提交，VOID-作废，DELETE-删除',
+    from_status TINYINT(1) DEFAULT NULL COMMENT '变更前状态：0-草稿，1-已完成，2-已作废',
+    to_status TINYINT(1) DEFAULT NULL COMMENT '变更后状态：0-草稿，1-已完成，2-已作废',
+    operator_id VARCHAR(32) NOT NULL DEFAULT 'SYSTEM' COMMENT '操作人ID（未接入登录时默认为SYSTEM）',
+    operator_name VARCHAR(50) NOT NULL DEFAULT 'SYSTEM' COMMENT '操作人姓名',
+    remark VARCHAR(200) DEFAULT NULL COMMENT '备注',
+    creation_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
+    PRIMARY KEY (id),
+    KEY idx_main_id (main_id),
+    KEY idx_operation (operation)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='异动日志表（审计追溯）';
 
 -- ============================================================
 -- 三、Mock数据（来源于概要设计5.3节）

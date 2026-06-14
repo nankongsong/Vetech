@@ -16,7 +16,7 @@ public class ReimMain {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    /** 报销单号，格式：BX-YYYYMMDD-XXXX */
+    /** 报销单号，格式：BXyyyyMMddXXXX */
     private String reimbursementNo;
 
     /** 报销标题 */

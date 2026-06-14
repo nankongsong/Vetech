@@ -44,11 +44,16 @@ public class ReimMainServiceImpl implements ReimMainService {
     @Autowired private ReimSubsidyCalendarMapper calendarMapper;
     @Autowired private ReimCostAllocationMapper allocationMapper;
     @Autowired private ReimCityMapper cityMapper;
+    @Autowired private ReimAuditLogMapper auditLogMapper;
 
     // ──────────── 报销单 CRUD ────────────
 
     @Override
     public IPage<ReimMain> pageQuery(ReimPageDTO dto) {
+        // 分页参数校验：非法值自动重置为默认值
+        if (dto.getCurrent() == null || dto.getCurrent() < 1) dto.setCurrent(1);
+        if (dto.getSize() == null || dto.getSize() < 1 || dto.getSize() > 100) dto.setSize(10);
+
         LambdaQueryWrapper<ReimMain> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.hasText(dto.getReimbursementNo()), ReimMain::getReimbursementNo, dto.getReimbursementNo());
         wrapper.like(StringUtils.hasText(dto.getTitle()), ReimMain::getReimbursementTitle, dto.getTitle());
@@ -92,6 +97,19 @@ public class ReimMainServiceImpl implements ReimMainService {
         main.setCreationTime(LocalDateTime.now());
         main.setUpdateTime(LocalDateTime.now());
         mainMapper.insert(main);
+
+        // 初始化默认分摊记录（比例100%，金额0，关联当前费用归属公司）
+        ReimCostAllocation defaultAlloc = new ReimCostAllocation();
+        defaultAlloc.setMainId(main.getId());
+        defaultAlloc.setCompanyId(main.getReimCompanyId());
+        defaultAlloc.setCompanyNo(main.getReimCompanyNo());
+        defaultAlloc.setCompanyName(main.getReimCompanyName());
+        defaultAlloc.setAllocationRatio(BigDecimal.ONE);
+        defaultAlloc.setAllocationAmount(BigDecimal.ZERO);
+        defaultAlloc.setSortOrder(1);
+        defaultAlloc.setCreationTime(LocalDateTime.now());
+        allocationMapper.insert(defaultAlloc);
+
         log.info("创建报销单草稿：id={}, no={}", main.getId(), main.getReimbursementNo());
         return main.getId();
     }
@@ -129,6 +147,10 @@ public class ReimMainServiceImpl implements ReimMainService {
             throw new BizException(40002, "仅草稿状态可提交");
         }
 
+        // 2.5 提交前实时重算补助合计（不信任库中旧值，从日历表聚合确保金额正确）
+        recalcMainTotal(id);
+        main = mainMapper.selectById(id);
+
         // 3. 必填字段校验
         validateRequiredFields(main);
 
@@ -153,6 +175,9 @@ public class ReimMainServiceImpl implements ReimMainService {
         int rows = mainMapper.updateById(main);
         if (rows == 0) throw new BizException(40006, "数据已被他人修改，请刷新后重试");
 
+        // 7. 记录异动日志
+        auditLog(main, "SUBMIT", 0, 1, "提交报销单");
+
         log.info("报销单提交成功：id={}, no={}", id, main.getReimbursementNo());
     }
 
@@ -168,6 +193,7 @@ public class ReimMainServiceImpl implements ReimMainService {
         main.setVersion(version + 1);
         main.setUpdateTime(LocalDateTime.now());
         mainMapper.updateById(main);
+        auditLog(main, "VOID", 1, 2, "作废报销单");
         log.info("报销单作废：id={}, no={}", id, main.getReimbursementNo());
     }
 
@@ -204,6 +230,9 @@ public class ReimMainServiceImpl implements ReimMainService {
         if (!tripIds.isEmpty()) {
             tripMapper.deleteBatchIds(tripIds);
         }
+        // 记录异动日志（需在物理删除前记录，删后主数据不存）
+        auditLog(main, "DELETE", 0, null, "删除草稿报销单");
+
         allocationMapper.delete(new LambdaQueryWrapper<ReimCostAllocation>().eq(ReimCostAllocation::getMainId, id));
         mainMapper.deleteById(id);
         log.info("删除报销单草稿及关联数据：id={}", id);
@@ -216,7 +245,15 @@ public class ReimMainServiceImpl implements ReimMainService {
     public void addTrip(Long mainId, TripDTO dto) {
         ReimMain main = checkMainEditable(mainId);
 
-        // 1. 日期校验
+        // 1. 必填字段校验
+        if (!StringUtils.hasText(dto.getTravelerId())) throw new BizException(40007, "出行人员不能为空");
+        if (!StringUtils.hasText(dto.getOriginCityId())) throw new BizException(40007, "出发城市不能为空");
+        if (!StringUtils.hasText(dto.getDestinationCityId())) throw new BizException(40007, "到达城市不能为空");
+        if (dto.getStartDate() == null) throw new BizException(40007, "出发日期不能为空");
+        if (dto.getEndDate() == null) throw new BizException(40007, "到达日期不能为空");
+        if (!StringUtils.hasText(dto.getTripDesc())) throw new BizException(40007, "行程说明不能为空");
+
+        // 2. 日期校验
         if (dto.getEndDate().isBefore(dto.getStartDate())) {
             throw new BizException(40008, "到达日期不可早于出发日期");
         }
@@ -224,10 +261,10 @@ public class ReimMainServiceImpl implements ReimMainService {
             throw new BizException(40008, "日期不可晚于当前日期");
         }
 
-        // 2. 唯一性校验
+        // 3. 唯一性校验
         validateTripUniqueness(mainId, dto.getTravelerId(), dto.getStartDate(), dto.getEndDate(), null);
 
-        // 3. 保存行程
+        // 4. 保存行程
         ReimTrip trip = new ReimTrip();
         trip.setMainId(mainId);
         trip.setTravelerId(dto.getTravelerId());
@@ -243,13 +280,13 @@ public class ReimMainServiceImpl implements ReimMainService {
         trip.setCreationTime(LocalDateTime.now());
         tripMapper.insert(trip);
 
-        // 4. 生成补助信息
+        // 5. 生成补助信息
         ReimSubsidy subsidy = createSubsidy(mainId, trip);
 
-        // 5. 生成补助日历
+        // 6. 生成补助日历
         createCalendar(subsidy, trip);
 
-        // 6. 更新主表合计
+        // 7. 更新主表合计
         recalcMainTotal(mainId);
 
         log.info("新增行程：mainId={}, tripId={}, subsidyId={}", mainId, trip.getId(), subsidy.getId());
@@ -261,6 +298,14 @@ public class ReimMainServiceImpl implements ReimMainService {
         checkMainEditable(mainId);
         ReimTrip trip = tripMapper.selectById(tripId);
         if (trip == null || !trip.getMainId().equals(mainId)) throw new BizException(40001, "行程记录不存在");
+
+        // 日期校验
+        if (dto.getEndDate().isBefore(dto.getStartDate())) {
+            throw new BizException(40008, "到达日期不可早于出发日期");
+        }
+        if (dto.getEndDate().isAfter(LocalDate.now())) {
+            throw new BizException(40008, "日期不可晚于当前日期");
+        }
 
         // 唯一性校验（排除自身）
         validateTripUniqueness(mainId, dto.getTravelerId(), dto.getStartDate(), dto.getEndDate(), tripId);
@@ -337,15 +382,30 @@ public class ReimMainServiceImpl implements ReimMainService {
                     .filter(d -> d.getId().equals(cal.getId())).findFirst().orElse(null);
             if (dto == null) continue;
 
-            // 校验申请金额不可大于标准
-            if (dto.getMealApplyAmount() != null && dto.getMealApplyAmount().compareTo(cal.getMealStandard()) > 0) {
-                throw new BizException(40009, "餐补申请金额不可大于标准金额");
+            // 校验申请金额：不可为负数，不可大于标准
+            if (dto.getMealApplyAmount() != null) {
+                if (dto.getMealApplyAmount().compareTo(BigDecimal.ZERO) < 0) {
+                    throw new BizException(40009, "补助金额不可为负数");
+                }
+                if (dto.getMealApplyAmount().compareTo(cal.getMealStandard()) > 0) {
+                    throw new BizException(40009, "餐补申请金额不可大于标准金额");
+                }
             }
-            if (dto.getTransportApplyAmount() != null && dto.getTransportApplyAmount().compareTo(cal.getTransportStandard()) > 0) {
-                throw new BizException(40009, "交补申请金额不可大于标准金额");
+            if (dto.getTransportApplyAmount() != null) {
+                if (dto.getTransportApplyAmount().compareTo(BigDecimal.ZERO) < 0) {
+                    throw new BizException(40009, "补助金额不可为负数");
+                }
+                if (dto.getTransportApplyAmount().compareTo(cal.getTransportStandard()) > 0) {
+                    throw new BizException(40009, "交补申请金额不可大于标准金额");
+                }
             }
-            if (dto.getPhoneApplyAmount() != null && dto.getPhoneApplyAmount().compareTo(cal.getPhoneStandard()) > 0) {
-                throw new BizException(40009, "通补申请金额不可大于标准金额");
+            if (dto.getPhoneApplyAmount() != null) {
+                if (dto.getPhoneApplyAmount().compareTo(BigDecimal.ZERO) < 0) {
+                    throw new BizException(40009, "补助金额不可为负数");
+                }
+                if (dto.getPhoneApplyAmount().compareTo(cal.getPhoneStandard()) > 0) {
+                    throw new BizException(40009, "通补申请金额不可大于标准金额");
+                }
             }
 
             cal.setIsMealSelected(dto.getIsMealSelected());
@@ -397,6 +457,25 @@ public class ReimMainServiceImpl implements ReimMainService {
         ReimMain main = mainMapper.selectById(mainId);
         BigDecimal totalAmount = main.getSubsidyTotal() != null ? main.getSubsidyTotal() : BigDecimal.ZERO;
 
+        // 首行比例 = 100% - 其他行比例总和（首行自动计算，不可由前端指定）
+        BigDecimal otherRatioSum = BigDecimal.ZERO;
+        for (int i = 1; i < list.size(); i++) {
+            BigDecimal ratio = list.get(i).getAllocationRatio();
+            if (ratio != null) otherRatioSum = otherRatioSum.add(ratio);
+        }
+        if (otherRatioSum.compareTo(BigDecimal.ONE) > 0) {
+            throw new BizException(40004, "其他行分摊比例之和已超过100%，请调整");
+        }
+        BigDecimal firstRatio = BigDecimal.ONE.subtract(otherRatioSum);
+
+        // 非首行金额按 ratio * total 计算；首行金额 = 总额 - 其他金额总和（吸收舍入误差）
+        BigDecimal otherAmountSum = BigDecimal.ZERO;
+        for (int i = 1; i < list.size(); i++) {
+            BigDecimal ratio = list.get(i).getAllocationRatio() != null ? list.get(i).getAllocationRatio() : BigDecimal.ZERO;
+            otherAmountSum = otherAmountSum.add(totalAmount.multiply(ratio).setScale(2, RoundingMode.HALF_UP));
+        }
+        BigDecimal firstAmount = totalAmount.subtract(otherAmountSum);
+
         for (int i = 0; i < list.size(); i++) {
             AllocationDTO dto = list.get(i);
             ReimCostAllocation alloc = new ReimCostAllocation();
@@ -407,8 +486,14 @@ public class ReimMainServiceImpl implements ReimMainService {
             alloc.setProjectId(dto.getProjectId());
             alloc.setProjectNo(dto.getProjectNo());
             alloc.setProjectName(dto.getProjectName());
-            alloc.setAllocationRatio(dto.getAllocationRatio());
-            alloc.setAllocationAmount(totalAmount.multiply(dto.getAllocationRatio()).setScale(2, RoundingMode.HALF_UP));
+            if (i == 0) {
+                alloc.setAllocationRatio(firstRatio);
+                alloc.setAllocationAmount(firstAmount);
+            } else {
+                BigDecimal ratio = dto.getAllocationRatio() != null ? dto.getAllocationRatio() : BigDecimal.ZERO;
+                alloc.setAllocationRatio(ratio);
+                alloc.setAllocationAmount(totalAmount.multiply(ratio).setScale(2, RoundingMode.HALF_UP));
+            }
             alloc.setSortOrder(i + 1);
             alloc.setCreationTime(LocalDateTime.now());
             allocationMapper.insert(alloc);
@@ -458,7 +543,7 @@ public class ReimMainServiceImpl implements ReimMainService {
     /** 生成报销单号：BX-YYYYMMDD-序号（4位） */
     private String generateReimNo() {
         String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String prefix = "BX-" + dateStr + "-";
+        String prefix = "BX" + dateStr;
         LambdaQueryWrapper<ReimMain> wrapper = new LambdaQueryWrapper<>();
         wrapper.likeRight(ReimMain::getReimbursementNo, prefix);
         wrapper.orderByDesc(ReimMain::getReimbursementNo);
@@ -639,5 +724,23 @@ public class ReimMainServiceImpl implements ReimMainService {
         if (obj == null) return BigDecimal.ZERO;
         if (obj instanceof BigDecimal) return (BigDecimal) obj;
         return new BigDecimal(obj.toString());
+    }
+
+    /**
+     * 记录异动日志（审计追溯）
+     * 操作人暂用 SYSTEM，接入登录后从 token/session 中获取
+     */
+    private void auditLog(ReimMain main, String operation, Integer fromStatus, Integer toStatus, String remark) {
+        ReimAuditLog auditLog = new ReimAuditLog();
+        auditLog.setMainId(main.getId());
+        auditLog.setReimbursementNo(main.getReimbursementNo());
+        auditLog.setOperation(operation);
+        auditLog.setFromStatus(fromStatus);
+        auditLog.setToStatus(toStatus);
+        auditLog.setOperatorId("SYSTEM");   // TODO: 接入登录后替换为真实用户ID
+        auditLog.setOperatorName("SYSTEM");
+        auditLog.setRemark(remark);
+        auditLog.setCreationTime(LocalDateTime.now());
+        auditLogMapper.insert(auditLog);
     }
 }
