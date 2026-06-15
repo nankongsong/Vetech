@@ -2,7 +2,7 @@ spring:
   application:
     name: vetech-reim
   datasource:
-    url: jdbc:mysql://localhost:3306/vetech_reim?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/vetech_reim?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&allowMultiQueries=true
     username: root
     password: wtt123
     driver-class-name: com.mysql.cj.jdbc.Driver

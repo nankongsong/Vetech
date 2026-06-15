@@ -105,6 +105,9 @@ public class ReimMainServiceImpl implements ReimMainService {
         defaultAlloc.setCompanyId(main.getReimCompanyId());
         defaultAlloc.setCompanyNo(main.getReimCompanyNo());
         defaultAlloc.setCompanyName(main.getReimCompanyName());
+        defaultAlloc.setProjectId("");
+        defaultAlloc.setProjectNo("");
+        defaultAlloc.setProjectName("");
         defaultAlloc.setAllocationRatio(BigDecimal.ONE);
         defaultAlloc.setAllocationAmount(BigDecimal.ZERO);
         defaultAlloc.setSortOrder(1);

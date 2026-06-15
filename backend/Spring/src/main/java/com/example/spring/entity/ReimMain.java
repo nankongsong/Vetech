@@ -79,15 +79,12 @@ public class ReimMain {
     /** 单据状态：0-草稿，1-已完成，2-已作废 */
     private Integer status;
 
-    /** 乐观锁版本号 */
-    @Version
+    /** 乐观锁版本号（由 Service 层手动管理，无需 @Version 注解） */
     private Integer version;
 
     /** 创建时间 */
-    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime creationTime;
 
     /** 更新时间 */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 }
