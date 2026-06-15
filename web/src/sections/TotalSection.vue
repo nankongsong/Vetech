@@ -8,7 +8,9 @@ const store = useReimbursementStore()
 
 <template>
   <section class="panel" :class="{ collapsed: store.ui.collapsed.total }">
-    <PanelHeader @toggle="store.togglePanel('total')">金额汇总</PanelHeader>
+    <PanelHeader @toggle="store.togglePanel('total')">
+      <template #title>费用合计</template>
+    </PanelHeader>
     <div class="panel-body">
       <table class="table total-table">
         <thead>

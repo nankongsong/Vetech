@@ -71,6 +71,7 @@ const cityName = computed(() => (no: string) => {
 <template>
   <section class="panel" :class="{ collapsed: store.ui.collapsed.trip }">
     <PanelHeader @toggle="store.togglePanel('trip')">
+      <template #title>补录行程</template>
       <template #extra>
         <button class="btn-text" @click.stop="openAdd">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
@@ -85,22 +86,26 @@ const cityName = computed(() => (no: string) => {
         <thead>
           <tr>
             <th class="col-index">序号</th>
-            <th>出差人员</th>
-            <th>出差日期</th>
-            <th>行程</th>
+            <th>出行人员</th>
+            <th>出发城市</th>
+            <th>到达城市</th>
+            <th>出发日期</th>
+            <th>到达日期</th>
             <th>行程说明</th>
             <th class="col-action">操作</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="store.trips.length === 0">
-            <td colspan="6" class="no-data">暂无数据</td>
+            <td colspan="8" class="no-data">暂无数据</td>
           </tr>
           <tr v-for="(t, i) in store.trips" :key="t.id">
             <td class="col-index">{{ i + 1 }}</td>
             <td>{{ empLabel(t.reimburserId) }}</td>
-            <td>{{ t.startDate }} 至 {{ t.endDate }}</td>
-            <td>{{ cityName(t.startCity) }} - {{ cityName(t.endCity) }}</td>
+            <td>{{ cityName(t.startCity) }}</td>
+            <td>{{ cityName(t.endCity) }}</td>
+            <td>{{ t.startDate }}</td>
+            <td>{{ t.endDate }}</td>
             <td>{{ t.description }}</td>
             <td class="col-action">
               <span class="op-icon danger" @click="onDelete(t)" title="删除">

@@ -44,7 +44,7 @@ interface ReimbursementState {
   businessTypes: BusinessType[]
 }
 
-function buildSubsidyFromTrip(tripId: string, trip: Trip): Subsidy {
+function buildSubsidyFromTrip(tripId: string, trip: Trip, state: ReimbursementState): Subsidy {
   return {
     id: uid('s'),
     tripId,
@@ -57,13 +57,14 @@ function buildSubsidyFromTrip(tripId: string, trip: Trip): Subsidy {
     subsidyCity: trip.endCity,
     applyAmount: 0,
     subsidyAmount: 0,
-    calendar: buildDefaultCalendar(trip)
+    calendar: buildDefaultCalendar(trip, (cn) => getCityType(state, cn))
   }
 }
 
-function buildDefaultCalendar(trip: Trip): SubsidyRow[] {
+function buildDefaultCalendar(trip: Trip, getCityType: (cityNo: string) => '1' | '2' | '3'): SubsidyRow[] {
   const dates = dateRange(trip.startDate, trip.endDate)
-  const mealStd = cityMealStandard(trip.endCity)
+  const ct = getCityType(trip.endCity)
+  const mealStd = cityMealStandard(ct)
   const trafficStd = cityTrafficStandard()
   const commStd = cityCommStandard()
   return dates.map(d => ({
@@ -72,6 +73,12 @@ function buildDefaultCalendar(trip: Trip): SubsidyRow[] {
     traffic: { checked: false, std: trafficStd, value: trafficStd },
     comm: { checked: false, std: commStd, value: commStd }
   }))
+}
+
+/** 从 store state 中获取城市类型 */
+function getCityType(state: ReimbursementState, cityNo: string): '1' | '2' | '3' {
+  const c = state.cities.find(x => x.cityNo === cityNo)
+  return c?.cityType ?? '3'
 }
 
 export const useReimbursementStore = defineStore('reimbursement', {
@@ -96,7 +103,20 @@ export const useReimbursementStore = defineStore('reimbursement', {
         reason: ''
       },
       trips: [initTrip],
-      subsidies: [buildSubsidyFromTrip(initTrip.id, initTrip)],
+      subsidies: [{
+        id: 's_1',
+        tripId: initTrip.id,
+        reimburserId: initTrip.reimburserId,
+        startDate: initTrip.startDate,
+        endDate: initTrip.endDate,
+        days: diffDays(initTrip.startDate, initTrip.endDate),
+        startCity: initTrip.startCity,
+        endCity: initTrip.endCity,
+        subsidyCity: initTrip.endCity,
+        applyAmount: 0,
+        subsidyAmount: 0,
+        calendar: buildDefaultCalendar(initTrip, (_cn) => '1')
+      }],
       allocation: [
         { id: 'a_1', company: '成本中心-管理层类', project: '', ratio: 1.0, amount: 0 }
       ],
@@ -139,7 +159,7 @@ export const useReimbursementStore = defineStore('reimbursement', {
     addTrip(trip: Omit<Trip, 'id'>) {
       const id = uid('t')
       this.trips.push({ id, ...trip })
-      this.subsidies.push(buildSubsidyFromTrip(id, { id, ...trip }))
+      this.subsidies.push(buildSubsidyFromTrip(id, { id, ...trip }, this))
     },
 
     updateTrip(id: string, patch: Partial<Omit<Trip, 'id'>>) {
@@ -148,7 +168,7 @@ export const useReimbursementStore = defineStore('reimbursement', {
       Object.assign(this.trips[idx], patch)
       const subIdx = this.subsidies.findIndex(s => s.tripId === id)
       if (subIdx !== -1) {
-        this.subsidies[subIdx] = buildSubsidyFromTrip(id, this.trips[idx])
+        this.subsidies[subIdx] = buildSubsidyFromTrip(id, this.trips[idx], this)
       }
     },
 
@@ -163,7 +183,7 @@ export const useReimbursementStore = defineStore('reimbursement', {
       const newId = uid('t')
       const clone: Trip = { ...src, id: newId }
       this.trips.push(clone)
-      this.subsidies.push(buildSubsidyFromTrip(newId, clone))
+      this.subsidies.push(buildSubsidyFromTrip(newId, clone, this))
     },
 
     updateSubsidyCalendar(subId: string, calendar: SubsidyRow[]) {
@@ -177,8 +197,18 @@ export const useReimbursementStore = defineStore('reimbursement', {
         if (r.traffic.checked) { apply += r.traffic.std; actual += Number(r.traffic.value || 0) }
         if (r.comm.checked) { apply += r.comm.std; actual += Number(r.comm.value || 0) }
       })
-      sub.applyAmount = apply
-      sub.subsidyAmount = actual
+      sub.applyAmount = Math.round(apply * 100) / 100
+      sub.subsidyAmount = Math.round(actual * 100) / 100
+      this.syncAllocationAmounts()
+    },
+
+    /** 同步分摊金额 = 补助总金额 × 比例 */
+    syncAllocationAmounts() {
+      const total = this.subsidyTotal
+      this.allocation = this.allocation.map(a => ({
+        ...a,
+        amount: Math.round(a.ratio * total * 100) / 100
+      }))
     },
 
     setAllocation(list: Allocation[]) {
@@ -186,7 +216,20 @@ export const useReimbursementStore = defineStore('reimbursement', {
     },
 
     addAllocationRow() {
-      this.allocation.push({ id: uid('a'), company: '', project: '', ratio: 0, amount: 0 })
+      const n = this.allocation.length + 1
+      const total = this.subsidyTotal
+      // 均摊：新行自动获得均等比例
+      const evenRatio = Math.floor((1 / n) * 10000) / 10000
+      // 重新计算所有行比例
+      const list = this.allocation.map((a, i) => {
+        if (i === 0) {
+          const otherSum = (n - 1) * evenRatio
+          return { ...a, ratio: Math.max(0, 1 - otherSum), amount: Math.max(0, 1 - otherSum) * total }
+        }
+        return { ...a, ratio: evenRatio, amount: evenRatio * total }
+      })
+      list.push({ id: uid('a'), company: '', project: '', ratio: evenRatio, amount: evenRatio * total })
+      this.allocation = list
     },
 
     setRemark(text: string) {

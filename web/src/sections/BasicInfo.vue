@@ -23,13 +23,20 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
 
 <template>
   <section class="panel" :class="{ collapsed: store.ui.collapsed.basic }">
-    <PanelHeader @toggle="store.togglePanel('basic')" />
+    <PanelHeader @toggle="store.togglePanel('basic')">
+      <template #title>基础信息</template>
+    </PanelHeader>
     <div class="panel-body">
       <div class="form-row">
-        <div class="form-field">
-          <span class="form-label">报销标题</span>
-          <div class="form-control" style="min-width: 300px;">
-            <input type="text" placeholder="请输入" :value="store.basic.title" @input="onTitle(($event.target as HTMLInputElement).value)" />
+        <div class="form-field col-1">
+          <span class="form-label">报销标题<span class="req">*</span></span>
+          <div class="form-control">
+            <input
+              type="text"
+              placeholder="请输入报销标题（最多500字）"
+              :value="store.basic.title"
+              @input="onTitle(($event.target as HTMLInputElement).value)"
+            />
           </div>
         </div>
       </div>
@@ -39,32 +46,32 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
           <BaseSelect v-model="store.basic.reimburser" :options="empOptions" />
         </div>
         <div class="form-field">
-          <span class="form-label">报销部门</span>
+          <span class="form-label">报销部门<span class="req">*</span></span>
           <BaseSelect v-model="store.basic.department" :options="deptOptions" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-field">
-          <span class="form-label">费用归属公司</span>
+          <span class="form-label">费用归属公司<span class="req">*</span></span>
           <BaseSelect v-model="store.basic.reimCompany" :options="compOptions" />
         </div>
         <div class="form-field">
           <span class="form-label">
-            业务类型
-            <span class="help">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
-              </svg>
-            </span>
+            业务类型<span class="req">*</span>
           </span>
           <BusinessTypeSelect v-model="store.basic.businessType" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-field col-1">
-          <span class="form-label">出差事由</span>
-          <div class="form-control textarea" style="flex: 1; min-width: 500px;">
-            <textarea rows="3" placeholder="请输入" :value="store.basic.reason" @input="onReason(($event.target as HTMLTextAreaElement).value)"></textarea>
+          <span class="form-label">出差事由<span class="req">*</span></span>
+          <div class="form-control textarea">
+            <textarea
+              rows="3"
+              placeholder="请输入出差事由（最多500字）"
+              :value="store.basic.reason"
+              @input="onReason(($event.target as HTMLTextAreaElement).value)"
+            ></textarea>
           </div>
         </div>
       </div>

@@ -134,7 +134,7 @@ const pageTitle = computed(() => {
     </div>
 
     <!-- 表单主体 -->
-    <DocHeader />
+    <DocHeader :mode="isEdit ? 'edit' : 'add'" />
     <main class="doc-main">
       <BasicInfo />
       <TripSection />

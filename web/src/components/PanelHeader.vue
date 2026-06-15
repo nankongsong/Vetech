@@ -31,6 +31,6 @@ defineEmits<{
 .panel-header:hover { background: #ebeef5; }
 .panel-header-left { display: flex; align-items: center; gap: 6px; }
 .toggle-icon { color: #909399; flex-shrink: 0; transition: transform 0.2s; }
-.panel-title { font-size: 14px; font-weight: 600; color: #303133; }
+.panel-title { font-size: 16px; font-weight: 600; color: #303133; }
 .panel-header-right { display: flex; align-items: center; gap: 8px; }
 </style>
