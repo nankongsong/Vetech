@@ -66,7 +66,6 @@ const displayValue = computed(() => {
 })
 
 function isVisible(node: TreeNode, parentChain: string[]): boolean {
-  // 检查所有父级是否都没有被折叠
   for (const p of parentChain) {
     if (collapsedMap.value[p]) return false
   }
@@ -105,12 +104,119 @@ function flatten(): Array<{ node: TreeNode; depth: number; parents: string[] }> 
                'opt-group': item.depth === 0,
                'opt-child': item.depth === 1,
                'opt-subchild': item.depth >= 2,
-               selected: props.modelValue === item.node.businessTypeId
+               selected: props.modelValue === item.node.businessTypeId,
+               'has-children': item.node.thereSubordinateNode === '1'
              }"
              @click.stop="onPick(item.node)">
-          {{ item.node.businessTypeName }}
+          <span v-if="item.node.thereSubordinateNode === '1'" class="expand-icon" :class="{ expanded: !collapsedMap[item.node.businessTypeId] }">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <path d="M7 10l5 5 5-5z"/>
+            </svg>
+          </span>
+          <span v-else class="expand-icon placeholder"></span>
+          <span class="opt-text">{{ item.node.businessTypeName }}</span>
         </div>
       </template>
     </div>
   </div>
 </template>
+
+<style scoped>
+.select-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.form-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+.form-control input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #303133;
+}
+.form-control:hover {
+  border-color: #c0c4cc;
+}
+.form-control.open {
+  border-color: #409eff;
+}
+.arrow {
+  color: #c0c4cc;
+  transition: transform 0.2s;
+}
+.form-control.open .arrow {
+  transform: rotate(180deg);
+}
+.select-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1100;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid #e4e7ed;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  max-height: 300px;
+  overflow-y: auto;
+}
+.opt {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #303133;
+}
+.opt:hover {
+  background: #f5f7fa;
+}
+.opt.selected {
+  background: #ecf5ff;
+  color: #409eff;
+}
+.opt-group {
+  font-weight: 600;
+  background: #fafafa;
+  color: #606266;
+}
+.opt-child {
+  padding-left: 30px;
+}
+.opt-subchild {
+  padding-left: 50px;
+}
+.expand-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #909399;
+  margin-right: 4px;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.expand-icon.expanded {
+  transform: rotate(90deg);
+}
+.expand-icon.placeholder {
+  visibility: hidden;
+}
+.opt-text {
+  flex: 1;
+}
+</style>

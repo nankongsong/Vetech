@@ -29,7 +29,7 @@ defineEmits<{
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 16px; background: #fff; border-bottom: 1px solid #ebeef5;
   cursor: pointer; user-select: none;
-  height: 42px;
+  height: 36px;
 }
 .panel-header:hover { background: #f5f7fa; }
 .panel-header-left {
@@ -45,7 +45,7 @@ defineEmits<{
   margin-left: auto; order: 2;
 }
 .panel-title {
-  font-size: 14px; font-weight: 600; color: #303133; flex-shrink: 0;
+  font-size: 16px; font-weight: 600; color: #303133; flex-shrink: 0;
 }
 .panel-header-right {
   display: flex; align-items: center; gap: 8px;

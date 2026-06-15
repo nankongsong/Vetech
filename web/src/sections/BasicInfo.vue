@@ -19,11 +19,6 @@ const compOptions = computed(() =>
 
 function onTitle(v: string) { store.setBasic({ title: v.slice(0, 500) }) }
 function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
-
-const selectedBusinessTypeName = computed(() => {
-  const bt = store.businessTypes.find(b => b.businessTypeId === store.basic.businessType)
-  return bt ? bt.businessTypeName : ''
-})
 </script>
 
 <template>
@@ -62,19 +57,7 @@ const selectedBusinessTypeName = computed(() => {
       <div class="form-row">
         <div class="form-field col-1">
           <span class="form-label">业务类型<span class="req">*</span></span>
-          <div class="form-control business-type-input">
-            <input
-              type="text"
-              :value="selectedBusinessTypeName"
-              readonly
-              style="background: #fff; cursor: default;"
-            />
-            <span class="business-type-icon">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-              </svg>
-            </span>
-          </div>
+          <BusinessTypeSelect v-model="store.basic.businessType" />
         </div>
       </div>
       <div class="form-row">
@@ -96,17 +79,4 @@ const selectedBusinessTypeName = computed(() => {
 
 <style scoped>
 .three-cols .form-field { flex: 1; min-width: 0; }
-.business-type-input {
-  display: flex;
-  align-items: center;
-}
-.business-type-input input {
-  flex: 1;
-}
-.business-type-icon {
-  position: absolute;
-  right: 10px;
-  color: #409eff;
-  cursor: pointer;
-}
 </style>

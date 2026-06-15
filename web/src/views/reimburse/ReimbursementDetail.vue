@@ -192,13 +192,13 @@ const pageTitle = computed(() => {
 
 /* ===== 表格 ===== */
 .table {
-  width: 100%; border-collapse: collapse; font-size: 13px;
+  width: 100%; border-collapse: collapse; font-size: 14px;
 }
 .table th, .table td {
   padding: 10px 12px; border-bottom: 1px solid #ebeef5; text-align: left;
 }
-.table th { background: #fafafa; color: #606266; font-weight: 600; font-size: 13px; }
-.table td { color: #303133; font-size: 13px; }
+.table th { background: #fafafa; color: #606266; font-weight: 600; font-size: 14px; }
+.table td { color: #303133; font-size: 14px; }
 .table .col-index { width: 50px; text-align: center; }
 .table .col-action { width: 100px; text-align: center; }
 .table .right { text-align: right; }
@@ -230,7 +230,7 @@ const pageTitle = computed(() => {
 .btn-default { background: #fff; color: #606266; }
 .btn-text {
   display: inline-flex; align-items: center; gap: 4px;
-  background: none; border: none; color: #409eff; font-size: 13px;
+  background: none; border: none; color: #409eff; font-size: 14px;
   cursor: pointer; padding: 2px 4px;
 }
 .btn-text:hover { text-decoration: underline; }
@@ -244,7 +244,7 @@ const pageTitle = computed(() => {
 }
 .form-field.col-1 { flex: 1 1 100%; }
 .form-label {
-  width: 90px; flex-shrink: 0; font-size: 13px; color: #606266;
+  width: 90px; flex-shrink: 0; font-size: 14px; color: #606266;
   display: flex; align-items: center;
 }
 .form-label .req { color: #f56c6c; margin-left: 2px; }
@@ -257,7 +257,7 @@ const pageTitle = computed(() => {
 .form-control textarea {
   width: 100%; height: 34px; padding: 0 10px;
   border: 1px solid #dcdfe6; border-radius: 4px;
-  font-size: 13px; box-sizing: border-box;
+  font-size: 14px; box-sizing: border-box;
 }
 .form-control input:focus,
 .form-control textarea:focus { border-color: #409eff; outline: none; }

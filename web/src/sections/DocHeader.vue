@@ -37,7 +37,7 @@ const displayDate = computed(() => {
 }
 .doc-header-spacer { /* 占位保持标题居中 */ }
 .doc-title {
-  font-size: 18px; font-weight: 600; color: #303133; margin: 0;
+  font-size: 20px; font-weight: 700; color: #303133; margin: 0;
   text-align: center;
 }
 .doc-date {
