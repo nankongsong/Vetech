@@ -81,7 +81,7 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
 
 <style scoped>
 .form-req {
-  color: #f56c6c;
+  color: #FF7673;
   font-weight: 700;
 }
 .right-align .form-field {
