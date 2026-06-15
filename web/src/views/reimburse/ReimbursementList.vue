@@ -216,7 +216,7 @@ function fmtNo(no: string): string { return no.replace(/-/g, '') }
               </el-select>
             </el-form-item>
             <el-form-item label="业务类型">
-              <el-tree-select v-model="filterForm.businessTypeId" :data="businessTypeTreeData" placeholder="请选择" clearable check-strictly default-expand-all style="width:200px" />
+              <el-tree-select v-model="filterForm.businessTypeId" :data="businessTypeTreeData" placeholder="请选择" clearable check-strictly style="width:200px" />
             </el-form-item>
             <!-- 按钮组：右对齐 -->
             <div class="filter-actions">

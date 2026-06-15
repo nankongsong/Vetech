@@ -216,19 +216,16 @@ export const useReimbursementStore = defineStore('reimbursement', {
     },
 
     addAllocationRow() {
-      const n = this.allocation.length + 1
       const total = this.subsidyTotal
-      // 均摊：新行自动获得均等比例
-      const evenRatio = Math.floor((1 / n) * 10000) / 10000
-      // 重新计算所有行比例
-      const list = this.allocation.map((a, i) => {
-        if (i === 0) {
-          const otherSum = (n - 1) * evenRatio
-          return { ...a, ratio: Math.max(0, 1 - otherSum), amount: Math.max(0, 1 - otherSum) * total }
-        }
-        return { ...a, ratio: evenRatio, amount: evenRatio * total }
-      })
-      list.push({ id: uid('a'), company: '', project: '', ratio: evenRatio, amount: evenRatio * total })
+      // 新增行默认：费用归属/项目为空，比例/金额为 0
+      const newRow: Allocation = { id: uid('a'), company: '', project: '', ratio: 0, amount: 0 }
+      const list = this.allocation.map(a => ({ ...a }))
+      list.push(newRow)
+      // 重算首行比例 = 1 - sum(row2+)
+      const otherSum = list.slice(1).reduce((s, a) => s + a.ratio, 0)
+      list[0].ratio = Math.max(0, Math.min(1, 1 - otherSum))
+      // 同步所有行金额（四舍五入到分）
+      list.forEach(a => { a.amount = Math.round(a.ratio * total * 100) / 100 })
       this.allocation = list
     },
 

@@ -64,7 +64,7 @@ export const STATIC_CITY_DATA = [
 // ==================== 5.3.6 项目数据 ====================
 export const STATIC_PROJECT_DATA = [
   { projectId: '12BC248B25083001', projectNo: 'nonProjectRelated', projectName: '非项目类费用归集' },
-  { projectId: '1C811ABF96195000', projectNo: '', projectName: '华中客户定制化项目' },
+  { projectId: '1C811ABF96195000', projectNo: 'centralChina', projectName: '华中客户定制化项目' },
   { projectId: '1C5931735AC4A000', projectNo: 'southChina', projectName: '华南客户定制化项目' },
   { projectId: '1771EC45F2443000', projectNo: 'northChina', projectName: '华北客户定制化项目' },
   { projectId: '1762792DB4E9A002', projectNo: 'eastChina', projectName: '华东客户定制化项目' },
