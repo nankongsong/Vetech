@@ -25,6 +25,11 @@ const wrap = ref<HTMLElement | null>(null)
 const open = ref(false)
 const collapsedMap = ref<Record<string, boolean>>({})
 
+function isExpanded(id: string): boolean {
+  // 默认不展开（返回 false），点击后设为 true 才展开
+  return !!collapsedMap.value[id]
+}
+
 const tree = computed<TreeNode[]>(() => buildTree(store.businessTypes))
 
 function buildTree(list: any[]): TreeNode[] {
@@ -41,7 +46,10 @@ function buildTree(list: any[]): TreeNode[] {
   return roots
 }
 
-function toggle() { open.value = !open.value }
+function onToggleClick(e: MouseEvent) {
+  e.stopPropagation()
+  open.value = !open.value
+}
 
 function onPick(node: TreeNode) {
   if (node.thereSubordinateNode === '1') {
@@ -52,23 +60,14 @@ function onPick(node: TreeNode) {
   }
 }
 
-function onDocClick(e: MouseEvent) {
-  if (!wrap.value) return
-  if (!wrap.value.contains(e.target as Node)) open.value = false
-}
-
-onMounted(() => document.addEventListener('click', onDocClick))
-onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
-
 const displayValue = computed(() => {
   const f = store.businessTypes.find(o => o.businessTypeId === props.modelValue)
   return f ? f.businessTypeName : ''
 })
 
 function isVisible(node: TreeNode, parentChain: string[]): boolean {
-  // 检查所有父级是否都没有被折叠
   for (const p of parentChain) {
-    if (collapsedMap.value[p]) return false
+    if (!isExpanded(p)) return false
   }
   return true
 }
@@ -89,15 +88,19 @@ function flatten(): Array<{ node: TreeNode; depth: number; parents: string[] }> 
 </script>
 
 <template>
-  <div ref="wrap" class="select-wrap" :class="{ open }">
-    <div class="form-control" @click="toggle" tabindex="0">
+  <div ref="wrap" class="business-type-select-wrapper" :class="{ open }">
+    <div class="business-type-select" @click.stop="onToggleClick" tabindex="0">
       <input type="text" readonly :value="displayValue" :placeholder="placeholder || '请选择'"
              style="cursor: pointer; background: transparent;" />
       <span class="arrow">
-        <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+        <svg viewBox="0 0 24 24" width="14" height="14">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="#c0c4cc" stroke-width="1.5"/>
+          <line x1="8" y1="8" x2="16" y2="16" stroke="#c0c4cc" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="16" y1="8" x2="8" y2="16" stroke="#c0c4cc" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
       </span>
     </div>
-    <div class="select-options">
+    <div v-if="open" class="select-options">
       <template v-for="(item, idx) in flatten()" :key="item.node.businessTypeId + '-' + idx">
         <div v-if="isVisible(item.node, item.parents)"
              class="opt"
@@ -105,12 +108,75 @@ function flatten(): Array<{ node: TreeNode; depth: number; parents: string[] }> 
                'opt-group': item.depth === 0,
                'opt-child': item.depth === 1,
                'opt-subchild': item.depth >= 2,
-               selected: props.modelValue === item.node.businessTypeId
+               selected: props.modelValue === item.node.businessTypeId,
+               'has-children': item.node.thereSubordinateNode === '1'
              }"
              @click.stop="onPick(item.node)">
-          {{ item.node.businessTypeName }}
+          <span v-if="item.node.thereSubordinateNode === '1'" class="expand-icon" :class="{ expanded: !collapsedMap[item.node.businessTypeId] }">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <path d="M7 10l5 5 5-5z"/>
+            </svg>
+          </span>
+          <span v-else class="expand-icon placeholder"></span>
+          <span class="opt-text">{{ item.node.businessTypeName }}</span>
         </div>
       </template>
     </div>
   </div>
 </template>
+
+<style scoped>
+.business-type-select-wrapper {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.business-type-select {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 36px; padding: 0 10px;
+  border: 1px solid #dcdfe6; border-radius: 4px;
+  background: #fff; cursor: pointer; font-size: 14px;
+}
+.business-type-select input {
+  flex: 1;
+  height: 100%;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #303133;
+  line-height: normal;
+}
+.business-type-select:hover { border-color: #c0c4cc; }
+.business-type-select.open { border-color: #409eff; }
+.arrow {
+  color: #c0c4cc;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.business-type-select.open .arrow { transform: rotate(180deg); }
+.select-options {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 1100;
+  margin-top: 4px; background: #fff; border: 1px solid #e4e7ed;
+  border-radius: 4px; box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  max-height: 300px; overflow-y: scroll;
+}
+.opt {
+  display: flex; align-items: center; padding: 6px 12px;
+  cursor: pointer; font-size: 14px; color: #303133;
+}
+.opt:hover { background: #f5f7fa; }
+.opt.selected { background: #ecf5ff; color: #409eff; }
+.opt-group { font-weight: 600; background: #fafafa; color: #606266; }
+.opt-child { padding-left: 30px; }
+.opt-subchild { padding-left: 50px; }
+.expand-icon {
+  width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
+  color: #909399; margin-right: 4px; flex-shrink: 0; transition: transform 0.2s;
+}
+.expand-icon.expanded { transform: rotate(90deg); }
+.expand-icon.placeholder { visibility: hidden; }
+.opt-text { flex: 1; }
+</style>

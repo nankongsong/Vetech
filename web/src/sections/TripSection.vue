@@ -71,6 +71,7 @@ const cityName = computed(() => (no: string) => {
 <template>
   <section class="panel" :class="{ collapsed: store.ui.collapsed.trip }">
     <PanelHeader @toggle="store.togglePanel('trip')">
+      <template #title>补录行程</template>
       <template #extra>
         <button class="btn-text" @click.stop="openAdd">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
@@ -85,7 +86,7 @@ const cityName = computed(() => (no: string) => {
         <thead>
           <tr>
             <th class="col-index">序号</th>
-            <th>出差人员</th>
+            <th>出行人员</th>
             <th>出差日期</th>
             <th>行程</th>
             <th>行程说明</th>
@@ -99,8 +100,8 @@ const cityName = computed(() => (no: string) => {
           <tr v-for="(t, i) in store.trips" :key="t.id">
             <td class="col-index">{{ i + 1 }}</td>
             <td>{{ empLabel(t.reimburserId) }}</td>
-            <td>{{ t.startDate }} 至 {{ t.endDate }}</td>
-            <td>{{ cityName(t.startCity) }} - {{ cityName(t.endCity) }}</td>
+            <td class="date-range">{{ t.startDate }} 至 {{ t.endDate }}</td>
+            <td>{{ cityName(t.startCity) }}-{{ cityName(t.endCity) }}</td>
             <td>{{ t.description }}</td>
             <td class="col-action">
               <span class="op-icon danger" @click="onDelete(t)" title="删除">
@@ -120,3 +121,7 @@ const cityName = computed(() => (no: string) => {
     <TripModal v-model="modalVisible" :mode="modalMode" :data="modalData" :exclude-id="modalExcludeId" @save="onSave" />
   </section>
 </template>
+
+<style scoped>
+.date-range { white-space: nowrap; }
+</style>

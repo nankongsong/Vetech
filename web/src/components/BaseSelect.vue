@@ -10,6 +10,7 @@ const props = defineProps<{
   modelValue: string
   options: SelectOption[]
   placeholder?: string
+  disabled?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -52,11 +53,11 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 
 <template>
   <div class="custom-select-wrapper">
-    <div class="custom-select" :class="{ open }" @click.stop="toggle">
+    <div class="custom-select" :class="{ open, disabled: props.disabled }" @click.stop="props.disabled ? null : toggle()">
       <span v-if="selectedLabel" class="selected-text">{{ selectedLabel }}</span>
       <span v-else class="placeholder">{{ placeholder || '请选择' }}</span>
-      <svg class="arrow" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-        <path d="M7 10l5 5 5-5z"/>
+      <svg class="arrow" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#606266" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6,9 12,15 18,9"/>
       </svg>
     </div>
     <div v-if="open" class="dropdown-panel">
@@ -96,6 +97,8 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
   background: #fff; cursor: pointer; font-size: 14px;
 }
 .custom-select:hover { border-color: #c0c4cc; }
+.custom-select.disabled { background: #f5f7fa; cursor: not-allowed; }
+.custom-select.disabled .selected-text { color: #909399; }
 .custom-select.open { border-color: #409eff; }
 .selected-text { color: #303133; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .placeholder { color: #c0c4cc; }

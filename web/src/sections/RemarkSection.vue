@@ -1,27 +1,49 @@
 <script setup lang="ts">
 import PanelHeader from '@/components/PanelHeader.vue'
 import { useReimbursementStore } from '@/stores/reimbursement'
+import { useConfirm } from '@/composables/useConfirm'
 
 const store = useReimbursementStore()
+const confirm = useConfirm()
 
 function onInput(val: string) {
   store.setRemark(val.slice(0, 1000))
+}
+
+/** 清空备注：需二次确认 */
+async function onClear() {
+  if (!store.remark) return
+  const ok = await confirm.confirm({
+    type: 'warning',
+    title: '确认清空',
+    text: '确定要清空备注内容吗？此操作不可撤销。',
+  })
+  if (ok) store.setRemark('')
 }
 </script>
 
 <template>
   <section class="panel" :class="{ collapsed: store.ui.collapsed.remark }">
-    <PanelHeader @toggle="store.togglePanel('remark')">备注</PanelHeader>
+    <PanelHeader @toggle="store.togglePanel('remark')">
+      <template #title>备注信息</template>
+      <template #extra>
+        <button v-if="store.remark" class="btn-text delete-remark-btn" @click.stop="onClear">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+          </svg>
+          删除备注
+        </button>
+      </template>
+    </PanelHeader>
     <div class="panel-body">
       <textarea
         class="remark-textarea"
         :value="store.remark"
         @input="onInput(($event.target as HTMLTextAreaElement).value)"
-        placeholder="请输入备注信息（不超过1000字）"
+        placeholder="请输入"
         maxlength="1000"
-        rows="4"
+        rows="5"
       />
-      <div class="remark-count">{{ store.remark.length }}/1000</div>
     </div>
   </section>
 </template>
@@ -33,5 +55,5 @@ function onInput(val: string) {
   line-height: 1.6; font-family: inherit;
 }
 .remark-textarea:focus { border-color: #409eff; outline: none; }
-.remark-count { text-align: right; color: #c0c4cc; font-size: 12px; margin-top: 4px; }
+.delete-remark-btn { color: #409eff; }
 </style>
