@@ -29,7 +29,7 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
     <div class="panel-body">
       <div class="form-row">
         <div class="form-field col-1">
-          <span class="form-label">报销标题<span class="req">*</span></span>
+          <span class="form-label">报销标题</span>
           <div class="form-control">
             <input
               type="text"
@@ -42,15 +42,15 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
       </div>
       <div class="form-row three-cols">
         <div class="form-field">
-          <span class="form-label">报销人<span class="req">*</span></span>
+          <span class="form-label">报销人</span>
           <BaseSelect v-model="store.basic.reimburser" :options="empOptions" />
         </div>
         <div class="form-field">
-          <span class="form-label">报销部门<span class="req">*</span></span>
+          <span class="form-label">报销部门</span>
           <BaseSelect v-model="store.basic.department" :options="deptOptions" />
         </div>
         <div class="form-field">
-          <span class="form-label">费用归属公司<span class="req">*</span></span>
+          <span class="form-label">费用归属公司</span>
           <BaseSelect v-model="store.basic.reimCompany" :options="compOptions" />
         </div>
       </div>
