@@ -27,7 +27,7 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
       <template #title>基础信息</template>
     </PanelHeader>
     <div class="panel-body">
-      <div class="form-row">
+      <div class="form-row right-align">
         <div class="form-field col-1">
           <span class="form-label">报销标题</span>
           <div class="form-control">
@@ -40,7 +40,7 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
           </div>
         </div>
       </div>
-      <div class="form-row three-cols">
+      <div class="form-row three-cols right-align">
         <div class="form-field">
           <span class="form-label">报销人</span>
           <BaseSelect v-model="store.basic.reimburser" :options="empOptions" />
@@ -54,7 +54,7 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
           <BaseSelect v-model="store.basic.reimCompany" :options="compOptions" />
         </div>
       </div>
-      <div class="form-row three-cols">
+      <div class="form-row three-cols right-align">
         <div class="form-field">
           <span class="form-label">业务类型<span class="req">*</span></span>
           <BusinessTypeSelect v-model="store.basic.businessType" />
@@ -62,7 +62,7 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
         <div class="form-field" style="flex: 0;"></div>
         <div class="form-field" style="flex: 0;"></div>
       </div>
-      <div class="form-row">
+      <div class="form-row right-align">
         <div class="form-field col-1">
           <span class="form-label">出差事由</span>
           <div class="form-control textarea">
@@ -80,6 +80,14 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
 </template>
 
 <style scoped>
+.right-align .form-field {
+  justify-content: flex-end;
+}
+.right-align .form-label {
+  justify-content: flex-end;
+  text-align: right;
+  padding-right: 12px;
+}
 .three-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
 .form-field.form-field-three {
   width: calc((100% - 20px * 2) / 3);
