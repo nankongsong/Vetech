@@ -139,10 +139,12 @@ function flatten(): Array<{ node: TreeNode; depth: number; parents: string[] }> 
 }
 .business-type-select input {
   flex: 1;
+  height: 100%;
   border: none;
   outline: none;
   font-size: 14px;
   color: #303133;
+  line-height: normal;
 }
 .business-type-select:hover { border-color: #c0c4cc; }
 .business-type-select.open { border-color: #409eff; }
