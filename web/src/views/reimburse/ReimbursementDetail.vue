@@ -183,7 +183,7 @@ const pageTitle = computed(() => {
 /* ===== Panel 面板 ===== */
 .panel {
   background: #fff; border: none; border-radius: 4px;
-  margin-bottom: 16px; overflow: hidden;
+  margin-bottom: 16px; overflow: visible;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 .panel.collapsed .panel-body { display: none; }

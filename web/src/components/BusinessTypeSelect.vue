@@ -154,7 +154,7 @@ function flatten(): Array<{ node: TreeNode; depth: number; parents: string[] }> 
   position: absolute; top: 100%; left: 0; right: 0; z-index: 1100;
   margin-top: 4px; background: #fff; border: 1px solid #e4e7ed;
   border-radius: 4px; box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-  max-height: 300px; overflow-y: auto;
+  max-height: 300px; overflow-y: scroll;
 }
 .opt {
   display: flex; align-items: center; padding: 6px 12px;
