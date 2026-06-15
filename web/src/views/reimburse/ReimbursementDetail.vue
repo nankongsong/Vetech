@@ -182,31 +182,33 @@ const pageTitle = computed(() => {
 <style>
 /* ===== Panel 面板 ===== */
 .panel {
-  background: #fff; border: 1px solid #ebeef5; border-radius: 4px;
-  margin-bottom: 12px; overflow: hidden;
+  background: #fff; border: none; border-radius: 4px;
+  margin-bottom: 16px; overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 .panel.collapsed .panel-body { display: none; }
-.panel.collapsed .toggle-icon { transform: rotate(0deg); }
-.panel-body { padding: 16px; }
+.panel.collapsed .panel-header .toggle-icon { transform: rotate(180deg); }
+.panel-body { padding: 20px 24px; }
 
 /* ===== 表格 ===== */
 .table {
-  width: 100%; border-collapse: collapse; font-size: 14px;
+  width: 100%; border-collapse: collapse; font-size: 13px;
 }
 .table th, .table td {
-  padding: 8px 10px; border: 1px solid #ebeef5; text-align: left;
+  padding: 10px 12px; border-bottom: 1px solid #ebeef5; text-align: left;
 }
-.table th { background: #f5f7fa; color: #606266; font-weight: 600; }
-.table td { color: #303133; }
+.table th { background: #fafafa; color: #606266; font-weight: 600; font-size: 13px; }
+.table td { color: #303133; font-size: 13px; }
 .table .col-index { width: 50px; text-align: center; }
 .table .col-action { width: 100px; text-align: center; }
 .table .right { text-align: right; }
 .table .no-data { text-align: center; color: #c0c4cc; padding: 24px 0; }
+.table tbody tr:hover { background: #f5f7fa; }
 
 /* ===== 操作图标 ===== */
 .op-icon {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 24px; height: 24px; cursor: pointer; color: #409eff;
+  width: 22px; height: 22px; cursor: pointer; color: #409eff;
   border-radius: 3px; margin: 0 2px;
 }
 .op-icon:hover { background: #ecf5ff; }
@@ -235,14 +237,14 @@ const pageTitle = computed(() => {
 
 /* ===== 表单行 ===== */
 .form-row {
-  display: flex; gap: 24px; margin-bottom: 14px;
+  display: flex; gap: 20px; margin-bottom: 16px;
 }
 .form-field {
   display: flex; align-items: center; flex: 1; min-width: 0;
 }
 .form-field.col-1 { flex: 1 1 100%; }
 .form-label {
-  width: 100px; flex-shrink: 0; font-size: 14px; color: #606266;
+  width: 90px; flex-shrink: 0; font-size: 13px; color: #606266;
   display: flex; align-items: center;
 }
 .form-label .req { color: #f56c6c; margin-left: 2px; }
@@ -253,9 +255,9 @@ const pageTitle = computed(() => {
 .form-control input[type="text"],
 .form-control input[type="date"],
 .form-control textarea {
-  width: 100%; height: 36px; padding: 0 10px;
+  width: 100%; height: 34px; padding: 0 10px;
   border: 1px solid #dcdfe6; border-radius: 4px;
-  font-size: 14px; box-sizing: border-box;
+  font-size: 13px; box-sizing: border-box;
 }
 .form-control input:focus,
 .form-control textarea:focus { border-color: #409eff; outline: none; }

@@ -112,22 +112,7 @@ const allocMatchSubsidy = computed(() => {
     <PanelHeader @toggle="store.togglePanel('allocation')">
       <template #title>费用归属及分摊</template>
       <template #extra>
-        <button class="btn-text" @click.stop="addRow">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-            <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/>
-          </svg>
-          新增分摊
-        </button>
-        <button
-          v-if="store.allocation.length > 1"
-          class="btn-text"
-          @click.stop="onEqualSplit"
-        >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-            <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/>
-          </svg>
-          均摊
-        </button>
+        <span class="alloc-sub-title">(分摊金额: {{ money(store.allocTotal) }})</span>
       </template>
     </PanelHeader>
     <div class="panel-body">
@@ -135,10 +120,10 @@ const allocMatchSubsidy = computed(() => {
         <thead>
           <tr>
             <th class="col-index">序号</th>
-            <th>费用归属公司</th>
+            <th>费用归属<span class="req">*</span></th>
             <th>项目</th>
-            <th class="right">分摊比例(%)</th>
-            <th class="right">分摊金额</th>
+            <th class="right">分摊比例<span class="req">*</span></th>
+            <th class="right">分摊金额<span class="req">*</span></th>
             <th class="col-action">操作</th>
           </tr>
         </thead>
@@ -164,15 +149,18 @@ const allocMatchSubsidy = computed(() => {
               />
             </td>
             <td class="right">
-              <input
-                type="number"
-                class="ratio-input"
-                min="0" max="100" step="0.01"
-                :value="ratioPercent(a.ratio)"
-                :disabled="idx === 0"
-                :class="{ 'ratio-locked': idx === 0 }"
-                @input="onRatioInput(idx, ($event.target as HTMLInputElement).value)"
-              />
+              <div class="ratio-cell">
+                <input
+                  type="number"
+                  class="ratio-input"
+                  min="0" max="100" step="0.01"
+                  :value="ratioPercent(a.ratio)"
+                  :disabled="idx === 0"
+                  :class="{ 'ratio-locked': idx === 0 }"
+                  @input="onRatioInput(idx, ($event.target as HTMLInputElement).value)"
+                />
+                <span class="ratio-unit">%</span>
+              </div>
             </td>
             <td class="right">{{ money(a.amount) }}</td>
             <td class="col-action">
@@ -190,15 +178,23 @@ const allocMatchSubsidy = computed(() => {
           </tr>
         </tbody>
         <tfoot>
-          <tr>
-            <td colspan="3" class="right"><strong>合计</strong></td>
+          <tr class="add-row-tr">
+            <td colspan="6" style="text-align: center; padding: 8px 0;">
+              <button class="btn-text add-row-btn" @click="addRow">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                  <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/>
+                </svg>
+                添加一行
+              </button>
+            </td>
+          </tr>
+          <tr class="summary-row">
+            <td colspan="3"><strong>合计</strong></td>
             <td class="right" :class="{ 'text-danger': !ratioValid }">
               <strong>{{ ratioSumPercent }}%</strong>
-              <span v-if="!ratioValid" class="invalid-hint">（比例合计须为100%）</span>
             </td>
             <td class="right" :class="{ 'text-danger': !allocMatchSubsidy }">
-              <strong>{{ money(store.allocTotal) }}</strong>
-              <span v-if="!allocMatchSubsidy" class="invalid-hint">（须等于补助总金额）</span>
+              <strong>CNY {{ money(store.allocTotal) }}</strong>
             </td>
             <td></td>
           </tr>
@@ -210,13 +206,28 @@ const allocMatchSubsidy = computed(() => {
 </template>
 
 <style scoped>
+.ratio-cell {
+  display: flex; align-items: center; justify-content: flex-end;
+}
 .ratio-input {
   width: 80px; height: 30px; text-align: right; padding: 0 6px;
   border: 1px solid #dcdfe6; border-radius: 3px; font-size: 14px;
 }
 .ratio-input:focus { border-color: #409eff; outline: none; }
 .ratio-input.ratio-locked { background: #f5f7fa; color: #909399; cursor: not-allowed; }
+.ratio-unit {
+  margin-left: 4px; font-size: 14px; color: #606266;
+}
 .text-danger { color: #f56c6c; }
 .invalid-hint { font-weight: 400; font-size: 12px; color: #f56c6c; margin-left: 4px; }
 .empty-hint { text-align: center; color: #c0c4cc; padding: 24px 0; font-size: 14px; }
+.alloc-sub-title {
+  font-size: 13px; color: #606266; font-weight: 400;
+}
+.add-row-btn { justify-content: center; margin: 0 auto; }
+.add-row-tr td { border-bottom: none !important; }
+.summary-row td {
+  background: #fdf6ec; font-size: 14px;
+  border-top: 1px solid #ebeef5;
+}
 </style>

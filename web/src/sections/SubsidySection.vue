@@ -50,7 +50,7 @@ function cityName(no: string) {
     <div class="panel-body">
       <div class="alert">
         <span class="icon">!</span>
-        <span class="text">1、请根据实际出差日期选择补助 2、出差期间当日有用餐安排的请自行核减当日餐补 3、出差期间当日有用车的，请自行核减当日交补</span>
+        <span class="text">1、请根据实际出差日期选择补助2、出差期间当日有用餐安排的请自行核减当日餐补3、出差期间当日有用车的，请自行核减当日交补</span>
       </div>
       <table class="table">
         <thead>

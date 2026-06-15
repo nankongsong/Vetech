@@ -87,25 +87,21 @@ const cityName = computed(() => (no: string) => {
           <tr>
             <th class="col-index">序号</th>
             <th>出行人员</th>
-            <th>出发城市</th>
-            <th>到达城市</th>
-            <th>出发日期</th>
-            <th>到达日期</th>
+            <th>出差日期</th>
+            <th>行程</th>
             <th>行程说明</th>
             <th class="col-action">操作</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="store.trips.length === 0">
-            <td colspan="8" class="no-data">暂无数据</td>
+            <td colspan="6" class="no-data">暂无数据</td>
           </tr>
           <tr v-for="(t, i) in store.trips" :key="t.id">
             <td class="col-index">{{ i + 1 }}</td>
             <td>{{ empLabel(t.reimburserId) }}</td>
-            <td>{{ cityName(t.startCity) }}</td>
-            <td>{{ cityName(t.endCity) }}</td>
-            <td>{{ t.startDate }}</td>
-            <td>{{ t.endDate }}</td>
+            <td class="date-range">{{ t.startDate }} 至 {{ t.endDate }}</td>
+            <td>{{ cityName(t.startCity) }}-{{ cityName(t.endCity) }}</td>
             <td>{{ t.description }}</td>
             <td class="col-action">
               <span class="op-icon danger" @click="onDelete(t)" title="删除">
@@ -125,3 +121,7 @@ const cityName = computed(() => (no: string) => {
     <TripModal v-model="modalVisible" :mode="modalMode" :data="modalData" :exclude-id="modalExcludeId" @save="onSave" />
   </section>
 </template>
+
+<style scoped>
+.date-range { white-space: nowrap; }
+</style>
