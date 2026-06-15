@@ -54,11 +54,13 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
           <BaseSelect v-model="store.basic.reimCompany" :options="compOptions" />
         </div>
       </div>
-      <div class="form-row">
-        <div class="form-field form-field-three">
+      <div class="form-row three-cols">
+        <div class="form-field">
           <span class="form-label">业务类型<span class="req">*</span></span>
           <BusinessTypeSelect v-model="store.basic.businessType" />
         </div>
+        <div class="form-field" style="flex: 0;"></div>
+        <div class="form-field" style="flex: 0;"></div>
       </div>
       <div class="form-row">
         <div class="form-field col-1">

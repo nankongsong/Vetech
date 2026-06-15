@@ -41,7 +41,7 @@ function buildTree(list: any[]): TreeNode[] {
   return roots
 }
 
-function toggle(e: MouseEvent) {
+function onToggleClick(e: MouseEvent) {
   e.stopPropagation()
   open.value = !open.value
 }
@@ -54,14 +54,6 @@ function onPick(node: TreeNode) {
     open.value = false
   }
 }
-
-function onDocClick(e: MouseEvent) {
-  if (!wrap.value) return
-  if (!wrap.value.contains(e.target as Node)) open.value = false
-}
-
-onMounted(() => document.addEventListener('click', onDocClick))
-onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 
 const displayValue = computed(() => {
   const f = store.businessTypes.find(o => o.businessTypeId === props.modelValue)
@@ -92,14 +84,14 @@ function flatten(): Array<{ node: TreeNode; depth: number; parents: string[] }> 
 
 <template>
   <div ref="wrap" class="business-type-select-wrapper" :class="{ open }">
-    <div class="business-type-select" @click="toggle" tabindex="0">
+    <div class="business-type-select" @click.stop="onToggleClick" tabindex="0">
       <input type="text" readonly :value="displayValue" :placeholder="placeholder || '请选择'"
              style="cursor: pointer; background: transparent;" />
       <span class="arrow">
         <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
       </span>
     </div>
-    <div class="select-options">
+    <div v-if="open" class="select-options">
       <template v-for="(item, idx) in flatten()" :key="item.node.businessTypeId + '-' + idx">
         <div v-if="isVisible(item.node, item.parents)"
              class="opt"
