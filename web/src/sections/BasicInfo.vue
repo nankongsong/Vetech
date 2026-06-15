@@ -50,7 +50,7 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
           <BaseSelect v-model="store.basic.department" :options="deptOptions" />
         </div>
         <div class="form-field">
-          <span class="form-label">费用归属公司</span>
+          <span class="form-label">费用归属公司<span class="req">*</span></span>
           <BaseSelect v-model="store.basic.reimCompany" :options="compOptions" />
         </div>
       </div>
