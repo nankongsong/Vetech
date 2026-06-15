@@ -55,7 +55,7 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
         </div>
       </div>
       <div class="form-row">
-        <div class="form-field">
+        <div class="form-field form-field-three">
           <span class="form-label">业务类型<span class="req">*</span></span>
           <BusinessTypeSelect v-model="store.basic.businessType" />
         </div>
@@ -78,5 +78,10 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
 </template>
 
 <style scoped>
-.three-cols .form-field { flex: 1; min-width: 0; }
+.three-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.form-field.form-field-three {
+  width: calc((100% - 20px * 2) / 3);
+  flex: 0 0 calc((100% - 20px * 2) / 3);
+  min-width: 0;
+}
 </style>
