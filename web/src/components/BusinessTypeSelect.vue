@@ -25,6 +25,11 @@ const wrap = ref<HTMLElement | null>(null)
 const open = ref(false)
 const collapsedMap = ref<Record<string, boolean>>({})
 
+function isExpanded(id: string): boolean {
+  // 默认不展开（返回 false），点击后设为 true 才展开
+  return !!collapsedMap.value[id]
+}
+
 const tree = computed<TreeNode[]>(() => buildTree(store.businessTypes))
 
 function buildTree(list: any[]): TreeNode[] {
@@ -62,7 +67,7 @@ const displayValue = computed(() => {
 
 function isVisible(node: TreeNode, parentChain: string[]): boolean {
   for (const p of parentChain) {
-    if (collapsedMap.value[p]) return false
+    if (!isExpanded(p)) return false
   }
   return true
 }
