@@ -55,7 +55,7 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
         </div>
       </div>
       <div class="form-row">
-        <div class="form-field col-1">
+        <div class="form-field">
           <span class="form-label">业务类型<span class="req">*</span></span>
           <BusinessTypeSelect v-model="store.basic.businessType" />
         </div>

@@ -41,7 +41,10 @@ function buildTree(list: any[]): TreeNode[] {
   return roots
 }
 
-function toggle() { open.value = !open.value }
+function toggle(e: MouseEvent) {
+  e.stopPropagation()
+  open.value = !open.value
+}
 
 function onPick(node: TreeNode) {
   if (node.thereSubordinateNode === '1') {
@@ -88,8 +91,8 @@ function flatten(): Array<{ node: TreeNode; depth: number; parents: string[] }> 
 </script>
 
 <template>
-  <div ref="wrap" class="select-wrap" :class="{ open }">
-    <div class="form-control" @click="toggle" tabindex="0">
+  <div ref="wrap" class="business-type-select-wrapper" :class="{ open }">
+    <div class="business-type-select" @click="toggle" tabindex="0">
       <input type="text" readonly :value="displayValue" :placeholder="placeholder || '请选择'"
              style="cursor: pointer; background: transparent;" />
       <span class="arrow">
@@ -122,101 +125,48 @@ function flatten(): Array<{ node: TreeNode; depth: number; parents: string[] }> 
 </template>
 
 <style scoped>
-.select-wrap {
+.business-type-select-wrapper {
   position: relative;
   flex: 1;
   min-width: 0;
 }
-.form-control {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 36px;
-  padding: 0 10px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  background: #fff;
-  cursor: pointer;
+.business-type-select {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 36px; padding: 0 10px;
+  border: 1px solid #dcdfe6; border-radius: 4px;
+  background: #fff; cursor: pointer; font-size: 14px;
 }
-.form-control input {
+.business-type-select input {
   flex: 1;
   border: none;
   outline: none;
   font-size: 14px;
   color: #303133;
 }
-.form-control:hover {
-  border-color: #c0c4cc;
-}
-.form-control.open {
-  border-color: #409eff;
-}
-.arrow {
-  color: #c0c4cc;
-  transition: transform 0.2s;
-}
-.form-control.open .arrow {
-  transform: rotate(180deg);
-}
+.business-type-select:hover { border-color: #c0c4cc; }
+.business-type-select.open { border-color: #409eff; }
+.arrow { color: #c0c4cc; flex-shrink: 0; transition: transform 0.2s; }
+.business-type-select.open .arrow { transform: rotate(180deg); }
 .select-options {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 1100;
-  margin-top: 4px;
-  background: #fff;
-  border: 1px solid #e4e7ed;
-  border-radius: 4px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-  max-height: 300px;
-  overflow-y: auto;
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 1100;
+  margin-top: 4px; background: #fff; border: 1px solid #e4e7ed;
+  border-radius: 4px; box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  max-height: 300px; overflow-y: auto;
 }
 .opt {
-  display: flex;
-  align-items: center;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-size: 14px;
-  color: #303133;
+  display: flex; align-items: center; padding: 6px 12px;
+  cursor: pointer; font-size: 14px; color: #303133;
 }
-.opt:hover {
-  background: #f5f7fa;
-}
-.opt.selected {
-  background: #ecf5ff;
-  color: #409eff;
-}
-.opt-group {
-  font-weight: 600;
-  background: #fafafa;
-  color: #606266;
-}
-.opt-child {
-  padding-left: 30px;
-}
-.opt-subchild {
-  padding-left: 50px;
-}
+.opt:hover { background: #f5f7fa; }
+.opt.selected { background: #ecf5ff; color: #409eff; }
+.opt-group { font-weight: 600; background: #fafafa; color: #606266; }
+.opt-child { padding-left: 30px; }
+.opt-subchild { padding-left: 50px; }
 .expand-icon {
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #909399;
-  margin-right: 4px;
-  flex-shrink: 0;
-  transition: transform 0.2s;
+  width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
+  color: #909399; margin-right: 4px; flex-shrink: 0; transition: transform 0.2s;
 }
-.expand-icon.expanded {
-  transform: rotate(90deg);
-}
-.expand-icon.placeholder {
-  visibility: hidden;
-}
-.opt-text {
-  flex: 1;
-}
+.expand-icon.expanded { transform: rotate(90deg); }
+.expand-icon.placeholder { visibility: hidden; }
+.opt-text { flex: 1; }
 </style>
