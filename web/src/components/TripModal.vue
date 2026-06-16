@@ -130,13 +130,13 @@ async function onSave() {
       <div class="form-field has-req">
         <span class="form-label">出发城市</span><span class="form-req">*</span>
         <div class="form-control ctrl-short">
-          <BaseSelect v-model="startCity" :options="cityOptions" />
+          <BaseSelect v-model="startCity" :options="cityOptions" icon-type="x" />
         </div>
       </div>
       <div class="form-field has-req">
         <span class="form-label">到达城市</span><span class="form-req">*</span>
         <div class="form-control ctrl-short">
-          <BaseSelect v-model="endCity" :options="cityOptions" />
+          <BaseSelect v-model="endCity" :options="cityOptions" icon-type="x" />
         </div>
       </div>
       <div class="form-field has-req">
