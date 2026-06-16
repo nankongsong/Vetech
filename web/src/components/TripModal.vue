@@ -114,7 +114,7 @@ async function onSave() {
 
 <template>
   <BaseModal :model-value="props.modelValue" @update:model-value="emit('update:modelValue', $event)"
-             :title="titleMap[props.mode || 'add']">
+             :title="titleMap[props.mode || 'add']" width="640px">
     <div class="alert trip-alert">
       <span class="icon">!</span>
       <span class="text">仅可补录未从申请单带入或未产生费用的行程信息<br />跨天跨城行程填写说明：出发城市-到达城市：武汉-北京；出发日期-到达日期：1号-5号；1号~5号补助按北京匹配；</span>
@@ -122,19 +122,25 @@ async function onSave() {
 
     <div class="modal-form-row">
       <span class="form-label">出行人<span class="req">*</span></span>
-      <BaseSelect v-model="reimburserId" :options="empOptions" />
+      <div class="form-control ctrl-short">
+        <BaseSelect v-model="reimburserId" :options="empOptions" />
+      </div>
     </div>
     <div class="modal-form-row">
       <span class="form-label">出发城市<span class="req">*</span></span>
-      <BaseSelect v-model="startCity" :options="cityOptions" />
+      <div class="form-control ctrl-short">
+        <BaseSelect v-model="startCity" :options="cityOptions" />
+      </div>
     </div>
     <div class="modal-form-row">
       <span class="form-label">到达城市<span class="req">*</span></span>
-      <BaseSelect v-model="endCity" :options="cityOptions" />
+      <div class="form-control ctrl-short">
+        <BaseSelect v-model="endCity" :options="cityOptions" />
+      </div>
     </div>
     <div class="modal-form-row">
       <span class="form-label">出发到达日期<span class="req">*</span></span>
-      <div class="form-control date-range-control" @click="onDateRangeClick">
+      <div class="form-control date-range-control ctrl-medium" @click="onDateRangeClick">
         <svg class="clock-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm-.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
         </svg>
@@ -145,7 +151,7 @@ async function onSave() {
     </div>
     <div class="modal-form-row">
       <span class="form-label">行程说明<span class="req">*</span></span>
-      <div class="form-control textarea" style="max-width: 560px;">
+      <div class="form-control textarea ctrl-long">
         <textarea rows="3" maxlength="500" v-model="description" placeholder="请输入"></textarea>
       </div>
     </div>
@@ -205,5 +211,16 @@ async function onSave() {
   opacity: 0;
   pointer-events: none;
   position: absolute;
+}
+
+/* 不同输入框宽度：三个等长 < 日期 < 行程说明 */
+.ctrl-short {
+  max-width: 240px;
+}
+.ctrl-medium {
+  max-width: 340px;
+}
+.ctrl-long {
+  max-width: 520px;
 }
 </style>
