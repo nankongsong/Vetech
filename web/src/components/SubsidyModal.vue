@@ -143,10 +143,6 @@ async function onSave() {
             <span class="info-label">出差类型</span>
             <span class="biz-type">{{ props.businessTypeName || '-' }}</span>
           </div>
-          <div class="card-row">
-            <span class="info-label">出行人</span>
-            <span class="info-value">{{ emp ? emp.reimburserName : '-' }}</span>
-          </div>
         </div>
 
         <!-- Card 2: 日期 + 时间轴 -->
@@ -285,7 +281,6 @@ async function onSave() {
 
 /* 卡片化分区 */
 .left-card {
-  background: #f7f8fa;
   border-radius: 6px;
   padding: 14px 16px;
   display: flex;
@@ -422,7 +417,7 @@ async function onSave() {
   justify-content: flex-end;
   gap: 6px;
   margin-bottom: 12px;
-  padding: 8px 0;
+  padding: 14px 0 8px 0;
 }
 .table-title {
   font-size: 15px;
