@@ -168,7 +168,8 @@ async function onSave() {
 <style scoped>
 .trip-alert {
   margin-bottom: 16px;
-  max-width: 680px;
+  max-width: 700px;
+  font-size: 14px;
 }
 .trip-alert .text {
   color: #303133;
