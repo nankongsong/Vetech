@@ -142,8 +142,10 @@ async function onSave() {
       <div class="form-field has-req">
         <span class="form-label">出发到达日期</span><span class="form-req">*</span>
         <div class="form-control ctrl-medium date-range-control" @click="onDateRangeClick">
-          <svg class="clock-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm-.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
+          <svg class="clock-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <circle cx="12" cy="12" r="9"/>
+            <line x1="12" y1="12" x2="12" y2="7"/>
+            <line x1="12" y1="12" x2="17" y2="12"/>
           </svg>
           <span class="range-text" :class="{ placeholder: !displayRange }">{{ displayRange || '请选择日期时间' }}</span>
           <input type="date" class="modal-trip-start" v-model="startDate" @change="onStartChange" />
@@ -197,7 +199,7 @@ async function onSave() {
 }
 .clock-icon {
   flex-shrink: 0;
-  color: #909399;
+  color: #c2c5cb;
 }
 .range-text {
   flex: 1;
