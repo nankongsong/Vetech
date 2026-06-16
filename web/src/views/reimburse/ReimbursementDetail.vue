@@ -6,7 +6,7 @@
  *   edit  — 编辑已有报销单（路由 /reimburse/:id/edit）
  *   push  — 手工推送确认页（路由 /reimburse/:id/push?mode=push）
  */
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useReimbursementStore } from '@/stores/reimbursement'
 import { fetchReimDetail } from '@/api/service'
@@ -33,6 +33,9 @@ const isEdit = ref(false)
 const isPush = ref(false)
 
 onMounted(async () => {
+  // 重置表单状态（确保从其他页面跳转时不会有旧数据残留）
+  store.resetForNewForm()
+
   await store.loadBaseData()
 
   const idParam = route.params.id
@@ -45,6 +48,29 @@ onMounted(async () => {
     isPush.value = true
   }
 })
+
+// 监听路由参数变化（组件复用时重新加载数据）
+watch(
+  () => route.params.id,
+  async (newId, oldId) => {
+    if (newId === oldId) return
+
+    // 重置 store 状态
+    store.resetForNewForm()
+    isPush.value = false
+
+    if (newId) {
+      isEdit.value = true
+      await loadDetail(Number(newId))
+    } else {
+      isEdit.value = false
+    }
+
+    if (route.query.mode === 'push') {
+      isPush.value = true
+    }
+  }
+)
 
 /** 加载已有报销单详情并映射到 store */
 async function loadDetail(id: number) {

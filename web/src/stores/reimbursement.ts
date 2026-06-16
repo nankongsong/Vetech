@@ -233,6 +233,25 @@ export const useReimbursementStore = defineStore('reimbursement', {
       this.remark = text
     },
 
+    /** 重置表单状态（进入新增/编辑新报销单前调用） */
+    resetForNewForm() {
+      this.basic = {
+        title: '',
+        reimburser: '',
+        department: '',
+        reimCompany: '',
+        businessType: '',
+        reason: ''
+      }
+      this.trips = []
+      this.subsidies = []
+      this.allocation = [
+        { id: 'a_1', company: '', project: '', ratio: 1.0, amount: 0 }
+      ]
+      this.remark = ''
+      this.meta = { title: '差旅费用报销单', submitDate: '' }
+    },
+
     togglePanel(key: string) {
       this.ui.collapsed[key] = !this.ui.collapsed[key]
     },
