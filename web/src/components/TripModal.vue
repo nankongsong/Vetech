@@ -173,6 +173,8 @@ async function onSave() {
   margin-right: auto;
   font-size: 14px;
   padding-left: 15px;
+  background: #fdfbe3;
+  border-color: #fdfbe3;
 }
 .trip-alert .text {
   color: #303133;
