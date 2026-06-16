@@ -444,8 +444,12 @@ async function onSave() {
   font-weight: 600;
   color: #333;
   border-bottom: 1px solid #e8e8e8;
+  border-right: 1px solid #e8e8e8;
   white-space: nowrap;
   background: #fafafa;
+}
+.subsidy-table th:last-child {
+  border-right: none;
 }
 .subsidy-table th .custom-checkbox {
   margin-right: 4px;
@@ -455,8 +459,12 @@ async function onSave() {
   padding: 10px 8px;
   color: #333;
   border-bottom: 1px solid #f0f0f0;
+  border-right: 1px solid #f0f0f0;
   vertical-align: middle;
   text-align: center;
+}
+.subsidy-table td:last-child {
+  border-right: none;
 }
 .subsidy-table tbody tr:hover {
   background: #f5f7fa;
