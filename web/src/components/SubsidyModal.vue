@@ -133,7 +133,7 @@ async function onSave() {
 
 <template>
   <BaseModal :model-value="props.modelValue" @update:model-value="emit('update:modelValue', $event)"
-             title="补助日历" width="960px">
+             title="补助日历" width="1280px">
     <div class="subsidy-layout">
       <!-- ===== 左侧信息面板 ===== -->
       <div class="left-panel">
@@ -149,11 +149,11 @@ async function onSave() {
 
         <div class="info-row">
           <span class="info-label">开始日期</span>
-          <input type="text" class="date-display" :value="props.subsidy.startDate" readonly />
+          <span class="date-text">{{ props.subsidy.startDate }}</span>
         </div>
         <div class="info-row">
           <span class="info-label">结束日期</span>
-          <input type="text" class="date-display" :value="props.subsidy.endDate" readonly />
+          <span class="date-text">{{ props.subsidy.endDate }}</span>
         </div>
 
         <div class="trip-bar">
@@ -217,7 +217,7 @@ async function onSave() {
                 <span class="custom-checkbox" :class="{ checked: checkAllRow(idx) }" @click="toggleRow(idx)"></span>
               </td>
               <td class="col-date">
-                {{ r.date.slice(5) }}<span class="week">星期{{ weekdayCn(r.date) }}</span>
+                {{ r.date.slice(5) }} 星期{{ weekdayCn(r.date) }}
               </td>
               <td class="col-city">{{ subsidyCity ? subsidyCity.cityName : '-' }}</td>
               <td class="col-amt" :class="{ disabled: !r.meal.checked }">
@@ -278,28 +278,20 @@ async function onSave() {
   width: 64px;
   flex-shrink: 0;
   font-size: 14px;
-  color: #303133;
+  color: #666;
 }
 .info-value {
   font-size: 14px;
-  color: #303133;
+  color: #333;
 }
 .biz-type {
   font-size: 14px;
   color: #FF6600;
 }
 
-.date-display {
-  width: 140px;
-  height: 30px;
-  padding: 0 8px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
+.date-text {
   font-size: 14px;
-  color: #303133;
-  background: #fff;
-  cursor: default;
-  outline: none;
+  color: #333;
 }
 
 /* 蓝色行程条 */
@@ -307,11 +299,11 @@ async function onSave() {
   display: flex;
   align-items: center;
   gap: 4px;
-  background: #4A90D9;
+  background: #409EFF;
   color: #fff;
   font-size: 14px;
   padding: 8px 14px;
-  border-radius: 6px;
+  border-radius: 4px;
 }
 .trip-label {
   flex-shrink: 0;
@@ -333,10 +325,10 @@ async function onSave() {
   font-size: 14px;
 }
 .summary-label {
-  color: #303133;
+  color: #333;
 }
 .summary-amount {
-  color: #303133;
+  color: #999;
   font-variant-numeric: tabular-nums;
 }
 .summary-amount.orange {
@@ -359,7 +351,7 @@ async function onSave() {
 }
 .select-all-text {
   font-size: 14px;
-  color: #303133;
+  color: #333;
   user-select: none;
 }
 
@@ -370,11 +362,11 @@ async function onSave() {
   font-size: 14px;
 }
 .subsidy-table th {
-  text-align: left;
-  padding: 6px 8px;
+  text-align: center;
+  padding: 8px 6px;
   font-weight: 600;
-  color: #303133;
-  border-bottom: 1px solid #ebeef5;
+  color: #333;
+  border-bottom: 1px solid #e8e8e8;
   white-space: nowrap;
 }
 .subsidy-table th .custom-checkbox {
@@ -383,9 +375,10 @@ async function onSave() {
 }
 .subsidy-table td {
   padding: 8px 8px;
-  color: #303133;
+  color: #333;
   border-bottom: 1px solid #f0f0f0;
-  vertical-align: top;
+  vertical-align: middle;
+  text-align: center;
 }
 .subsidy-table tbody tr:hover {
   background: #fafafa;
@@ -398,11 +391,6 @@ async function onSave() {
 .col-date {
   white-space: nowrap;
   min-width: 80px;
-}
-.col-date .week {
-  color: #909399;
-  font-size: 12px;
-  margin-left: 4px;
 }
 .col-city {
   white-space: nowrap;
