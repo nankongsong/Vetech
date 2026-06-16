@@ -133,36 +133,51 @@ async function onSave() {
 
 <template>
   <BaseModal :model-value="props.modelValue" @update:model-value="emit('update:modelValue', $event)"
-             title="补助日历" width="1280px">
+             title="补助日历" width="1200px">
     <div class="subsidy-layout">
       <!-- ===== 左侧信息面板 ===== -->
       <div class="left-panel">
-        <div class="info-row">
-          <span class="info-label">出差类型</span>
-          <span class="biz-type">{{ props.businessTypeName || '-' }}</span>
+        <!-- Card 1: 基础信息 -->
+        <div class="left-card">
+          <div class="card-row">
+            <span class="info-label">出差类型</span>
+            <span class="biz-type">{{ props.businessTypeName || '-' }}</span>
+          </div>
+          <div class="card-row">
+            <span class="info-label">出行人</span>
+            <span class="info-value">{{ emp ? emp.reimburserName : '-' }}</span>
+          </div>
         </div>
 
-        <div class="info-row">
-          <span class="info-label">出行人</span>
-          <span class="info-value">{{ emp ? emp.reimburserName : '-' }}</span>
+        <!-- Card 2: 日期 + 时间轴 -->
+        <div class="left-card date-card">
+          <div class="timeline">
+            <div class="tl-node-start">
+              <div class="tl-dot"></div>
+              <div class="tl-label">开始日期</div>
+              <div class="tl-date">{{ props.subsidy.startDate }}</div>
+            </div>
+
+            <div class="tl-line">
+              <div class="tl-active">
+                <div class="trip-bar">
+                  <span>行程天数</span>
+                  <span>{{ trip }}</span>
+                  <strong>{{ props.subsidy.days }}天</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="tl-node-end">
+              <div class="tl-dot"></div>
+              <div class="tl-label">结束日期</div>
+              <div class="tl-date">{{ props.subsidy.endDate }}</div>
+            </div>
+          </div>
         </div>
 
-        <div class="info-row">
-          <span class="info-label">开始日期</span>
-          <span class="date-text">{{ props.subsidy.startDate }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">结束日期</span>
-          <span class="date-text">{{ props.subsidy.endDate }}</span>
-        </div>
-
-        <div class="trip-bar">
-          <span class="trip-label">行程天数</span>
-          <span>{{ trip }}</span>
-          <span class="trip-days"> {{ props.subsidy.days }}天</span>
-        </div>
-
-        <div class="summary">
+        <!-- Card 3: 金额汇总 -->
+        <div class="left-card">
           <div class="summary-row">
             <span class="summary-label">补助金额</span>
             <span class="summary-amount orange">CNY {{ money(sumActual()) }}</span>
@@ -247,7 +262,7 @@ async function onSave() {
 
     <template #footer>
       <button class="btn btn-default" @click="close">取消</button>
-      <button class="btn btn-primary" @click="onSave">保存</button>
+      <button class="btn btn-primary" @click="onSave">确定</button>
     </template>
   </BaseModal>
 </template>
@@ -257,24 +272,32 @@ async function onSave() {
 .subsidy-layout {
   display: flex;
   gap: 0;
-  min-height: 300px;
 }
 
 /* ===== 左侧面板 ===== */
 .left-panel {
-  width: 300px;
+  width: 340px;
   flex-shrink: 0;
-  border-right: 1px solid #ebeef5;
-  padding-right: 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
-.info-row {
+/* 卡片化分区 */
+.left-card {
+  background: #f7f8fa;
+  border-radius: 6px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card-row {
   display: flex;
   align-items: center;
 }
+
 .info-label {
   width: 64px;
   flex-shrink: 0;
@@ -287,43 +310,93 @@ async function onSave() {
 }
 .biz-type {
   font-size: 14px;
-  color: #FF6600;
+  color: #E6A23C;
 }
 
-.date-text {
+/* ===== 时间轴 ===== */
+.date-card {
+  padding: 0;
+  background: #fff;
+  border: 1px solid #ebeef5;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.tl-node-start,
+.tl-node-end {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+}
+
+.tl-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #409EFF;
+  flex-shrink: 0;
+}
+
+.tl-label {
+  font-size: 14px;
+  color: #666;
+  width: 64px;
+  flex-shrink: 0;
+}
+.tl-date {
   font-size: 14px;
   color: #333;
+}
+
+.tl-line {
+  position: relative;
+  padding-left: 37px;
+  padding-right: 16px;
+}
+
+.tl-line::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #dcdfe6;
+}
+
+.tl-active {
+  position: relative;
+  z-index: 1;
+  padding: 4px 0;
 }
 
 /* 蓝色行程条 */
 .trip-bar {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   background: #409EFF;
   color: #fff;
   font-size: 14px;
-  padding: 8px 14px;
-  border-radius: 4px;
+  padding: 10px 14px;
+  border-radius: 6px;
 }
-.trip-label {
-  flex-shrink: 0;
-}
-.trip-days {
-  font-weight: 700;
+.trip-bar strong {
+  font-size: 16px;
 }
 
-/* 金额汇总 */
-.summary {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
+/* ===== 金额汇总 ===== */
 .summary-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 14px;
+  padding: 2px 0;
 }
 .summary-label {
   color: #333;
@@ -333,15 +406,14 @@ async function onSave() {
   font-variant-numeric: tabular-nums;
 }
 .summary-amount.orange {
-  color: #FF6600;
+  color: #E6A23C;
 }
 
 /* ===== 右侧表格面板 ===== */
 .right-table-panel {
   flex: 1;
-  padding-left: 20px;
+  padding-left: 14px;
   min-width: 0;
-  overflow-x: auto;
 }
 
 .select-all-row {
@@ -349,10 +421,11 @@ async function onSave() {
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  padding: 8px 0;
 }
 .table-title {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: #333;
   margin-right: auto;
@@ -376,52 +449,52 @@ async function onSave() {
   color: #333;
   border-bottom: 1px solid #e8e8e8;
   white-space: nowrap;
+  background: #fafafa;
 }
 .subsidy-table th .custom-checkbox {
   margin-right: 4px;
   vertical-align: middle;
 }
 .subsidy-table td {
-  padding: 8px 8px;
+  padding: 10px 8px;
   color: #333;
   border-bottom: 1px solid #f0f0f0;
   vertical-align: middle;
   text-align: center;
 }
 .subsidy-table tbody tr:hover {
-  background: #fafafa;
+  background: #f5f7fa;
 }
 
 .col-index {
-  width: 32px;
-  text-align: center;
+  width: 30px;
 }
 .col-date {
   white-space: nowrap;
-  min-width: 80px;
+  min-width: 100px;
 }
 .col-city {
   white-space: nowrap;
-  min-width: 70px;
+  min-width: 80px;
 }
 .col-amt {
-  min-width: 120px;
+  min-width: 130px;
 }
 .col-amt.disabled {
-  opacity: 0.5;
+  opacity: 0.45;
 }
 .col-amt .std {
   display: block;
   font-size: 12px;
   color: #c0c4cc;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
   white-space: nowrap;
 }
 .col-amt .amt-input {
-  width: 80px;
-  height: 28px;
+  width: 88px;
+  height: 30px;
   text-align: right;
-  padding: 0 6px;
+  padding: 0 8px;
   border: 1px solid #dcdfe6;
   border-radius: 3px;
   font-size: 14px;
