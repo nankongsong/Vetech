@@ -181,6 +181,7 @@ async function onSave() {
       <!-- ===== 右侧补助表格 ===== -->
       <div class="right-table-panel">
         <div class="select-all-row">
+          <span class="table-title">出差补助</span>
           <span class="custom-checkbox" :class="{ checked: allChecked, partial }" @click="toggleAll"></span>
           <span class="select-all-text">全选</span>
         </div>
@@ -346,8 +347,15 @@ async function onSave() {
 .select-all-row {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 6px;
   margin-bottom: 10px;
+}
+.table-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-right: auto;
 }
 .select-all-text {
   font-size: 14px;
