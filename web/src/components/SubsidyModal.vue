@@ -132,7 +132,7 @@ async function onSave() {
 
 <template>
   <BaseModal :model-value="props.modelValue" @update:model-value="emit('update:modelValue', $event)"
-             title="补助日历" width="1200px">
+             title="补助日历" fullscreen>
     <div class="subsidy-layout">
       <!-- ===== 左侧信息面板 ===== -->
       <div class="left-panel">
@@ -172,7 +172,7 @@ async function onSave() {
         </div>
 
         <!-- Card 3: 金额汇总 -->
-        <div class="left-card">
+        <div class="left-card summary-card">
           <div class="summary-row">
             <span class="summary-label">补助金额</span>
             <span class="summary-amount orange">CNY {{ money(sumActual()) }}</span>
@@ -266,11 +266,11 @@ async function onSave() {
 .subsidy-layout {
   display: flex;
   gap: 0;
+  height: 100%;
 }
-
 /* ===== 左侧面板 ===== */
 .left-panel {
-  width: 340px;
+  width: 250px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -312,6 +312,7 @@ async function onSave() {
   margin-top: -8px;
   background: #fff;
   border: 1px solid #ebeef5;
+  border-radius: 0;
 }
 
 .timeline {
@@ -401,6 +402,11 @@ async function onSave() {
 }
 .summary-amount.orange {
   color: #E6A23C;
+}
+.summary-card {
+  border: 1px solid #ebeef5;
+  border-radius: 0;
+  flex: 0.9;
 }
 
 /* ===== 右侧表格面板 ===== */
