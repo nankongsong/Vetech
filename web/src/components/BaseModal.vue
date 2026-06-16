@@ -3,6 +3,7 @@ defineProps<{
   modelValue: boolean
   title: string
   large?: boolean
+  width?: string
 }>()
 
 defineEmits<{
@@ -13,7 +14,7 @@ defineEmits<{
 <template>
   <Teleport to="body">
     <div v-if="modelValue" class="modal-overlay" @click.self="$emit('update:modelValue', false)">
-      <div class="modal-card" :class="{ 'modal-large': large }">
+      <div class="modal-card" :class="{ 'modal-large': large }" :style="width ? { width } : undefined">
         <div class="modal-header">
           <span class="modal-title">{{ title }}</span>
           <button class="modal-close" @click="$emit('update:modelValue', false)">

@@ -33,7 +33,6 @@ export function getStatusLabel(value: number): string {
 export function getRowActions(status: number, isAllRequiredFilled: boolean = false) {
   const isDraft = status === 0       // 草稿
   const isDone = status === 1        // 已完成
-  const isVoided = status === 2      // 已作废
 
   return {
     // 提交/查看：草稿且必填项完成时可提交；仅已完成可查看；已作废完全禁用

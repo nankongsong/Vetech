@@ -167,7 +167,7 @@ const pageTitle = computed(() => {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 20px; background: #fff; border-bottom: 1px solid #ebeef5;
 }
-.page-nav-title { font-size: 16px; font-weight: 600; color: #303133; }
+.page-nav-title { font-size: 20px; font-weight: 700; color: #303133; }
 .page-nav-back {
   display: flex; align-items: center; gap: 4px;
   font-size: 14px; color: #409eff; cursor: pointer;

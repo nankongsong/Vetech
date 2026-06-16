@@ -48,8 +48,8 @@ watch(
       description.value = props.data?.description || ''
       nextTick(() => {
         const today = fmtDate(new Date())
-        const inps = document.querySelectorAll<HTMLInputElement>('.modal-mask input[type="date"]')
-        inps.forEach(i => (i.max = today))
+        document.querySelector<HTMLInputElement>('.modal-trip-start')?.setAttribute('max', today)
+        document.querySelector<HTMLInputElement>('.modal-trip-end')?.setAttribute('max', today)
       })
     }
   },
@@ -57,7 +57,7 @@ watch(
 )
 
 const empOptions = computed(() =>
-  store.employees.map(e => ({ id: e.reimburserId, name: `${e.reimburserName}/${e.reimburserNo}` }))
+  store.employees.map(e => ({ id: e.reimburserId, name: e.reimburserName }))
 )
 const cityOptions = computed(() =>
   store.cities.map(c => ({ id: c.cityNo, name: c.cityName }))
@@ -65,6 +65,27 @@ const cityOptions = computed(() =>
 
 function close() { emit('update:modelValue', false) }
 
+const displayRange = computed(() => {
+  const s = startDate.value
+  const e = endDate.value
+  if (!s && !e) return ''
+  if (s && e) return `${s} 00:00:00      -   ${e} 00:00:00`
+  if (s) return `${s} 00:00:00      -   ?`
+  return `?      -   ${e} 00:00:00`
+})
+
+function onDateRangeClick() {
+  const el = document.querySelector<HTMLInputElement>('.modal-trip-start')
+  el?.showPicker()
+}
+function onStartChange() {
+  if (startDate.value) {
+    nextTick(() => {
+      const el = document.querySelector<HTMLInputElement>('.modal-trip-end')
+      el?.showPicker()
+    })
+  }
+}
 async function onSave() {
   const data: Omit<Trip, 'id'> = {
     reimburserId: reimburserId.value,
@@ -93,41 +114,49 @@ async function onSave() {
 
 <template>
   <BaseModal :model-value="props.modelValue" @update:model-value="emit('update:modelValue', $event)"
-             :title="titleMap[props.mode || 'add']">
-    <div class="tip-box">
-      <b>提示：</b>仅可补录未从申请单带入或未产生费用的行程信息<br />
-      跨天跨城行程填写说明：<br />
-      出发城市-到达城市：武汉-北京；出发日期-到达日期：1号-5号；1号~5号补助按到达城市（北京）匹配。
+             :title="titleMap[props.mode || 'add']" width="780px">
+    <div class="alert trip-alert">
+      <span class="icon">!</span>
+      <span class="text">仅可补录未从申请单带入或未产生费用的行程信息<br />跨天跨城行程填写说明：出发城市-到达城市：武汉-北京；出发日期-到达日期：1号-5号；1号~5号补<br />助按北京匹配；</span>
     </div>
 
-    <div class="modal-form-row">
-      <span class="form-label">出行人<span class="req">*</span></span>
-      <BaseSelect v-model="reimburserId" :options="empOptions" />
-    </div>
-    <div class="modal-form-row">
-      <span class="form-label">出发城市<span class="req">*</span></span>
-      <BaseSelect v-model="startCity" :options="cityOptions" />
-    </div>
-    <div class="modal-form-row">
-      <span class="form-label">到达城市<span class="req">*</span></span>
-      <BaseSelect v-model="endCity" :options="cityOptions" />
-    </div>
-    <div class="modal-form-row">
-      <span class="form-label">出发日期<span class="req">*</span></span>
-      <div class="form-control">
-        <input type="date" v-model="startDate" />
+    <div class="right-align">
+      <div class="form-field has-req">
+        <span class="form-label">出行人</span><span class="form-req">*</span>
+        <div class="form-control ctrl-short">
+          <BaseSelect v-model="reimburserId" :options="empOptions" />
+        </div>
       </div>
-    </div>
-    <div class="modal-form-row">
-      <span class="form-label">到达日期<span class="req">*</span></span>
-      <div class="form-control">
-        <input type="date" v-model="endDate" />
+      <div class="form-field has-req">
+        <span class="form-label">出发城市</span><span class="form-req">*</span>
+        <div class="form-control ctrl-short">
+          <BaseSelect v-model="startCity" :options="cityOptions" icon-type="x" />
+        </div>
       </div>
-    </div>
-    <div class="modal-form-row">
-      <span class="form-label">行程说明<span class="req">*</span></span>
-      <div class="form-control textarea" style="max-width: 560px;">
-        <textarea rows="3" maxlength="500" v-model="description" placeholder="请输入"></textarea>
+      <div class="form-field has-req">
+        <span class="form-label">到达城市</span><span class="form-req">*</span>
+        <div class="form-control ctrl-short">
+          <BaseSelect v-model="endCity" :options="cityOptions" icon-type="x" />
+        </div>
+      </div>
+      <div class="form-field has-req">
+        <span class="form-label">出发到达日期</span><span class="form-req">*</span>
+        <div class="form-control ctrl-medium date-range-control" @click="onDateRangeClick">
+          <svg class="clock-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <circle cx="12" cy="12" r="9"/>
+            <line x1="12" y1="12" x2="12" y2="7"/>
+            <line x1="12" y1="12" x2="17" y2="12"/>
+          </svg>
+          <span class="range-text" :class="{ placeholder: !displayRange }">{{ displayRange || '请选择日期时间' }}</span>
+          <input type="date" class="modal-trip-start" v-model="startDate" @change="onStartChange" />
+          <input type="date" class="modal-trip-end" v-model="endDate" />
+        </div>
+      </div>
+      <div class="form-field has-req">
+        <span class="form-label">行程说明</span><span class="form-req">*</span>
+        <div class="form-control textarea ctrl-long">
+          <textarea rows="3" maxlength="500" v-model="description" placeholder="请输入"></textarea>
+        </div>
       </div>
     </div>
 
@@ -137,3 +166,108 @@ async function onSave() {
     </template>
   </BaseModal>
 </template>
+
+<style scoped>
+.trip-alert {
+  margin-bottom: 16px;
+  width: 660px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 14px;
+  padding-left: 15px;
+  background: #fdfbe3;
+  border-color: #fdfbe3;
+}
+.trip-alert .text {
+  color: #303133;
+}
+.date-range-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #fff;
+  font-size: 14px;
+  position: relative;
+}
+.date-range-control:hover {
+  border-color: #c0c4cc;
+}
+.clock-icon {
+  flex-shrink: 0;
+  color: #c2c5cb;
+}
+.range-text {
+  flex: 1;
+  color: #303133;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: pre;
+}
+.range-text.placeholder {
+  color: #c0c4cc;
+}
+.modal-trip-start,
+.modal-trip-end {
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  font-size: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+}
+
+/* 不同输入框宽度：三个等长 < 日期 < 行程说明 */
+.ctrl-short {
+  max-width: 300px;
+}
+.ctrl-medium {
+  max-width: 350px;
+}
+.ctrl-long {
+  max-width: 560px;
+}
+
+/* 完全模仿基础信息页面：标签右对齐 + 红色*绝对定位 */
+.form-req {
+  color: #FF7673;
+  font-weight: 400;
+}
+.right-align {
+  padding-left: 50px;
+}
+.right-align .form-field {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.right-align .form-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: right;
+  white-space: nowrap;
+  color: #4e5b70;
+}
+.right-align .form-control {
+  margin-left: 12px;
+}
+.right-align .form-field.has-req .form-req {
+  position: absolute;
+  top: calc(50% + 3px);
+  transform: translateY(-50%);
+  left: 90px;
+  margin-left: 1px;
+  pointer-events: none;
+}
+.right-align .form-field.has-req {
+  position: relative;
+}
+</style>

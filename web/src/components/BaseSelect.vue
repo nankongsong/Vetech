@@ -11,6 +11,7 @@ const props = defineProps<{
   options: SelectOption[]
   placeholder?: string
   disabled?: boolean
+  iconType?: 'chevron' | 'x'
 }>()
 
 const emit = defineEmits<{
@@ -56,9 +57,18 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
     <div class="custom-select" :class="{ open, disabled: props.disabled }" @click.stop="props.disabled ? null : toggle()">
       <span v-if="selectedLabel" class="selected-text">{{ selectedLabel }}</span>
       <span v-else class="placeholder">{{ placeholder || '请选择' }}</span>
-      <svg class="arrow" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#606266" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="6,9 12,15 18,9"/>
-      </svg>
+      <span v-if="props.iconType !== 'x'" class="arrow arrow-chevron">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6,9 12,15 18,9"/>
+        </svg>
+      </span>
+      <span v-else class="arrow x-arrow">
+        <svg viewBox="0 0 24 24" width="14" height="14">
+          <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="8" y1="8" x2="16" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <line x1="16" y1="8" x2="8" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </span>
     </div>
     <div v-if="open" class="dropdown-panel">
       <div class="search-box">
@@ -102,7 +112,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocClick))
 .custom-select.open { border-color: #409eff; }
 .selected-text { color: #303133; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .placeholder { color: #c0c4cc; }
-.arrow { color: #c0c4cc; flex-shrink: 0; transition: transform 0.2s; }
+.arrow { color: #c0c4cc; flex-shrink: 0; transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center; }
 .custom-select.open .arrow { transform: rotate(180deg); }
 .dropdown-panel {
   position: absolute; top: 100%; left: 0; right: 0; z-index: 1100;
