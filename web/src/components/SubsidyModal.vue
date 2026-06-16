@@ -311,6 +311,7 @@ async function onSave() {
 /* ===== 时间轴 ===== */
 .date-card {
   padding: 0;
+  margin-top: -8px;
   background: #fff;
   border: 1px solid #ebeef5;
 }
