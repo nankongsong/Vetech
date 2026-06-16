@@ -12,11 +12,10 @@ function onInput(val: string) {
 
 /** 清空备注：需二次确认 */
 async function onClear() {
-  if (!store.remark) return
   const ok = await confirm.confirm({
     type: 'warning',
-    title: '确认清空',
-    text: '确定要清空备注内容吗？此操作不可撤销。',
+    title: '提示',
+    text: '确认删除？',
   })
   if (ok) store.setRemark('')
 }
@@ -27,7 +26,7 @@ async function onClear() {
     <PanelHeader @toggle="store.togglePanel('remark')">
       <template #title>备注信息</template>
       <template #extra>
-        <button v-if="store.remark" class="btn-text delete-remark-btn" @click.stop="onClear">
+        <button class="btn-text delete-remark-btn" @click.stop="onClear">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
             <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
           </svg>
@@ -44,6 +43,7 @@ async function onClear() {
         maxlength="1000"
         rows="5"
       />
+      <div class="remark-word-count">剩余{{ 1000 - (store.remark?.length || 0) }}字</div>
     </div>
   </section>
 </template>
@@ -55,5 +55,6 @@ async function onClear() {
   line-height: 1.6; font-family: inherit;
 }
 .remark-textarea:focus { border-color: #409eff; outline: none; }
+.remark-word-count { text-align: right; font-size: 12px; color: #909399; margin-top: 4px; }
 .delete-remark-btn { color: #409eff; }
 </style>

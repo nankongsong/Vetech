@@ -33,13 +33,11 @@ const isEdit = ref(false)
 const isPush = ref(false)
 
 onMounted(async () => {
-  // 重置表单状态（确保从其他页面跳转时不会有旧数据残留）
   store.resetForNewForm()
-
   await store.loadBaseData()
 
   const idParam = route.params.id
-  if (idParam) {
+  if (idParam && typeof idParam === 'string') {
     isEdit.value = true
     await loadDetail(Number(idParam))
   }
@@ -55,11 +53,10 @@ watch(
   async (newId, oldId) => {
     if (newId === oldId) return
 
-    // 重置 store 状态
     store.resetForNewForm()
     isPush.value = false
 
-    if (newId) {
+    if (newId && typeof newId === 'string') {
       isEdit.value = true
       await loadDetail(Number(newId))
     } else {
