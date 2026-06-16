@@ -69,9 +69,9 @@ const displayRange = computed(() => {
   const s = startDate.value
   const e = endDate.value
   if (!s && !e) return ''
-  if (s && e) return `${s} 00:00:00      -   ${e} 00:00:00`
-  if (s) return `${s} 00:00:00      -   ?`
-  return `?      -   ${e} 00:00:00`
+  if (s && e) return `${s} 00:00:00      -   ${e} 00:00:00`
+  if (s) return `${s} 00:00:00      -   ?`
+  return `?      -   ${e} 00:00:00`
 })
 
 function onDateRangeClick() {

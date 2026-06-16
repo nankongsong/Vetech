@@ -105,7 +105,6 @@ const startCity = computed(() => store.cities.find(c => c.cityNo === props.subsi
 const endCity = computed(() => store.cities.find(c => c.cityNo === props.subsidy.endCity))
 const subsidyCity = computed(() => store.cities.find(c => c.cityNo === props.subsidy.subsidyCity))
 const trip = computed(() => `${startCity.value ? startCity.value.cityName : ''}-${endCity.value ? endCity.value.cityName : ''}`)
-const emp = computed(() => store.employees.find(e => e.reimburserId === props.subsidy.reimburserId))
 
 const allChecked = ['meal', 'traffic', 'comm'].every(k => checkAllColumn(k as 'meal' | 'traffic' | 'comm'))
 const partial = !allChecked && anyChecked()

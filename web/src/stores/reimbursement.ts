@@ -115,7 +115,7 @@ export const useReimbursementStore = defineStore('reimbursement', {
         subsidyCity: initTrip.endCity,
         applyAmount: 0,
         subsidyAmount: 0,
-        calendar: buildDefaultCalendar(initTrip, (_cn) => '1')
+        calendar: buildDefaultCalendar(initTrip, (_) => '1')
       }],
       allocation: [
         { id: 'a_1', company: '成本中心-管理层类', project: '', ratio: 1.0, amount: 0 }
