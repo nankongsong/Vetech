@@ -69,9 +69,9 @@ const displayRange = computed(() => {
   const s = startDate.value
   const e = endDate.value
   if (!s && !e) return ''
-  if (s && e) return `${s} 00:00:00   -  ${e} 00:00:00`
-  if (s) return `${s} 00:00:00   -  ?`
-  return `?   -  ${e} 00:00:00`
+  if (s && e) return `${s} 00:00:00      -   ${e} 00:00:00`
+  if (s) return `${s} 00:00:00      -   ?`
+  return `?      -   ${e} 00:00:00`
 })
 
 function onDateRangeClick() {
@@ -204,7 +204,7 @@ async function onSave() {
   color: #303133;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: pre;
 }
 .range-text.placeholder {
   color: #c0c4cc;
