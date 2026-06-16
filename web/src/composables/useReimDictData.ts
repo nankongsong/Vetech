@@ -150,13 +150,18 @@ export async function initDictData() {
 function mapApiTreeToTreeNode(apiNodes: BusinessTypeNode[]): TreeNode[] {
   if (!apiNodes || apiNodes.length === 0) return []
 
-  return apiNodes.map((node) => ({
-    value: node.businessTypeId,
-    label: node.businessTypeName,
-    children: node.children ? mapApiTreeToTreeNode(node.children) : undefined,
-    // 透传原始数据
-    _raw: node,
-  }))
+  return apiNodes.map((node) => {
+    const hasChildren = node.children && node.children.length > 0
+    return {
+      value: node.businessTypeId,
+      label: node.businessTypeName,
+      children: hasChildren ? mapApiTreeToTreeNode(node.children) : undefined,
+      // 父级分组节点仅用于展开/收起，不允许选中（仅最底层叶子节点可选）
+      disabled: hasChildren || undefined,
+      // 透传原始数据
+      _raw: node,
+    }
+  })
 }
 
 // ==================== 便捷 computed（el-select 直接使用） ====================
