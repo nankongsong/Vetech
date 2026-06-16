@@ -200,7 +200,6 @@ async function onSave() {
         <table class="subsidy-table">
           <thead>
             <tr>
-              <th class="col-index"></th>
               <th class="col-date">出差日期</th>
               <th class="col-city">补助城市</th>
               <th class="col-amt">
@@ -225,11 +224,11 @@ async function onSave() {
           </thead>
           <tbody>
             <tr v-for="(r, idx) in calendar" :key="r.date">
-              <td class="col-index">
-                <span class="custom-checkbox" :class="{ checked: checkAllRow(idx) }" @click="toggleRow(idx)"></span>
-              </td>
               <td class="col-date">
-                {{ r.date.slice(5) }} 星期{{ weekdayCn(r.date) }}
+                <div class="date-cell-content">
+                  <span class="custom-checkbox" :class="{ checked: checkAllRow(idx) }" @click="toggleRow(idx)"></span>
+                  <span>{{ r.date.slice(5) }} 星期{{ weekdayCn(r.date) }}</span>
+                </div>
               </td>
               <td class="col-city">{{ subsidyCity ? subsidyCity.cityName : '-' }}</td>
               <td class="col-amt" :class="{ disabled: !r.meal.checked }">
@@ -470,12 +469,14 @@ async function onSave() {
   background: #f5f7fa;
 }
 
-.col-index {
-  width: 30px;
-}
 .col-date {
   white-space: nowrap;
-  min-width: 100px;
+  min-width: 120px;
+}
+.date-cell-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 .col-city {
   white-space: nowrap;
