@@ -107,13 +107,11 @@ export async function initDictData() {
   if (results[3].status === 'fulfilled') {
     const apiData = results[3].value.data
     if (apiData && apiData.length > 0) {
-      // 判断是否已是树形（有 children 字段且非空）
-      const isTree = apiData.some((n: any) => n.children && n.children.length > 0)
+      const isTree = apiData.some((n: BusinessTypeNode) => n.children && n.children.length > 0)
       if (isTree) {
         businessTypeTreeData.value = mapApiTreeToTreeNode(apiData)
       } else {
-        // 扁平数组 → 调用通用转换
-        businessTypeTreeData.value = buildBusinessTypeTree(apiData as any[])
+        businessTypeTreeData.value = buildBusinessTypeTree(apiData)
       }
     }
   } else {
