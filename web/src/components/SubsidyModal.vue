@@ -270,7 +270,7 @@ async function onSave() {
 }
 /* ===== 左侧面板 ===== */
 .left-panel {
-  width: 250px;
+  width: 300px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
