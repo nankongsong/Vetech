@@ -57,7 +57,7 @@ watch(
 )
 
 const empOptions = computed(() =>
-  store.employees.map(e => ({ id: e.reimburserId, name: `${e.reimburserName}/${e.reimburserNo}` }))
+  store.employees.map(e => ({ id: e.reimburserId, name: e.reimburserName }))
 )
 const cityOptions = computed(() =>
   store.cities.map(c => ({ id: c.cityNo, name: c.cityName }))
