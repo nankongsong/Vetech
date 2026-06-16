@@ -120,39 +120,41 @@ async function onSave() {
       <span class="text">仅可补录未从申请单带入或未产生费用的行程信息<br />跨天跨城行程填写说明：出发城市-到达城市：武汉-北京；出发日期-到达日期：1号-5号；1号~5号补助按北京匹配；</span>
     </div>
 
-    <div class="modal-form-row">
-      <span class="form-label">出行人<span class="req">*</span></span>
-      <div class="form-control ctrl-short">
-        <BaseSelect v-model="reimburserId" :options="empOptions" />
+    <div class="right-align">
+      <div class="form-field has-req">
+        <span class="form-label">出行人</span><span class="form-req">*</span>
+        <div class="form-control ctrl-short">
+          <BaseSelect v-model="reimburserId" :options="empOptions" />
+        </div>
       </div>
-    </div>
-    <div class="modal-form-row">
-      <span class="form-label">出发城市<span class="req">*</span></span>
-      <div class="form-control ctrl-short">
-        <BaseSelect v-model="startCity" :options="cityOptions" />
+      <div class="form-field has-req">
+        <span class="form-label">出发城市</span><span class="form-req">*</span>
+        <div class="form-control ctrl-short">
+          <BaseSelect v-model="startCity" :options="cityOptions" />
+        </div>
       </div>
-    </div>
-    <div class="modal-form-row">
-      <span class="form-label">到达城市<span class="req">*</span></span>
-      <div class="form-control ctrl-short">
-        <BaseSelect v-model="endCity" :options="cityOptions" />
+      <div class="form-field has-req">
+        <span class="form-label">到达城市</span><span class="form-req">*</span>
+        <div class="form-control ctrl-short">
+          <BaseSelect v-model="endCity" :options="cityOptions" />
+        </div>
       </div>
-    </div>
-    <div class="modal-form-row">
-      <span class="form-label">出发到达日期<span class="req">*</span></span>
-      <div class="form-control date-range-control ctrl-medium" @click="onDateRangeClick">
-        <svg class="clock-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm-.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
-        </svg>
-        <span class="range-text" :class="{ placeholder: !displayRange }">{{ displayRange || '请选择日期时间' }}</span>
-        <input type="date" class="modal-trip-start" v-model="startDate" @change="onStartChange" />
-        <input type="date" class="modal-trip-end" v-model="endDate" />
+      <div class="form-field has-req">
+        <span class="form-label">出发到达日期</span><span class="form-req">*</span>
+        <div class="form-control ctrl-medium date-range-control" @click="onDateRangeClick">
+          <svg class="clock-icon" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm-.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/>
+          </svg>
+          <span class="range-text" :class="{ placeholder: !displayRange }">{{ displayRange || '请选择日期时间' }}</span>
+          <input type="date" class="modal-trip-start" v-model="startDate" @change="onStartChange" />
+          <input type="date" class="modal-trip-end" v-model="endDate" />
+        </div>
       </div>
-    </div>
-    <div class="modal-form-row">
-      <span class="form-label">行程说明<span class="req">*</span></span>
-      <div class="form-control textarea ctrl-long">
-        <textarea rows="3" maxlength="500" v-model="description" placeholder="请输入"></textarea>
+      <div class="form-field has-req">
+        <span class="form-label">行程说明</span><span class="form-req">*</span>
+        <div class="form-control textarea ctrl-long">
+          <textarea rows="3" maxlength="500" v-model="description" placeholder="请输入"></textarea>
+        </div>
       </div>
     </div>
 
@@ -222,5 +224,38 @@ async function onSave() {
 }
 .ctrl-long {
   max-width: 520px;
+}
+
+/* 完全模仿基础信息页面：标签右对齐 + 红色*绝对定位 */
+.form-req {
+  color: #FF7673;
+  font-weight: 400;
+}
+.right-align .form-field {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.right-align .form-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: right;
+  white-space: nowrap;
+  color: #4e5b70;
+}
+.right-align .form-control {
+  margin-left: 12px;
+}
+.right-align .form-field.has-req .form-req {
+  position: absolute;
+  top: calc(50% + 3px);
+  transform: translateY(-50%);
+  left: 90px;
+  margin-left: 1px;
+  pointer-events: none;
+}
+.right-align .form-field.has-req {
+  position: relative;
 }
 </style>
