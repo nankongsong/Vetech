@@ -155,10 +155,8 @@ function mapApiTreeToTreeNode(apiNodes: BusinessTypeNode[]): TreeNode[] {
     return {
       value: node.businessTypeId,
       label: node.businessTypeName,
-      children: hasChildren ? mapApiTreeToTreeNode(node.children) : undefined,
-      // 父级分组节点仅用于展开/收起，不允许选中（仅最底层叶子节点可选）
+      children: hasChildren ? mapApiTreeToTreeNode(node.children!) : undefined,
       disabled: hasChildren || undefined,
-      // 透传原始数据
       _raw: node,
     }
   })
