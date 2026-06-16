@@ -114,10 +114,10 @@ async function onSave() {
 
 <template>
   <BaseModal :model-value="props.modelValue" @update:model-value="emit('update:modelValue', $event)"
-             :title="titleMap[props.mode || 'add']" width="640px">
+             :title="titleMap[props.mode || 'add']" width="800px">
     <div class="alert trip-alert">
       <span class="icon">!</span>
-      <span class="text">仅可补录未从申请单带入或未产生费用的行程信息<br />跨天跨城行程填写说明：出发城市-到达城市：武汉-北京；出发日期-到达日期：1号-5号；1号~5号补助按北京匹配；</span>
+      <span class="text">仅可补录未从申请单带入或未产生费用的行程信息<br />跨天跨城行程填写说明：出发城市-到达城市：武汉-北京；出发日期-到达日期：1号-5号；1号~5号补<br />助按北京匹配；</span>
     </div>
 
     <div class="right-align">
@@ -168,6 +168,7 @@ async function onSave() {
 <style scoped>
 .trip-alert {
   margin-bottom: 16px;
+  max-width: 680px;
 }
 .trip-alert .text {
   color: #303133;
@@ -217,13 +218,13 @@ async function onSave() {
 
 /* 不同输入框宽度：三个等长 < 日期 < 行程说明 */
 .ctrl-short {
-  max-width: 240px;
+  max-width: 300px;
 }
 .ctrl-medium {
-  max-width: 340px;
+  max-width: 440px;
 }
 .ctrl-long {
-  max-width: 520px;
+  max-width: 700px;
 }
 
 /* 完全模仿基础信息页面：标签右对齐 + 红色*绝对定位 */
