@@ -301,7 +301,7 @@ async function onSave() {
 .info-label {
   width: 64px;
   flex-shrink: 0;
-  font-size: 14px;
+  font-size: 15px;
   color: #666;
 }
 .info-value {
@@ -309,7 +309,7 @@ async function onSave() {
   color: #333;
 }
 .biz-type {
-  font-size: 14px;
+  font-size: 15px;
   color: #E6A23C;
 }
 
@@ -426,13 +426,13 @@ async function onSave() {
 }
 .table-title {
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 500;
   color: #333;
   margin-right: auto;
 }
 .select-all-text {
   font-size: 14px;
-  color: #333;
+  color: #000000;
   user-select: none;
 }
 
@@ -553,5 +553,9 @@ async function onSave() {
   border: none;
   transform: none;
   margin-top: 0;
+}
+
+:deep(.modal-title) {
+  font-weight: 400;
 }
 </style>
