@@ -357,7 +357,7 @@ async function onSave() {
 
 .date-label {
   font-size: 14px;
-  color: #666;
+  color: #333;
   width: 64px;
   flex-shrink: 0;
 }
@@ -484,8 +484,8 @@ async function onSave() {
 .subsidy-table th {
   text-align: center;
   padding: 8px 6px;
-  font-weight: 600;
-  color: #9D9EA2;
+  font-weight: 400;
+  color: #333;
   border-bottom: var(--border-width) solid var(--border-color);
   border-right: var(--border-width) solid var(--border-color);
   white-space: nowrap;
@@ -596,7 +596,7 @@ async function onSave() {
   justify-content: center;
   width: 14px;
   height: 14px;
-  border: 1.5px solid #c0c4cc;
+  border: 1.5px solid #E3E6EF;
   border-radius: 2px;
   cursor: pointer;
   flex-shrink: 0;
