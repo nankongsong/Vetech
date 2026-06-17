@@ -346,6 +346,7 @@ async function onSave() {
 .date-value {
   font-size: 14px;
   color: #333;
+  margin-left: 16px;
 }
 
 /* 蓝色行程条 */
@@ -353,15 +354,17 @@ async function onSave() {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #409EFF;
+  background: lch(60.99% 40.66 258.29);
   color: #fff;
   font-size: 14px;
-  padding: 10px 14px;
-  border-radius: 6px;
+  padding: 6px 14px;
+  border-radius: 0;
   margin: 10px 0;
 }
 .trip-bar strong {
-  font-size: 16px;
+  font-weight: 400;
+  font-size: 14px;
+  margin-left: 60px;
 }
 .trip-text {
   margin-left: 5px;
