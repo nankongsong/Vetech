@@ -392,7 +392,7 @@ async function onSave() {
 .summary-card {
   border: var(--border-width) solid var(--border-color);
   border-radius: 0;
-  flex: 0.9;
+  flex: 0.95;
   margin-top: 24px;
 }
 
