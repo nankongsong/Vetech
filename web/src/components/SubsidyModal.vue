@@ -228,8 +228,16 @@ async function onSave() {
             <tr v-for="(r, idx) in calendar" :key="r.date">
               <td class="col-date">
                 <div class="date-cell-content">
+                  <div class="date-text">
+                    <div>{{ r.date }}</div>
+                    <div>星期{{ weekdayCn(r.date) }}</div>
+                  </div>
                   <span class="custom-checkbox" :class="{ checked: checkAllRow(idx) }" @click="toggleRow(idx)"></span>
-                  <span>{{ r.date.slice(5) }} 星期{{ weekdayCn(r.date) }}</span>
+                  <svg class="pin-icon" viewBox="0 0 21 30" width="9" height="13">
+                    <circle cx="10.5" cy="10.5" r="10.5" fill="#979797"/>
+                    <path d="M10.5 30L1.40673 16.5H19.5933L10.5 30Z" fill="#979797"/>
+                    <circle cx="10.5" cy="10.5" r="6.5" fill="white"/>
+                  </svg>
                 </div>
               </td>
               <td class="col-city">{{ subsidyCity ? subsidyCity.cityName : '-' }}</td>
@@ -485,6 +493,15 @@ async function onSave() {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+.date-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.4;
+  text-align: left;
+}
+.pin-icon {
+  flex-shrink: 0;
 }
 .col-city {
   white-space: nowrap;
