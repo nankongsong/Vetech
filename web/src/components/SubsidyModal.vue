@@ -415,11 +415,17 @@ async function onSave() {
   color: #E6A23C;
 }
 .summary-amount .cny {
-  margin-left: -60px;
+  margin-left: 10px;
 }
 .summary-amount .num {
-  margin-left: 40px;
+  margin-left: 70px;
   font-size: 20px;
+  line-height: 1;
+  transform: translateX(-40px);
+}
+.summary-amount {
+  display: inline-flex;
+  align-items: center;
 }
 .summary-card {
   border: var(--border-width) solid var(--border-color);
