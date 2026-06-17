@@ -539,6 +539,8 @@ async function onSave() {
   color: #E6A23C;
   margin-bottom: 3px;
   white-space: nowrap;
+  text-align: right;
+  padding-right: 84px;
 }
 .amt-row {
   display: flex;
