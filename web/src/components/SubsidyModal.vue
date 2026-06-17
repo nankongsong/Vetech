@@ -33,6 +33,10 @@ watch(
   { immediate: true }
 )
 
+watch(() => props.modelValue, (v) => {
+  document.body.style.overflow = v ? 'hidden' : ''
+})
+
 function close() { emit('update:modelValue', false) }
 
 function sumStd() {
@@ -639,5 +643,8 @@ async function onSave() {
 .modal-card.modal-fullscreen .modal-title {
   font-weight: 500;
   padding-left: 4px;
+}
+.modal-card.modal-fullscreen .modal-footer {
+  justify-content: center;
 }
 </style>
