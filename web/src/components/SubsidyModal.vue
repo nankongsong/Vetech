@@ -548,13 +548,18 @@ async function onSave() {
 .col-amt .amt-input {
   width: 75px;
   height: 28px;
-  text-align: right;
-  padding: 0 8px;
+  padding: 0 0 0 20px;
   border: 1px solid #dcdfe6;
   border-radius: 3px;
   font-size: 14px;
   outline: none;
   box-sizing: border-box;
+  -moz-appearance: textfield;
+}
+.col-amt .amt-input::-webkit-outer-spin-button,
+.col-amt .amt-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 .col-amt .amt-input:focus {
   border-color: #409eff;
