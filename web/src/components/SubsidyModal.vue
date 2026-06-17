@@ -177,15 +177,15 @@ async function onSave() {
         <div class="left-card summary-card">
           <div class="summary-row">
             <span class="summary-label">补助金额</span>
-            <span class="summary-amount orange">CNY {{ money(sumActual()) }}</span>
+            <span class="summary-amount orange"><span class="cny">CNY</span> <span class="num">{{ money(sumActual()) }}</span></span>
           </div>
           <div class="summary-row">
             <span class="summary-label">标准总额</span>
-            <span class="summary-amount">CNY {{ money(sumStd()) }}</span>
+            <span class="summary-amount"><span class="cny">CNY</span> <span class="num">{{ money(sumStd()) }}</span></span>
           </div>
           <div class="summary-row">
             <span class="summary-label">补助金额</span>
-            <span class="summary-amount">CNY {{ money(sumActual()) }}</span>
+            <span class="summary-amount"><span class="cny">CNY</span> <span class="num">{{ money(sumActual()) }}</span></span>
           </div>
         </div>
       </div>
@@ -413,6 +413,13 @@ async function onSave() {
 }
 .summary-amount.orange {
   color: #E6A23C;
+}
+.summary-amount .cny {
+  margin-left: -60px;
+}
+.summary-amount .num {
+  margin-left: 40px;
+  font-size: 20px;
 }
 .summary-card {
   border: var(--border-width) solid var(--border-color);
