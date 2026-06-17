@@ -205,22 +205,22 @@ async function onSave() {
               <th class="col-date">出差日期</th>
               <th class="col-city">补助城市</th>
               <th class="col-amt">
+                餐费补助
                 <span class="custom-checkbox"
                       :class="{ checked: checkAllColumn('meal'), partial: !checkAllColumn('meal') && calendar.some(r => r.meal.checked) }"
                       @click="toggleCol('meal')"></span>
-                餐费补助
               </th>
               <th class="col-amt">
+                交通补助
                 <span class="custom-checkbox"
                       :class="{ checked: checkAllColumn('traffic'), partial: !checkAllColumn('traffic') && calendar.some(r => r.traffic.checked) }"
                       @click="toggleCol('traffic')"></span>
-                交通补助
               </th>
               <th class="col-amt">
+                通讯补助
                 <span class="custom-checkbox"
                       :class="{ checked: checkAllColumn('comm'), partial: !checkAllColumn('comm') && calendar.some(r => r.comm.checked) }"
                       @click="toggleCol('comm')"></span>
-                通讯补助
               </th>
             </tr>
           </thead>
