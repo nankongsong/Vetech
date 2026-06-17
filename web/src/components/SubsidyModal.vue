@@ -542,6 +542,7 @@ async function onSave() {
 .amt-row {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
 }
 .col-amt .amt-input {
