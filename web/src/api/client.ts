@@ -8,16 +8,21 @@ export interface ApiResult<T = unknown> {
   data: T
 }
 
-// 统一响应拦截：code===200 返回 data 字段，否则抛错
+// 统一响应拦截：code===200 返回 data 字段，否则抛错（附带 code 供下游判断）
 http.interceptors.response.use(
   (res: AxiosResponse<ApiResult>) => {
     const r = res.data
     if (r.code === 200) return { ...res, data: r.data } as AxiosResponse
-    return Promise.reject(new Error(r.msg || '请求失败'))
+    const err = new Error(r.msg || '请求失败') as Error & { code: number }
+    err.code = r.code
+    return Promise.reject(err)
   },
   (err) => {
     const msg = err.response?.data?.msg || err.message || '网络错误'
-    return Promise.reject(msg)
+    const code = err.response?.data?.code
+    const wrapped = new Error(msg) as Error & { code?: number }
+    if (code !== undefined) wrapped.code = code
+    return Promise.reject(wrapped)
   }
 )
 

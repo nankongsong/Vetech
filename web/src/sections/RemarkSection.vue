@@ -26,7 +26,7 @@ async function onClear() {
     <PanelHeader @toggle="store.togglePanel('remark')">
       <template #title>备注信息</template>
       <template #extra>
-        <button class="btn-text delete-remark-btn" @click.stop="onClear">
+        <button v-if="!store.ui.readonly" class="btn-text delete-remark-btn" @click.stop="onClear">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
             <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
           </svg>
@@ -38,6 +38,7 @@ async function onClear() {
       <textarea
         class="remark-textarea"
         :value="store.remark"
+        :disabled="store.ui.readonly"
         @input="onInput(($event.target as HTMLTextAreaElement).value)"
         placeholder="请输入"
         maxlength="1000"

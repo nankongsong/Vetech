@@ -1,10 +1,11 @@
 <script setup lang="ts">
 /**
  * 差旅报销单详情页面（统一入口）
- * 支持三种模式：
+ * 支持四种模式：
  *   add   — 新增报销单（路由 /reimburse/add）
  *   edit  — 编辑已有报销单（路由 /reimburse/:id/edit）
  *   push  — 手工推送确认页（路由 /reimburse/:id/push?mode=push）
+ *   view  — 只读查看页（路由 /reimburse/:id/view）
  */
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -31,7 +32,10 @@ const store = useReimbursementStore()
 const pageLoading = ref(false)
 const isEdit = ref(false)
 const isPush = ref(false)
+const isView = ref(false)
 const editVersion = ref(0)
+const editStatus = ref(0) // 0=草稿 1=已完成 2=已作废
+const docFooterRef = ref<InstanceType<typeof DocFooter> | null>(null)
 
 onMounted(async () => {
   store.resetForNewForm()
@@ -46,6 +50,12 @@ onMounted(async () => {
   if (route.query.mode === 'push') {
     isPush.value = true
   }
+  // 检测只读查看模式
+  if (route.name === 'reimburseView') {
+    isView.value = true
+    isEdit.value = false
+    store.ui.readonly = true
+  }
 })
 
 // 监听路由参数变化（组件复用时重新加载数据）
@@ -56,6 +66,10 @@ watch(
 
     store.resetForNewForm()
     isPush.value = false
+    isView.value = false
+    editVersion.value = 0
+    editStatus.value = 0
+    store.ui.readonly = false
 
     if (newId && typeof newId === 'string') {
       isEdit.value = true
@@ -66,6 +80,11 @@ watch(
 
     if (route.query.mode === 'push') {
       isPush.value = true
+    }
+    if (route.name === 'reimburseView') {
+      isView.value = true
+      isEdit.value = false
+      store.ui.readonly = true
     }
   }
 )
@@ -88,11 +107,12 @@ async function loadDetail(id: number) {
 function mapDetailToStore(detail: BackendReimDetail) {
   const m = detail.main
   editVersion.value = m.version || 0
+  editStatus.value = m.status ?? 0
 
   // 基础信息映射（后端字段名 → store 字段名）
   store.setBasic({
     title: m.reimbursementTitle || '',
-    reimburser: m.reimburserId || '',
+    reimbursement: m.reimburserId || '',
     department: m.reimDepartmentId || '',
     reimCompany: m.reimCompanyId || '',
     businessType: m.businessTypeId || '',
@@ -103,7 +123,7 @@ function mapDetailToStore(detail: BackendReimDetail) {
   // 行程映射
   store.trips = (detail.trips || []).map((t): Trip => ({
     id: String(t.id || t.travelerId),
-    reimburserId: t.travelerId,
+    reimbursementId: t.travelerId,
     startCity: t.originCityId,
     endCity: t.destinationCityId,
     startDate: t.startDate,
@@ -115,7 +135,7 @@ function mapDetailToStore(detail: BackendReimDetail) {
   store.subsidies = (detail.subsidies || []).map(s => ({
     id: String(s.id),
     tripId: String(s.tripId || ''),
-    reimburserId: s.travelerId,
+    reimbursementId: s.travelerId,
     startDate: s.startDate,
     endDate: s.endDate,
     days: s.subsidyDays,
@@ -127,39 +147,64 @@ function mapDetailToStore(detail: BackendReimDetail) {
     calendar: [],
   }))
 
-  // 分摊映射
-  store.allocation = (detail.allocations || []).map((a): Allocation => ({
+  // 分摊映射（如果后端返回空数组，保持默认的一行分摊记录）
+  const allocList = (detail.allocations || []).map((a): Allocation => ({
     id: String(a.id || a.companyId),
     company: a.companyId || a.companyName || '',
     project: a.projectId || a.projectName || '',
     ratio: a.allocationRatio || 0,
     amount: a.allocationAmount || 0,
   }))
+  store.allocation = allocList.length > 0 ? allocList : [
+    { id: 'a_default', company: m.reimCompanyId || '', project: '', ratio: 1.0, amount: 0 }
+  ]
 }
 
 /** 页面标题 */
 const pageTitle = computed(() => {
+  if (isView.value) return '查看报销单'
   if (isPush.value) return '手工推送 — 报销单'
   if (isEdit.value) return '编辑报销单'
   return '新增报销单'
 })
+
+/** 关闭页面 / 返回列表：统一弹窗 → 保存草稿 → 跳转列表 */
+async function handleCloseOrBack() {
+  // 只读查看页面：直接退出，不保存
+  if (isView.value) {
+    router.push({ name: 'reimburseList' })
+    return
+  }
+  const ok = await confirm.confirm({
+    type: 'warning',
+    title: '提示',
+    text: '确认关闭页面？当前已填写内容将自动保存为草稿',
+  })
+  if (ok) {
+    // 调用 DocFooter 的 saveDraft 方法保存草稿
+    if (docFooterRef.value) {
+      await docFooterRef.value.saveDraft()
+    }
+    router.push({ name: 'reimburseList' })
+  }
+}
 </script>
 
 <template>
   <div class="doc-page" v-loading="pageLoading">
-    <!-- 顶部导航 -->
-    <div class="page-nav">
-      <span class="page-nav-title">{{ pageTitle }}</span>
-      <span class="page-nav-back" @click="router.push({ name: 'reimburseList' })">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-        </svg>
-        返回列表
-      </span>
+    <!-- 固定表头区域（返回列表 + 单据标题 + 提单日） -->
+    <div class="doc-sticky-header">
+      <div class="page-nav">
+        <span class="page-nav-title">{{ pageTitle }}</span>
+        <span class="page-nav-back" @click="handleCloseOrBack">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+          </svg>
+          返回列表
+        </span>
+      </div>
+      <DocHeader :mode="isEdit ? 'edit' : 'add'" />
     </div>
-
-    <!-- 表单主体 -->
-    <DocHeader :mode="isEdit ? 'edit' : 'add'" />
     <main class="doc-main">
       <BasicInfo />
       <TripSection />
@@ -168,7 +213,7 @@ const pageTitle = computed(() => {
       <AllocationSection />
       <RemarkSection />
     </main>
-    <DocFooter :mode="isEdit ? 'edit' : 'add'" :reim-id="isEdit ? Number(route.params.id) : null" :edit-version="editVersion" />
+    <DocFooter ref="docFooterRef" :mode="isEdit ? 'edit' : 'add'" :reim-id="isEdit ? Number(route.params.id) : null" :edit-version="editVersion" :edit-status="editStatus" :readonly="isView" @close="handleCloseOrBack" />
 
     <!-- 确认对话框（兼容 useConfirm v-model 模式） -->
     <ConfirmModal
@@ -188,6 +233,9 @@ const pageTitle = computed(() => {
 .doc-page {
   min-height: 100vh; background: #f0f2f5;
 }
+.doc-sticky-header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 99;
+}
 .page-nav {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 20px; background: #fff; border-bottom: 1px solid #ebeef5;
@@ -199,7 +247,7 @@ const pageTitle = computed(() => {
 }
 .page-nav-back:hover { text-decoration: underline; }
 .doc-main {
-  max-width: 1200px; margin: 0 auto; padding: 16px 20px 80px;
+  max-width: 1200px; margin: 0 auto; padding: 114px 20px 80px;
 }
 </style>
 
@@ -208,7 +256,7 @@ const pageTitle = computed(() => {
 /* ===== Panel 面板 ===== */
 .panel {
   background: #fff; border: none; border-radius: 4px;
-  margin-bottom: 16px; overflow: visible;
+  margin-bottom: 0; overflow: visible;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 .panel.collapsed .panel-body { display: none; }

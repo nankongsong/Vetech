@@ -89,8 +89,6 @@ export function buildTree(
       if (node.children && node.children.length === 0) {
         delete node.children
       } else if (node.children) {
-        // 父级分组节点仅用于展开/收起，不允许选中（仅最底层叶子节点可选）
-        node.disabled = true
         cleanChildren(node.children)
       }
     }

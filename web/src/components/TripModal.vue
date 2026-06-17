@@ -40,7 +40,7 @@ watch(
   () => [props.modelValue, props.data],
   () => {
     if (props.modelValue) {
-      reimburserId.value = props.data?.reimburserId || ''
+      reimburserId.value = props.data?.reimbursementId || ''
       startCity.value = props.data?.startCity || ''
       endCity.value = props.data?.endCity || ''
       startDate.value = props.data?.startDate || ''
@@ -57,7 +57,7 @@ watch(
 )
 
 const empOptions = computed(() =>
-  store.employees.map(e => ({ id: e.reimburserId, name: e.reimburserName }))
+  store.employees.map(e => ({ id: e.reimbursementId, name: e.reimbursementName }))
 )
 const cityOptions = computed(() =>
   store.cities.map(c => ({ id: c.cityNo, name: c.cityName }))
@@ -88,7 +88,7 @@ function onStartChange() {
 }
 async function onSave() {
   const data: Omit<Trip, 'id'> = {
-    reimburserId: reimburserId.value,
+    reimbursementId: reimburserId.value,
     startCity: startCity.value,
     endCity: endCity.value,
     startDate: startDate.value,
@@ -96,7 +96,7 @@ async function onSave() {
     description: description.value.trim()
   }
 
-  if (!data.reimburserId) { await confirm.alert('请选择出行人'); return }
+  if (!data.reimbursementId) { await confirm.alert('请选择出行人'); return }
   if (!data.startCity) { await confirm.alert('请选择出发城市'); return }
   if (!data.endCity) { await confirm.alert('请选择到达城市'); return }
   if (!startDate.value) { await confirm.alert('请选择出发日期'); return }

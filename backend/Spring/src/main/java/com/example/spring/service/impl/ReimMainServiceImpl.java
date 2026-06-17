@@ -122,12 +122,10 @@ public class ReimMainServiceImpl implements ReimMainService {
     public void update(Long id, ReimMain updateData) {
         ReimMain existing = mainMapper.selectById(id);
         if (existing == null) throw new BizException(40001, "报销单不存在");
+        // 草稿状态才可编辑（已完成/已作废不可编辑）
         if (existing.getStatus() != 0) throw new BizException(40002, "仅草稿状态可编辑");
 
-        // @Version 乐观锁校验
-        if (!existing.getVersion().equals(updateData.getVersion())) {
-            throw new BizException(40006, "数据已被他人修改，请刷新后重试");
-        }
+        // 草稿单据不校验版本号：本人草稿无并发修改场景，直接覆盖保存
         updateData.setId(id);
         updateData.setUpdateTime(LocalDateTime.now());
         mainMapper.updateById(updateData);
@@ -141,14 +139,15 @@ public class ReimMainServiceImpl implements ReimMainService {
         ReimMain main = mainMapper.selectById(id);
         if (main == null) throw new BizException(40001, "报销单不存在");
 
-        // 1. 乐观锁校验
-        if (!main.getVersion().equals(version)) {
-            throw new BizException(40006, "数据已被他人修改，请刷新后重试");
-        }
-
-        // 2. 状态校验
+        // 状态校验：仅草稿可提交
         if (main.getStatus() != 0) {
             throw new BizException(40002, "仅草稿状态可提交");
+        }
+
+        // 草稿单据不校验版本号：本人草稿编辑无并发修改场景，跳过乐观锁拦截
+        // 仅当后台检测到外部修改（version传非0且不匹配）才触发冲突提示
+        if (version != null && version != 0 && !main.getVersion().equals(version)) {
+            throw new BizException(40006, "数据已被他人修改，请刷新后重试");
         }
 
         // 2.5 提交前实时重算补助合计（不信任库中旧值，从日历表聚合确保金额正确）
@@ -244,7 +243,7 @@ public class ReimMainServiceImpl implements ReimMainService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void addTrip(Long mainId, TripDTO dto) {
+    public Map<String, Long> addTrip(Long mainId, TripDTO dto) {
         ReimMain main = checkMainEditable(mainId);
 
         // 1. 必填字段校验
@@ -292,11 +291,12 @@ public class ReimMainServiceImpl implements ReimMainService {
         recalcMainTotal(mainId);
 
         log.info("新增行程：mainId={}, tripId={}, subsidyId={}", mainId, trip.getId(), subsidy.getId());
+        return Map.of("tripId", trip.getId(), "subsidyId", subsidy.getId());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateTrip(Long mainId, Long tripId, TripDTO dto) {
+    public Map<String, Long> updateTrip(Long mainId, Long tripId, TripDTO dto) {
         checkMainEditable(mainId);
         ReimTrip trip = tripMapper.selectById(tripId);
         if (trip == null || !trip.getMainId().equals(mainId)) throw new BizException(40001, "行程记录不存在");
@@ -336,6 +336,7 @@ public class ReimMainServiceImpl implements ReimMainService {
         ReimSubsidy newSubsidy = createSubsidy(mainId, trip);
         createCalendar(newSubsidy, trip);
         recalcMainTotal(mainId);
+        return Map.of("subsidyId", newSubsidy.getId());
     }
 
     @Override
