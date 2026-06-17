@@ -527,10 +527,10 @@ async function onSave() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border: 1.5px solid #c0c4cc;
-  border-radius: 3px;
+  border-radius: 2px;
   cursor: pointer;
   flex-shrink: 0;
   background: #fff;
