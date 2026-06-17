@@ -437,6 +437,9 @@ async function onSave() {
 .subsidy-table {
   border-collapse: collapse;
   font-size: 14px;
+  table-layout: fixed;
+  --col-info-w: 210px;
+  --col-amt-w: 290px;
 }
 .subsidy-table th {
   text-align: center;
@@ -470,6 +473,7 @@ async function onSave() {
 
 .col-date {
   white-space: nowrap;
+  width: var(--col-info-w);
 }
 .date-cell-content {
   display: inline-flex;
@@ -478,9 +482,10 @@ async function onSave() {
 }
 .col-city {
   white-space: nowrap;
+  width: var(--col-info-w);
 }
 .col-amt {
-  width: 300px;
+  width: var(--col-amt-w);
 }
 .col-amt.disabled {
   opacity: 0.45;
