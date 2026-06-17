@@ -14,27 +14,27 @@ defineEmits<{
           </slot>
         </span>
       </div>
-      <svg class="toggle-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-        <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
-      </svg>
     </div>
     <div class="panel-header-right" @click.stop>
       <slot name="extra" />
     </div>
+    <svg class="toggle-icon" viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+      <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+    </svg>
   </div>
 </template>
 
 <style scoped>
 .panel-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 16px; background: #fff; border-bottom: 1px solid #ebeef5;
+  display: flex; align-items: center;
+  padding: 0 16px; background: #fafafa; border-bottom: 1px solid #ebeef5;
   cursor: pointer; user-select: none;
   height: 36px;
 }
-.panel-header:hover { background: #f5f7fa; }
+.panel-header:hover { background: #f0f2f5; }
 .panel-header-left {
   display: flex; align-items: center; gap: 8px;
-  height: 100%;
+  height: 100%; flex: 1;
 }
 .title-left {
   display: flex; align-items: center; height: 100%;
@@ -42,7 +42,7 @@ defineEmits<{
 }
 .toggle-icon {
   color: #909399; flex-shrink: 0; transition: transform 0.2s;
-  margin-left: auto; order: 2;
+  margin-left: 8px;
 }
 .panel-title {
   font-size: 16px; font-weight: 600; color: #303133; flex-shrink: 0;
