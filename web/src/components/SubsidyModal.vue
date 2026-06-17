@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onBeforeMount, onBeforeUnmount } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { money, weekdayCn } from '@/utils/format'
 import { useConfirm } from '@/composables/useConfirm'
@@ -33,6 +33,12 @@ watch(
   { immediate: true }
 )
 
+onBeforeMount(() => {
+  if (props.modelValue) document.documentElement.classList.add('subsidy-modal-open')
+})
+onBeforeUnmount(() => {
+  document.documentElement.classList.remove('subsidy-modal-open')
+})
 watch(() => props.modelValue, (v) => {
   document.documentElement.classList.toggle('subsidy-modal-open', v)
 })
