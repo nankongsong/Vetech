@@ -17,8 +17,8 @@ const btName = computed(() => {
 
 const tipText = computed(() => {
   return store.subsidies.map(s => {
-    const e = store.employees.find(x => x.reimburserId === s.reimburserId)
-    return `${e ? e.reimburserName : ''}${s.days}天`
+    const e = store.employees.find(x => x.reimbursementId === s.reimbursementId)
+    return `${e ? e.reimbursementName : ''}${s.days}天`
   }).join(' ')
 })
 
@@ -30,8 +30,8 @@ function onSave(calendar: SubsidyRow[]) {
   if (currentSub.value) store.updateSubsidyCalendar(currentSub.value.id, calendar)
 }
 function empLabel(id: string) {
-  const e = store.employees.find(x => x.reimburserId === id)
-  return e ? `${e.reimburserName}/${e.reimburserNo}` : '-'
+  const e = store.employees.find(x => x.reimbursementId === id)
+  return e ? `${e.reimbursementName}/${e.reimbursementNo}` : '-'
 }
 function cityName(no: string) {
   const c = store.cities.find(x => x.cityNo === no)
@@ -72,7 +72,7 @@ function cityName(no: string) {
           </tr>
           <tr v-for="(s, i) in store.subsidies" :key="s.id">
             <td class="col-index">{{ i + 1 }}</td>
-            <td>{{ empLabel(s.reimburserId) }}</td>
+            <td>{{ empLabel(s.reimbursementId) }}</td>
             <td>{{ s.startDate }} 至 {{ s.endDate }}</td>
             <td>{{ s.days }}</td>
             <td>{{ cityName(s.startCity) }}-{{ cityName(s.endCity) }}</td>
@@ -80,7 +80,7 @@ function cityName(no: string) {
             <td class="right">{{ money(s.applyAmount) }}</td>
             <td class="right">{{ money(s.subsidyAmount) }}</td>
             <td class="col-action">
-              <span class="op-icon" @click="openEdit(s)" title="编辑">
+              <span v-if="!store.ui.readonly" class="op-icon" @click="openEdit(s)" title="编辑">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
               </span>
             </td>

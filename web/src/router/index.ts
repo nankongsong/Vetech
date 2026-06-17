@@ -31,6 +31,12 @@ const router = createRouter({
       component: () => import('../views/reimburse/ReimbursementDetail.vue'),
       meta: { title: '手工推送' },
     },
+    {
+      path: '/reimburse/:id/view',
+      name: 'reimburseView',
+      component: () => import('../views/reimburse/ReimbursementDetail.vue'),
+      meta: { title: '查看报销单' },
+    },
   ],
 })
 

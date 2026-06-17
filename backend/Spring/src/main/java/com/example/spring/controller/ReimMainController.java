@@ -75,18 +75,18 @@ public class ReimMainController {
 
     // ── 行程管理 ──
 
-    /** 新增行程 */
+    /** 新增行程，返回 {tripId, subsidyId} */
     @PostMapping("/{mainId}/trip")
-    public Result<Void> addTrip(@PathVariable Long mainId, @RequestBody TripDTO dto) {
-        reimMainService.addTrip(mainId, dto);
-        return Result.success("行程添加成功", null);
+    public Result<Map<String, Long>> addTrip(@PathVariable Long mainId, @RequestBody TripDTO dto) {
+        Map<String, Long> ids = reimMainService.addTrip(mainId, dto);
+        return Result.success("行程添加成功", ids);
     }
 
-    /** 更新行程 */
+    /** 更新行程，返回 {subsidyId} */
     @PutMapping("/{mainId}/trip/{tripId}")
-    public Result<Void> updateTrip(@PathVariable Long mainId, @PathVariable Long tripId, @RequestBody TripDTO dto) {
-        reimMainService.updateTrip(mainId, tripId, dto);
-        return Result.success("行程更新成功", null);
+    public Result<Map<String, Long>> updateTrip(@PathVariable Long mainId, @PathVariable Long tripId, @RequestBody TripDTO dto) {
+        Map<String, Long> ids = reimMainService.updateTrip(mainId, tripId, dto);
+        return Result.success("行程更新成功", ids);
     }
 
     /** 删除行程 */

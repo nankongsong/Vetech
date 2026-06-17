@@ -2,7 +2,7 @@
 
 export interface BasicInfo {
   title: string
-  reimburser: string
+  reimbursement: string
   department: string
   reimCompany: string
   businessType: string
@@ -16,7 +16,7 @@ export interface DocMeta {
 
 export interface Trip {
   id: string
-  reimburserId: string
+  reimbursementId: string
   startCity: string
   endCity: string
   startDate: string   // 'YYYY-MM-DD'
@@ -36,7 +36,7 @@ export interface SubsidyRow {
 export interface Subsidy {
   id: string
   tripId: string
-  reimburserId: string
+  reimbursementId: string
   startDate: string
   endDate: string
   days: number
@@ -58,6 +58,7 @@ export interface Allocation {
 
 export interface UiState {
   collapsed: Record<string, boolean>
+  readonly: boolean
 }
 
 export interface Company {
@@ -73,9 +74,9 @@ export interface Department {
 }
 
 export interface Employee {
-  reimburserId: string
-  reimburserNo: string
-  reimburserName: string
+  reimbursementId: string
+  reimbursementNo: string
+  reimbursementName: string
 }
 
 export interface City {

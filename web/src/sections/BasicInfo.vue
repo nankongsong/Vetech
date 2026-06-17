@@ -8,7 +8,7 @@ import { computed } from 'vue'
 const store = useReimbursementStore()
 
 const empOptions = computed(() =>
-  store.employees.map(e => ({ id: e.reimburserId, name: e.reimburserName }))
+  store.employees.map(e => ({ id: e.reimbursementId, name: e.reimbursementName }))
 )
 const deptOptions = computed(() =>
   store.departments.map(d => ({ id: d.reimDepartmentId, name: d.reimDepartmentName }))
@@ -35,6 +35,7 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
               type="text"
               placeholder="徐年年日常办公差旅报销单"
               :value="store.basic.title"
+              :disabled="store.ui.readonly"
               @input="onTitle(($event.target as HTMLInputElement).value)"
             />
           </div>
@@ -43,21 +44,21 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
       <div class="form-row three-cols right-align">
         <div class="form-field">
           <span class="form-label">报销人</span>
-          <BaseSelect v-model="store.basic.reimburser" :options="empOptions" />
+          <BaseSelect v-model="store.basic.reimbursement" :options="empOptions" :disabled="store.ui.readonly" />
         </div>
         <div class="form-field">
           <span class="form-label">报销部门</span>
-          <BaseSelect v-model="store.basic.department" :options="deptOptions" />
+          <BaseSelect v-model="store.basic.department" :options="deptOptions" :disabled="store.ui.readonly" />
         </div>
       <div class="form-field has-req">
           <span class="form-label">费用归属公司</span><span class="form-req">*</span>
-          <BaseSelect v-model="store.basic.reimCompany" :options="compOptions" />
+          <BaseSelect v-model="store.basic.reimCompany" :options="compOptions" :disabled="store.ui.readonly" />
         </div>
       </div>
       <div class="form-row three-cols right-align">
         <div class="form-field has-req">
           <span class="form-label">业务类型</span><span class="form-req">*</span>
-          <BusinessTypeSelect v-model="store.basic.businessType" />
+          <BusinessTypeSelect v-model="store.basic.businessType" :disabled="store.ui.readonly" />
         </div>
         <div class="form-field" style="flex: 0;"></div>
         <div class="form-field" style="flex: 0;"></div>
@@ -70,6 +71,7 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
               rows="3"
               placeholder="请输入"
               :value="store.basic.reason"
+              :disabled="store.ui.readonly"
               @input="onReason(($event.target as HTMLTextAreaElement).value)"
             ></textarea>
           </div>

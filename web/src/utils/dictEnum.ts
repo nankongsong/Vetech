@@ -35,8 +35,8 @@ export function getRowActions(status: number, isAllRequiredFilled: boolean = fal
   const isDone = status === 1        // 已完成
 
   return {
-    // 提交/查看：草稿且必填项完成时可提交；仅已完成可查看；已作废完全禁用
-    submit: (isDraft && isAllRequiredFilled) || isDone,
+    // 提交/查看：草稿始终可点击跳转编辑页提交；已完成可查看详情；已作废禁用
+    submit: isDraft || isDone,
 
     // 编辑：仅草稿可用
     edit: isDraft,

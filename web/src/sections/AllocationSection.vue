@@ -141,7 +141,7 @@ const allocMatchSubsidy = computed(() => {
             <th>项目</th>
             <th class="right">
               分摊比例
-              <span class="equal-split-btn" @click.stop="onEqualSplit">
+              <span v-if="!store.ui.readonly" class="equal-split-btn" @click.stop="onEqualSplit">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21.5 2v6h-6"/>
                   <path d="M2.5 12a9 9 0 0 1 15-6.7l4 2.7"/>
@@ -192,6 +192,7 @@ const allocMatchSubsidy = computed(() => {
             <td class="right">{{ money(a.amount) }}</td>
             <td class="col-action">
               <span
+                v-if="!store.ui.readonly"
                 class="op-icon danger"
                 @click="removeRow(idx)"
                 title="删除"
@@ -204,7 +205,7 @@ const allocMatchSubsidy = computed(() => {
           </tr>
         </tbody>
         <tfoot>
-          <tr class="add-row-tr">
+          <tr v-if="!store.ui.readonly" class="add-row-tr">
             <td colspan="6" style="text-align: center; padding: 8px 0;">
               <button class="btn-text add-row-btn" @click="addRow">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">

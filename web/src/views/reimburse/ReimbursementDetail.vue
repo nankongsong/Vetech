@@ -1,10 +1,11 @@
 <script setup lang="ts">
 /**
  * 差旅报销单详情页面（统一入口）
- * 支持三种模式：
+ * 支持四种模式：
  *   add   — 新增报销单（路由 /reimburse/add）
  *   edit  — 编辑已有报销单（路由 /reimburse/:id/edit）
  *   push  — 手工推送确认页（路由 /reimburse/:id/push?mode=push）
+ *   view  — 只读查看页（路由 /reimburse/:id/view）
  */
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -31,7 +32,10 @@ const store = useReimbursementStore()
 const pageLoading = ref(false)
 const isEdit = ref(false)
 const isPush = ref(false)
+const isView = ref(false)
 const editVersion = ref(0)
+const editStatus = ref(0) // 0=草稿 1=已完成 2=已作废
+const docFooterRef = ref<InstanceType<typeof DocFooter> | null>(null)
 
 onMounted(async () => {
   store.resetForNewForm()
@@ -46,6 +50,12 @@ onMounted(async () => {
   if (route.query.mode === 'push') {
     isPush.value = true
   }
+  // 检测只读查看模式
+  if (route.name === 'reimburseView') {
+    isView.value = true
+    isEdit.value = false
+    store.ui.readonly = true
+  }
 })
 
 // 监听路由参数变化（组件复用时重新加载数据）
@@ -56,6 +66,10 @@ watch(
 
     store.resetForNewForm()
     isPush.value = false
+    isView.value = false
+    editVersion.value = 0
+    editStatus.value = 0
+    store.ui.readonly = false
 
     if (newId && typeof newId === 'string') {
       isEdit.value = true
@@ -66,6 +80,11 @@ watch(
 
     if (route.query.mode === 'push') {
       isPush.value = true
+    }
+    if (route.name === 'reimburseView') {
+      isView.value = true
+      isEdit.value = false
+      store.ui.readonly = true
     }
   }
 )
@@ -88,11 +107,12 @@ async function loadDetail(id: number) {
 function mapDetailToStore(detail: BackendReimDetail) {
   const m = detail.main
   editVersion.value = m.version || 0
+  editStatus.value = m.status ?? 0
 
   // 基础信息映射（后端字段名 → store 字段名）
   store.setBasic({
     title: m.reimbursementTitle || '',
-    reimburser: m.reimburserId || '',
+    reimbursement: m.reimburserId || '',
     department: m.reimDepartmentId || '',
     reimCompany: m.reimCompanyId || '',
     businessType: m.businessTypeId || '',
@@ -103,7 +123,7 @@ function mapDetailToStore(detail: BackendReimDetail) {
   // 行程映射
   store.trips = (detail.trips || []).map((t): Trip => ({
     id: String(t.id || t.travelerId),
-    reimburserId: t.travelerId,
+    reimbursementId: t.travelerId,
     startCity: t.originCityId,
     endCity: t.destinationCityId,
     startDate: t.startDate,
@@ -115,7 +135,7 @@ function mapDetailToStore(detail: BackendReimDetail) {
   store.subsidies = (detail.subsidies || []).map(s => ({
     id: String(s.id),
     tripId: String(s.tripId || ''),
-    reimburserId: s.travelerId,
+    reimbursementId: s.travelerId,
     startDate: s.startDate,
     endDate: s.endDate,
     days: s.subsidyDays,
@@ -142,10 +162,32 @@ function mapDetailToStore(detail: BackendReimDetail) {
 
 /** 页面标题 */
 const pageTitle = computed(() => {
+  if (isView.value) return '查看报销单'
   if (isPush.value) return '手工推送 — 报销单'
   if (isEdit.value) return '编辑报销单'
   return '新增报销单'
 })
+
+/** 关闭页面 / 返回列表：统一弹窗 → 保存草稿 → 跳转列表 */
+async function handleCloseOrBack() {
+  // 只读查看页面：直接退出，不保存
+  if (isView.value) {
+    router.push({ name: 'reimburseList' })
+    return
+  }
+  const ok = await confirm.confirm({
+    type: 'warning',
+    title: '提示',
+    text: '确认关闭页面？当前已填写内容将自动保存为草稿',
+  })
+  if (ok) {
+    // 调用 DocFooter 的 saveDraft 方法保存草稿
+    if (docFooterRef.value) {
+      await docFooterRef.value.saveDraft()
+    }
+    router.push({ name: 'reimburseList' })
+  }
+}
 </script>
 
 <template>
@@ -154,7 +196,7 @@ const pageTitle = computed(() => {
     <div class="doc-sticky-header">
       <div class="page-nav">
         <span class="page-nav-title">{{ pageTitle }}</span>
-        <span class="page-nav-back" @click="router.push({ name: 'reimburseList' })">
+        <span class="page-nav-back" @click="handleCloseOrBack">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
             <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
           </svg>
@@ -171,7 +213,7 @@ const pageTitle = computed(() => {
       <AllocationSection />
       <RemarkSection />
     </main>
-    <DocFooter :mode="isEdit ? 'edit' : 'add'" :reim-id="isEdit ? Number(route.params.id) : null" :edit-version="editVersion" />
+    <DocFooter ref="docFooterRef" :mode="isEdit ? 'edit' : 'add'" :reim-id="isEdit ? Number(route.params.id) : null" :edit-version="editVersion" :edit-status="editStatus" :readonly="isView" @close="handleCloseOrBack" />
 
     <!-- 确认对话框（兼容 useConfirm v-model 模式） -->
     <ConfirmModal

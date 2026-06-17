@@ -55,7 +55,7 @@ function buildSubsidyFromTrip(tripId: string, trip: Trip, state: ReimbursementSt
   return {
     id: uid('s'),
     tripId,
-    reimburserId: trip.reimburserId,
+    reimbursementId: trip.reimbursementId,
     startDate: trip.startDate,
     endDate: trip.endDate,
     days: diffDays(trip.startDate, trip.endDate),
@@ -92,7 +92,7 @@ export const useReimbursementStore = defineStore('reimbursement', {
   state: (): ReimbursementState => {
     const initTrip: Trip = {
       id: 't_1',
-      reimburserId: '13AB3A3F72409002',
+      reimbursementId: '13AB3A3F72409002',
       startCity: '10458',
       endCity: '10119',
       startDate: '2026-04-13',
@@ -103,7 +103,7 @@ export const useReimbursementStore = defineStore('reimbursement', {
       meta: { title: '差旅费用报销单', submitDate: '2026-04-23' },
       basic: {
         title: '徐年年项目出差',
-        reimburser: '13AB3A3F72409002',
+        reimbursement: '13AB3A3F72409002',
         department: '',
         reimCompany: '',
         businessType: '1B5FEB7DD4396000',
@@ -113,7 +113,7 @@ export const useReimbursementStore = defineStore('reimbursement', {
       subsidies: [{
         id: 's_1',
         tripId: initTrip.id,
-        reimburserId: initTrip.reimburserId,
+        reimbursementId: initTrip.reimbursementId,
         startDate: initTrip.startDate,
         endDate: initTrip.endDate,
         days: diffDays(initTrip.startDate, initTrip.endDate),
@@ -128,7 +128,7 @@ export const useReimbursementStore = defineStore('reimbursement', {
         { id: 'a_1', company: '成本中心-管理层类', project: '', ratio: 1.0, amount: 0 }
       ],
       remark: '',
-      ui: { collapsed: { basic: false, trip: false, subsidy: false, total: false, allocation: false, remark: false } },
+      ui: { collapsed: { basic: false, trip: false, subsidy: false, total: false, allocation: false, remark: false }, readonly: false },
       // 基础数据（初始为空，由 loadBaseData 填充）
       companies: [],
       departments: [],
@@ -235,7 +235,7 @@ export const useReimbursementStore = defineStore('reimbursement', {
     resetForNewForm() {
       this.basic = {
         title: '',
-        reimburser: '',
+        reimbursement: '',
         department: '',
         reimCompany: '',
         businessType: '',
@@ -248,6 +248,7 @@ export const useReimbursementStore = defineStore('reimbursement', {
       ]
       this.remark = ''
       this.meta = { title: '差旅费用报销单', submitDate: '' }
+      this.ui.readonly = false
     },
 
     togglePanel(key: string) {
@@ -275,9 +276,9 @@ export const useReimbursementStore = defineStore('reimbursement', {
         reimDepartmentName: d.departmentName
       }))
       this.employees = employees.map((e: EmployeeItem) => ({
-        reimburserId: e.employeeId,
-        reimburserNo: e.employeeNo,
-        reimburserName: e.employeeName
+        reimbursementId: e.employeeId,
+        reimbursementNo: e.employeeNo,
+        reimbursementName: e.employeeName
       }))
       this.businessTypes = btRaw.map((bt: BusinessTypeNode) => ({
         businessTypeId: bt.businessTypeId,

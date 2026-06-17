@@ -41,12 +41,14 @@ request.interceptors.response.use(
     if (res.code !== undefined && res.code !== 200) {
       ElMessage.error(res.msg || res.message || '请求失败，请稍后重试')
 
-      // 乐观锁冲突特殊处理
+      // 乐观锁冲突特殊处理（保留 code 供下游弹窗判断）
       if (res.code === 40006) {
         ElMessage.warning('数据已被他人修改，请刷新页面后重试')
       }
 
-      return Promise.reject(new Error(res.msg || '请求失败'))
+      const err = new Error(res.msg || '请求失败') as Error & { code: number }
+      err.code = res.code
+      return Promise.reject(err)
     }
 
     return res

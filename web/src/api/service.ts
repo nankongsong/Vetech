@@ -75,12 +75,12 @@ export function deleteReim(id: number): Promise<void> {
 
 // ── 行程管理 ──
 
-export function addTrip(mainId: number, dto: BackendTripDTO): Promise<void> {
-  return post<void>(`/reim/${mainId}/trip`, dto)
+export function addTrip(mainId: number, dto: BackendTripDTO): Promise<{ tripId: number; subsidyId: number }> {
+  return post<{ tripId: number; subsidyId: number }>(`/reim/${mainId}/trip`, dto)
 }
 
-export function updateTrip(mainId: number, tripId: number, dto: BackendTripDTO): Promise<void> {
-  return put<void>(`/reim/${mainId}/trip/${tripId}`, dto)
+export function updateTrip(mainId: number, tripId: number, dto: BackendTripDTO): Promise<{ subsidyId: number }> {
+  return put<{ subsidyId: number }>(`/reim/${mainId}/trip/${tripId}`, dto)
 }
 
 export function deleteTrip(mainId: number, tripId: number): Promise<void> {

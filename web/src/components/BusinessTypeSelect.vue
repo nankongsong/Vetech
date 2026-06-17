@@ -15,6 +15,7 @@ const store = useReimbursementStore()
 const props = defineProps<{
   modelValue: string
   placeholder?: string
+  disabled?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -46,8 +47,8 @@ function buildTree(list: any[]): TreeNode[] {
   return roots
 }
 
-function onToggleClick(e: MouseEvent) {
-  e.stopPropagation()
+function onToggleClick() {
+  if (props.disabled) return
   open.value = !open.value
 }
 
@@ -89,7 +90,7 @@ function flatten(): Array<{ node: TreeNode; depth: number; parents: string[] }> 
 
 <template>
   <div ref="wrap" class="business-type-select-wrapper" :class="{ open }">
-    <div class="business-type-select" @click.stop="onToggleClick" tabindex="0">
+    <div class="business-type-select" :class="{ disabled: props.disabled }" @click.stop="onToggleClick" tabindex="0">
       <input type="text" readonly :value="displayValue" :placeholder="placeholder || '请选择'"
              style="cursor: pointer; background: transparent;" />
       <span class="arrow">
@@ -147,6 +148,8 @@ function flatten(): Array<{ node: TreeNode; depth: number; parents: string[] }> 
   line-height: normal;
 }
 .business-type-select:hover { border-color: #c0c4cc; }
+.business-type-select.disabled { background: #f5f7fa; cursor: not-allowed; }
+.business-type-select.disabled input { color: #909399; }
 .business-type-select.open { border-color: #409eff; }
 .arrow {
   color: #c0c4cc;

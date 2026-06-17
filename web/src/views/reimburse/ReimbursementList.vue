@@ -113,8 +113,17 @@ function onBusinessTypeChange(val: string) {
   // 父节点忽略，不更新 modelValue
 }
 
-/** 点击报销单号/标题 → 跳转详情页 */
-function goDetail(row: ReimburseListRow) { router.push({ name: 'reimburseEdit', params: { id: row.id } }) }
+/** 点击报销单号/标题 → 与提交/查看按钮跳转逻辑一致 */
+function goDetail(row: ReimburseListRow) {
+  if (row.status === 0) {
+    // 草稿：跳转编辑报销单页面
+    router.push({ name: 'reimburseEdit', params: { id: row.id } })
+  } else if (row.status === 1) {
+    // 已完成：跳转独立只读详情页面
+    router.push({ name: 'reimburseView', params: { id: row.id } })
+  }
+  // 已作废：无跳转
+}
 
 function handleAdd() { router.push({ name: 'reimburseAdd' }) }
 
@@ -124,21 +133,23 @@ function handleEdit(row: ReimburseListRow) {
   router.push({ name: 'reimburseEdit', params: { id: row.id } })
 }
 
-/** 提交/查看：草稿跳转编辑页补录行程后提交，已完成/已作废跳转只读页 */
+/** 提交/查看：草稿跳转编辑页，已完成跳转只读详情页，已作废禁用 */
 function handleSubmit(row: ReimburseListRow) {
-  // 所有状态统一跳转到单据详情页（草稿可补录行程后提交，已完成/已作废只读查看）
-  router.push({ name: 'reimburseEdit', params: { id: row.id } })
+  if (row.status === 0) {
+    // 草稿：跳转编辑报销单页面
+    router.push({ name: 'reimburseEdit', params: { id: row.id } })
+  } else if (row.status === 1) {
+    // 已完成：跳转独立只读详情页面
+    router.push({ name: 'reimburseView', params: { id: row.id } })
+  }
+  // 已作废：按钮置灰不可点击，不做任何跳转
 }
 
-/** 获取提交按钮的智能提示文字 */
+/** 获取提交/查看按钮的提示文字 */
 function getSubmitTooltip(row: ReimburseListRow): string {
-  if (row.status === 0) {
-    return row.isAllRequiredFilled ? '提交' : '请先完善必填项'
-  } else if (row.status === 1) {
-    return '查看详情'
-  } else {
-    return '已作废，不可操作'
-  }
+  if (row.status === 0) return '提交'
+  if (row.status === 1) return '查看详情'
+  return '单据已作废，无法操作'
 }
 
 /** 手工推送：仅已完成单据可推送 */
@@ -278,9 +289,14 @@ function fmtNo(no: string): string { return no.replace(/-/g, '') }
               </el-dropdown>
             </template>
           </el-table-column>
-          <!-- 报销单号：去横线格式化显示 -->
+          <!-- 报销单号：草稿→编辑页，已完成→只读页，已作废→无跳转+悬浮提示 -->
           <el-table-column label="报销单号" width="155" show-overflow-tooltip>
-            <template #default="{row}"><span class="text-blue link-text" @click="goDetail(row)">{{ fmtNo(row.reimbursementNo) }}</span></template>
+            <template #default="{row}">
+              <el-tooltip v-if="row.status === 2" content="单据已作废，无法查看编辑" placement="top">
+                <span class="text-disabled">{{ fmtNo(row.reimbursementNo) }}</span>
+              </el-tooltip>
+              <span v-else class="text-blue link-text" @click="goDetail(row)">{{ fmtNo(row.reimbursementNo) }}</span>
+            </template>
           </el-table-column>
           <!-- 单据状态 -->
           <el-table-column label="单据状态" width="90" align="center">
@@ -306,12 +322,17 @@ function fmtNo(no: string): string { return no.replace(/-/g, '') }
           <el-table-column label="业务类型" width="105" show-overflow-tooltip>
             <template #default="{row}">{{ row.businessTypeName }}</template>
           </el-table-column>
-          <!-- 报销标题：不定宽，自动填满剩余空间 -->
+          <!-- 报销标题：草稿→编辑页，已完成→只读页，已作废→无跳转+悬浮提示 -->
           <el-table-column label="报销标题" show-overflow-tooltip>
-            <template #default="{row}"><span class="text-blue link-text" @click="goDetail(row)">{{row.reimbursementTitle}}</span></template>
+            <template #default="{row}">
+              <el-tooltip v-if="row.status === 2" content="单据已作废，无法查看编辑" placement="top">
+                <span class="text-disabled">{{ row.reimbursementTitle }}</span>
+              </el-tooltip>
+              <span v-else class="text-blue link-text" @click="goDetail(row)">{{ row.reimbursementTitle }}</span>
+            </template>
           </el-table-column>
           <!-- 报销事由：不定宽，自动填满剩余空间 -->
-          <el-table-column label="报销事由" show-overflow-tooltip />
+          <el-table-column prop="businessTripReason" label="报销事由" show-overflow-tooltip />
           <!-- 补助金额 -->
           <el-table-column label="补助金额" width="85" align="right">
             <template #default="{row}">{{ (row.subsidyTotal ?? 0).toFixed(2) }}</template>
@@ -389,6 +410,7 @@ function fmtNo(no: string): string { return no.replace(/-/g, '') }
 }
 .link-text { cursor: pointer; }
 .link-text:hover { text-decoration: underline; }
+.text-disabled { color: #c0c4cc; cursor: not-allowed; }
 
 .action-icon-btn { padding: 4px; font-size: 15px; }
 .action-icon-btn + .action-icon-btn { margin-left: 1px; }

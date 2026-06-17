@@ -6,6 +6,7 @@ import com.example.spring.entity.*;
 import com.example.spring.vo.ReimDetailVO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 报销单核心业务服务接口
@@ -33,11 +34,11 @@ public interface ReimMainService {
     /** 删除草稿报销单 */
     void delete(Long id);
 
-    /** 新增行程（级联生成补助+日历） */
-    void addTrip(Long mainId, TripDTO dto);
+    /** 新增行程（级联生成补助+日历），返回 {tripId, subsidyId} */
+    Map<String, Long> addTrip(Long mainId, TripDTO dto);
 
-    /** 更新行程（同步更新补助+日历） */
-    void updateTrip(Long mainId, Long tripId, TripDTO dto);
+    /** 更新行程（同步更新补助+日历），返回 {subsidyId} */
+    Map<String, Long> updateTrip(Long mainId, Long tripId, TripDTO dto);
 
     /** 删除行程（级联删除补助+日历） */
     void deleteTrip(Long mainId, Long tripId);
