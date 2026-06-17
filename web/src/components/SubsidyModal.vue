@@ -545,9 +545,6 @@ async function onSave() {
 .col-amt {
   width: var(--col-amt-w);
 }
-.col-amt.disabled .amt-input {
-  opacity: 0.45;
-}
 .col-amt .std {
   display: block;
   font-size: 12px;
@@ -555,7 +552,7 @@ async function onSave() {
   margin-bottom: 3px;
   white-space: nowrap;
   text-align: right;
-  padding-right: 84px;
+  padding-right: 83px;
 }
 .amt-row {
   display: flex;
