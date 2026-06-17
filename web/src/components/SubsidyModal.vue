@@ -271,6 +271,7 @@ async function onSave() {
   display: flex;
   gap: 0;
   height: 100%;
+  padding-left: 24px;
   --border-color: #e8e8e8;
   --border-width: 1px;
 }
