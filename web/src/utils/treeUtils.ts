@@ -83,12 +83,14 @@ export function buildTree(
     }
   }
 
-  // 3) 清理空的 children 数组（el-tree-select 节点若无子节点不应有 children 字段）
+  // 3) 清理空的 children 数组，并标记父节点为不可选中
   function cleanChildren(nodes: TreeNode[]) {
     for (const node of nodes) {
       if (node.children && node.children.length === 0) {
         delete node.children
       } else if (node.children) {
+        // 父级分组节点仅用于展开/收起，不允许选中（仅最底层叶子节点可选）
+        node.disabled = true
         cleanChildren(node.children)
       }
     }

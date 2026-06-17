@@ -6,7 +6,7 @@
  *   edit  — 编辑已有报销单（路由 /reimburse/:id/edit）
  *   push  — 手工推送确认页（路由 /reimburse/:id/push?mode=push）
  */
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useReimbursementStore } from '@/stores/reimbursement'
 import { fetchReimDetail } from '@/api/service'
@@ -31,12 +31,14 @@ const store = useReimbursementStore()
 const pageLoading = ref(false)
 const isEdit = ref(false)
 const isPush = ref(false)
+const editVersion = ref(0)
 
 onMounted(async () => {
+  store.resetForNewForm()
   await store.loadBaseData()
 
   const idParam = route.params.id
-  if (idParam) {
+  if (idParam && typeof idParam === 'string') {
     isEdit.value = true
     await loadDetail(Number(idParam))
   }
@@ -45,6 +47,28 @@ onMounted(async () => {
     isPush.value = true
   }
 })
+
+// 监听路由参数变化（组件复用时重新加载数据）
+watch(
+  () => route.params.id,
+  async (newId, oldId) => {
+    if (newId === oldId) return
+
+    store.resetForNewForm()
+    isPush.value = false
+
+    if (newId && typeof newId === 'string') {
+      isEdit.value = true
+      await loadDetail(Number(newId))
+    } else {
+      isEdit.value = false
+    }
+
+    if (route.query.mode === 'push') {
+      isPush.value = true
+    }
+  }
+)
 
 /** 加载已有报销单详情并映射到 store */
 async function loadDetail(id: number) {
@@ -63,6 +87,7 @@ async function loadDetail(id: number) {
 /** 后端 DTO → 前端 store 模型映射 */
 function mapDetailToStore(detail: BackendReimDetail) {
   const m = detail.main
+  editVersion.value = m.version || 0
 
   // 基础信息映射（后端字段名 → store 字段名）
   store.setBasic({
@@ -143,7 +168,7 @@ const pageTitle = computed(() => {
       <AllocationSection />
       <RemarkSection />
     </main>
-    <DocFooter />
+    <DocFooter :mode="isEdit ? 'edit' : 'add'" :reim-id="isEdit ? Number(route.params.id) : null" :edit-version="editVersion" />
 
     <!-- 确认对话框（兼容 useConfirm v-model 模式） -->
     <ConfirmModal
@@ -174,7 +199,7 @@ const pageTitle = computed(() => {
 }
 .page-nav-back:hover { text-decoration: underline; }
 .doc-main {
-  max-width: 1200px; margin: 0 auto; padding: 16px 20px;
+  max-width: 1200px; margin: 0 auto; padding: 16px 20px 80px;
 }
 </style>
 
@@ -228,6 +253,8 @@ const pageTitle = computed(() => {
 }
 .btn-primary:hover { background: #337ecc; border-color: #337ecc; color: #fff; }
 .btn-default { background: #fff; color: #606266; }
+.btn-outline { background: #fff; border-color: #409eff; color: #409eff; }
+.btn-outline:hover { border-color: #337ecc; color: #337ecc; }
 .btn-text {
   display: inline-flex; align-items: center; gap: 4px;
   background: none; border: none; color: #409eff; font-size: 14px;
@@ -349,8 +376,8 @@ const pageTitle = computed(() => {
 
 /* ===== 页脚 ===== */
 .doc-footer {
-  display: flex; justify-content: flex-end; gap: 12px;
+  display: flex; justify-content: center; gap: 12px;
   padding: 16px 20px; background: #fff; border-top: 1px solid #ebeef5;
-  position: sticky; bottom: 0;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
 }
 </style>

@@ -107,13 +107,11 @@ export async function initDictData() {
   if (results[3].status === 'fulfilled') {
     const apiData = results[3].value.data
     if (apiData && apiData.length > 0) {
-      // 判断是否已是树形（有 children 字段且非空）
-      const isTree = apiData.some((n: any) => n.children && n.children.length > 0)
+      const isTree = apiData.some((n: BusinessTypeNode) => n.children && n.children.length > 0)
       if (isTree) {
         businessTypeTreeData.value = mapApiTreeToTreeNode(apiData)
       } else {
-        // 扁平数组 → 调用通用转换
-        businessTypeTreeData.value = buildBusinessTypeTree(apiData as any[])
+        businessTypeTreeData.value = buildBusinessTypeTree(apiData)
       }
     }
   } else {
@@ -150,13 +148,16 @@ export async function initDictData() {
 function mapApiTreeToTreeNode(apiNodes: BusinessTypeNode[]): TreeNode[] {
   if (!apiNodes || apiNodes.length === 0) return []
 
-  return apiNodes.map((node) => ({
-    value: node.businessTypeId,
-    label: node.businessTypeName,
-    children: node.children ? mapApiTreeToTreeNode(node.children) : undefined,
-    // 透传原始数据
-    _raw: node,
-  }))
+  return apiNodes.map((node) => {
+    const hasChildren = node.children && node.children.length > 0
+    return {
+      value: node.businessTypeId,
+      label: node.businessTypeName,
+      children: hasChildren ? mapApiTreeToTreeNode(node.children!) : undefined,
+      disabled: hasChildren || undefined,
+      _raw: node,
+    }
+  })
 }
 
 // ==================== 便捷 computed（el-select 直接使用） ====================

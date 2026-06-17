@@ -13,32 +13,38 @@ import type {
   BackendSubsidyCalendar,
   BackendCalendarDTO,
   BackendAllocationDTO,
+  CompanyItem,
+  DepartmentItem,
+  EmployeeItem,
+  BusinessTypeNode,
+  CityItem,
+  ProjectItem,
 } from './types'
 
 // ── 基础数据 ──
 
-export function fetchCompanies(): Promise<Company[]> {
-  return get<Company[]>('/company/list')
+export function fetchCompanies(): Promise<CompanyItem[]> {
+  return get<CompanyItem[]>('/company/list')
 }
 
-export function fetchDepartments(): Promise<Department[]> {
-  return get<Department[]>('/department/list')
+export function fetchDepartments(): Promise<DepartmentItem[]> {
+  return get<DepartmentItem[]>('/department/list')
 }
 
-export function fetchEmployees(): Promise<Employee[]> {
-  return get<Employee[]>('/employee/list')
+export function fetchEmployees(): Promise<EmployeeItem[]> {
+  return get<EmployeeItem[]>('/employee/list')
 }
 
-export function fetchBusinessTypes(): Promise<any[]> {
-  return get<any[]>('/business-type/tree')
+export function fetchBusinessTypes(): Promise<BusinessTypeNode[]> {
+  return get<BusinessTypeNode[]>('/business-type/tree')
 }
 
-export function fetchCities(): Promise<City[]> {
-  return get<City[]>('/city/list')
+export function fetchCities(): Promise<CityItem[]> {
+  return get<CityItem[]>('/city/list')
 }
 
-export function fetchProjects(): Promise<Project[]> {
-  return get<Project[]>('/project/list')
+export function fetchProjects(): Promise<ProjectItem[]> {
+  return get<ProjectItem[]>('/project/list')
 }
 
 // ── 报销单 CRUD ──

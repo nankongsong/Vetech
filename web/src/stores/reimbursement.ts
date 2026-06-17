@@ -26,6 +26,13 @@ import {
   fetchCities,
   fetchProjects
 } from '@/api/service'
+import type {
+  CompanyItem,
+  DepartmentItem,
+  EmployeeItem,
+  BusinessTypeNode,
+  CityItem,
+} from '@/api/types'
 
 interface ReimbursementState {
   meta: DocMeta
@@ -177,15 +184,6 @@ export const useReimbursementStore = defineStore('reimbursement', {
       this.subsidies = this.subsidies.filter(s => s.tripId !== id)
     },
 
-    copyTrip(id: string) {
-      const src = this.trips.find(t => t.id === id)
-      if (!src) return
-      const newId = uid('t')
-      const clone: Trip = { ...src, id: newId }
-      this.trips.push(clone)
-      this.subsidies.push(buildSubsidyFromTrip(newId, clone, this))
-    },
-
     updateSubsidyCalendar(subId: string, calendar: SubsidyRow[]) {
       const sub = this.subsidies.find(s => s.id === subId)
       if (!sub) return
@@ -233,6 +231,25 @@ export const useReimbursementStore = defineStore('reimbursement', {
       this.remark = text
     },
 
+    /** 重置表单状态（进入新增/编辑新报销单前调用） */
+    resetForNewForm() {
+      this.basic = {
+        title: '',
+        reimburser: '',
+        department: '',
+        reimCompany: '',
+        businessType: '',
+        reason: ''
+      }
+      this.trips = []
+      this.subsidies = []
+      this.allocation = [
+        { id: 'a_1', company: '', project: '', ratio: 1.0, amount: 0 }
+      ]
+      this.remark = ''
+      this.meta = { title: '差旅费用报销单', submitDate: '' }
+    },
+
     togglePanel(key: string) {
       this.ui.collapsed[key] = !this.ui.collapsed[key]
     },
@@ -247,31 +264,29 @@ export const useReimbursementStore = defineStore('reimbursement', {
         fetchCities(),
         fetchProjects()
       ])
-      this.companies = (companies as any[]).map((c: any) => ({
+      this.companies = companies.map((c: CompanyItem) => ({
         reimCompanyId: c.companyId,
         reimCompanyNo: c.companyNo,
         reimCompanyName: c.companyName
       }))
-      this.departments = (departments as any[]).map((d: any) => ({
+      this.departments = departments.map((d: DepartmentItem) => ({
         reimDepartmentId: d.departmentId,
         reimDepartmentNo: d.departmentNo,
         reimDepartmentName: d.departmentName
       }))
-      this.employees = (employees as any[]).map((e: any) => ({
+      this.employees = employees.map((e: EmployeeItem) => ({
         reimburserId: e.employeeId,
         reimburserNo: e.employeeNo,
         reimburserName: e.employeeName
       }))
-      // 后端 BusinessTypeTreeVO 字段 → 前端 BusinessType 字段映射
-      this.businessTypes = (btRaw as any[]).map((bt: any) => ({
+      this.businessTypes = btRaw.map((bt: BusinessTypeNode) => ({
         businessTypeId: bt.businessTypeId,
         businessTypeNo: bt.businessTypeNo,
         businessTypeName: bt.businessTypeName,
-        thereSubordinateNode: (bt.hasSubordinate === 1 || bt.hasSubordinate === true ? '1' : '0') as '0' | '1',
+        thereSubordinateNode: bt.hasSubordinate === 1 ? '1' : '0',
         superiorId: bt.superiorId
       }))
-      // cityType: Integer → string union
-      this.cities = (cities as any[]).map((c: any) => ({
+      this.cities = cities.map((c: CityItem) => ({
         cityNo: c.cityNo,
         cityName: c.cityName,
         cityType: String(c.cityType) as '1' | '2' | '3'

@@ -1,5 +1,46 @@
 // 后端 API 类型定义 —— 与 Java Entity/DTO 一一映射
 
+// ── 基础数据类型 ──
+
+export interface CompanyItem {
+  companyId: string
+  companyNo: string
+  companyName: string
+}
+
+export interface DepartmentItem {
+  departmentId: string
+  departmentNo: string
+  departmentName: string
+}
+
+export interface EmployeeItem {
+  employeeId: string
+  employeeNo: string
+  employeeName: string
+}
+
+export interface BusinessTypeNode {
+  businessTypeId: string
+  businessTypeNo: string
+  businessTypeName: string
+  superiorId: string
+  hasSubordinate: 0 | 1
+  children?: BusinessTypeNode[]
+}
+
+export interface CityItem {
+  cityNo: string
+  cityName: string
+  cityType: 1 | 2 | 3
+}
+
+export interface ProjectItem {
+  projectId: string
+  projectNo: string
+  projectName: string
+}
+
 // ── 报销单头 ──
 
 export interface BackendReimMain {
