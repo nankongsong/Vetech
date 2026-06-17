@@ -34,7 +34,7 @@ watch(
 )
 
 watch(() => props.modelValue, (v) => {
-  document.body.style.overflow = v ? 'hidden' : ''
+  document.documentElement.classList.toggle('subsidy-modal-open', v)
 })
 
 function close() { emit('update:modelValue', false) }
@@ -646,5 +646,8 @@ async function onSave() {
 }
 .modal-card.modal-fullscreen .modal-footer {
   justify-content: center;
+}
+html.subsidy-modal-open {
+  overflow: hidden !important;
 }
 </style>
