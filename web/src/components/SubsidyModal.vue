@@ -545,8 +545,7 @@ async function onSave() {
 .col-amt {
   width: var(--col-amt-w);
 }
-.col-amt.disabled .amt-input,
-.col-amt.disabled .custom-checkbox {
+.col-amt.disabled .amt-input {
   opacity: 0.45;
 }
 .col-amt .std {
