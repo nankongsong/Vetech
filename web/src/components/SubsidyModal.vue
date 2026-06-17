@@ -229,10 +229,11 @@ async function onSave() {
               <td class="col-date">
                 <div class="date-cell-content">
                   <div class="date-text">
-                    <div>{{ r.date }}</div>
-                    <div>星期{{ weekdayCn(r.date) }}</div>
+                    <div class="date-line">{{ r.date }}</div>
+                    <div class="date-line">星期{{ weekdayCn(r.date) }}
+                      <span class="custom-checkbox" :class="{ checked: checkAllRow(idx) }" @click="toggleRow(idx)"></span>
+                    </div>
                   </div>
-                  <span class="custom-checkbox" :class="{ checked: checkAllRow(idx) }" @click="toggleRow(idx)"></span>
                   <svg class="pin-icon" viewBox="0 0 21 30" width="9" height="13">
                     <circle cx="10.5" cy="10.5" r="10.5" fill="#979797"/>
                     <path d="M10.5 30L1.40673 16.5H19.5933L10.5 30Z" fill="#979797"/>
@@ -452,7 +453,7 @@ async function onSave() {
   border-collapse: collapse;
   font-size: 14px;
   table-layout: fixed;
-  --col-info-w: 210px;
+  --col-info-w: 300px;
   --col-amt-w: 290px;
 }
 .subsidy-table th {
@@ -490,18 +491,26 @@ async function onSave() {
   width: var(--col-info-w);
 }
 .date-cell-content {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
+  width: 100%;
 }
 .date-text {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  line-height: 1.4;
-  text-align: left;
+  line-height: 1.5;
+  text-align: center;
+}
+.date-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 .pin-icon {
   flex-shrink: 0;
+  margin-left: auto;
 }
 .col-city {
   white-space: nowrap;
