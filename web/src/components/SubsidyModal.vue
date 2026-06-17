@@ -324,7 +324,7 @@ async function onSave() {
 /* ===== 日期卡片 ===== */
 .date-card {
   padding: 12px 16px;
-  margin-top: -8px;
+  margin-top: -20px;
   background: #fff;
   border: var(--border-width) solid var(--border-color);
   border-radius: 0;
@@ -411,6 +411,7 @@ async function onSave() {
 }
 .table-wrapper {
   border: var(--border-width) solid var(--border-color);
+  margin-top: -15px;
 }
 
 .select-all-row {
