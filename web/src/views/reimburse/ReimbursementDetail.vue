@@ -127,14 +127,17 @@ function mapDetailToStore(detail: BackendReimDetail) {
     calendar: [],
   }))
 
-  // 分摊映射
-  store.allocation = (detail.allocations || []).map((a): Allocation => ({
+  // 分摊映射（如果后端返回空数组，保持默认的一行分摊记录）
+  const allocList = (detail.allocations || []).map((a): Allocation => ({
     id: String(a.id || a.companyId),
     company: a.companyId || a.companyName || '',
     project: a.projectId || a.projectName || '',
     ratio: a.allocationRatio || 0,
     amount: a.allocationAmount || 0,
   }))
+  store.allocation = allocList.length > 0 ? allocList : [
+    { id: 'a_default', company: m.reimCompanyId || '', project: '', ratio: 1.0, amount: 0 }
+  ]
 }
 
 /** 页面标题 */
