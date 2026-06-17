@@ -549,7 +549,8 @@ async function onSave() {
 .col-amt .amt-input {
   width: 75px;
   height: 28px;
-  padding: 0 0 0 25px;
+  text-align: right;
+  padding: 0 5px 0 0;
   border: 1px solid #dcdfe6;
   border-radius: 3px;
   font-size: 14px;
