@@ -150,19 +150,19 @@ const pageTitle = computed(() => {
 
 <template>
   <div class="doc-page" v-loading="pageLoading">
-    <!-- 顶部导航 -->
-    <div class="page-nav">
-      <span class="page-nav-title">{{ pageTitle }}</span>
-      <span class="page-nav-back" @click="router.push({ name: 'reimburseList' })">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-        </svg>
-        返回列表
-      </span>
+    <!-- 固定表头区域（返回列表 + 单据标题 + 提单日） -->
+    <div class="doc-sticky-header">
+      <div class="page-nav">
+        <span class="page-nav-title">{{ pageTitle }}</span>
+        <span class="page-nav-back" @click="router.push({ name: 'reimburseList' })">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+          </svg>
+          返回列表
+        </span>
+      </div>
+      <DocHeader :mode="isEdit ? 'edit' : 'add'" />
     </div>
-
-    <!-- 表单主体 -->
-    <DocHeader :mode="isEdit ? 'edit' : 'add'" />
     <main class="doc-main">
       <BasicInfo />
       <TripSection />
@@ -191,6 +191,9 @@ const pageTitle = computed(() => {
 .doc-page {
   min-height: 100vh; background: #f0f2f5;
 }
+.doc-sticky-header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 99;
+}
 .page-nav {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 20px; background: #fff; border-bottom: 1px solid #ebeef5;
@@ -202,7 +205,7 @@ const pageTitle = computed(() => {
 }
 .page-nav-back:hover { text-decoration: underline; }
 .doc-main {
-  max-width: 1200px; margin: 0 auto; padding: 16px 20px 80px;
+  max-width: 1200px; margin: 0 auto; padding: 114px 20px 80px;
 }
 </style>
 
@@ -211,7 +214,7 @@ const pageTitle = computed(() => {
 /* ===== Panel 面板 ===== */
 .panel {
   background: #fff; border: none; border-radius: 4px;
-  margin-bottom: 16px; overflow: visible;
+  margin-bottom: 0; overflow: visible;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 .panel.collapsed .panel-body { display: none; }
