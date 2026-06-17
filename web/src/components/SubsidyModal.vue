@@ -493,10 +493,11 @@ async function onSave() {
 .date-cell-content {
   display: flex;
   align-items: center;
+  justify-content: center;
   width: 100%;
+  gap: 4px;
 }
 .date-text {
-  flex: 1;
   display: flex;
   flex-direction: column;
   line-height: 1.5;
@@ -510,7 +511,7 @@ async function onSave() {
 }
 .pin-icon {
   flex-shrink: 0;
-  margin-left: auto;
+  transform: translateX(30px);
 }
 .col-city {
   white-space: nowrap;
