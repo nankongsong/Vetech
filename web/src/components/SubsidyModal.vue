@@ -137,7 +137,7 @@ async function onSave() {
       <!-- ===== 左侧信息面板 ===== -->
       <div class="left-panel">
         <!-- Card 1: 基础信息 -->
-        <div class="left-card">
+        <div class="left-card info-card">
           <div class="card-row">
             <span class="info-label">出差类型</span>
             <span class="biz-type">{{ props.businessTypeName || '-' }}</span>
@@ -298,20 +298,27 @@ async function onSave() {
   align-items: center;
 }
 
+.info-card {
+  padding-left: 0;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
 .info-label {
   width: 64px;
   flex-shrink: 0;
-  font-size: 15px;
-  color: #666;
+  font-size: 16px;
+  font-weight: 400;
+  color: #303133;
 }
 .info-value {
   font-size: 14px;
   color: #333;
 }
 .biz-type {
-  font-size: 15px;
+  font-size: 16px;
+  font-weight: 400;
   color: #E6A23C;
-  margin-left: 17px;
+  margin-left: 33px;
 }
 
 /* ===== 日期卡片 ===== */
@@ -428,7 +435,6 @@ async function onSave() {
 
 /* ===== 表格 ===== */
 .subsidy-table {
-  width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
@@ -451,7 +457,7 @@ async function onSave() {
   vertical-align: middle;
 }
 .subsidy-table td {
-  padding: 10px 8px;
+  padding: 6px 4px;
   color: #333;
   border-bottom: var(--border-width) solid var(--border-color);
   border-right: var(--border-width) solid var(--border-color);
@@ -464,7 +470,6 @@ async function onSave() {
 
 .col-date {
   white-space: nowrap;
-  min-width: 120px;
 }
 .date-cell-content {
   display: inline-flex;
@@ -473,10 +478,9 @@ async function onSave() {
 }
 .col-city {
   white-space: nowrap;
-  min-width: 80px;
 }
 .col-amt {
-  min-width: 130px;
+  width: 300px;
 }
 .col-amt.disabled {
   opacity: 0.45;
@@ -489,8 +493,8 @@ async function onSave() {
   white-space: nowrap;
 }
 .col-amt .amt-input {
-  width: 88px;
-  height: 30px;
+  width: 62px;
+  height: 28px;
   text-align: right;
   padding: 0 8px;
   border: 1px solid #dcdfe6;
@@ -555,5 +559,11 @@ async function onSave() {
 
 :deep(.modal-title) {
   font-weight: 400;
+}
+</style>
+<style>
+.modal-card.modal-fullscreen .modal-title {
+  font-weight: 400;
+  padding-left: 4px;
 }
 </style>
