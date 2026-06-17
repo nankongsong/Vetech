@@ -196,7 +196,8 @@ async function onSave() {
           <span class="select-all-text">全选</span>
         </div>
 
-        <table class="subsidy-table">
+        <div class="table-wrapper">
+	        <table class="subsidy-table">
           <thead>
             <tr>
               <th class="col-date">出差日期</th>
@@ -251,6 +252,7 @@ async function onSave() {
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
 
@@ -267,6 +269,8 @@ async function onSave() {
   display: flex;
   gap: 0;
   height: 100%;
+  --border-color: #e8e8e8;
+  --border-width: 1px;
 }
 /* ===== 左侧面板 ===== */
 .left-panel {
@@ -311,7 +315,7 @@ async function onSave() {
   padding: 0;
   margin-top: -8px;
   background: #fff;
-  border: 1px solid #ebeef5;
+  border: var(--border-width) solid var(--border-color);
   border-radius: 0;
 }
 
@@ -404,9 +408,10 @@ async function onSave() {
   color: #E6A23C;
 }
 .summary-card {
-  border: 1px solid #ebeef5;
+  border: var(--border-width) solid var(--border-color);
   border-radius: 0;
   flex: 0.9;
+  margin-top: 24px;
 }
 
 /* ===== 右侧表格面板 ===== */
@@ -414,6 +419,9 @@ async function onSave() {
   flex: 1;
   padding-left: 14px;
   min-width: 0;
+}
+.table-wrapper {
+  border: var(--border-width) solid var(--border-color);
 }
 
 .select-all-row {
@@ -447,12 +455,13 @@ async function onSave() {
   padding: 8px 6px;
   font-weight: 600;
   color: #333;
-  border-bottom: 1px solid #e8e8e8;
-  border-right: 1px solid #e8e8e8;
+  border-bottom: var(--border-width) solid var(--border-color);
+  border-right: var(--border-width) solid var(--border-color);
   white-space: nowrap;
   background: #fafafa;
 }
-.subsidy-table th:last-child {
+.subsidy-table th:last-child,
+.subsidy-table td:last-child {
   border-right: none;
 }
 .subsidy-table th .custom-checkbox {
@@ -462,13 +471,10 @@ async function onSave() {
 .subsidy-table td {
   padding: 10px 8px;
   color: #333;
-  border-bottom: 1px solid #f0f0f0;
-  border-right: 1px solid #f0f0f0;
+  border-bottom: var(--border-width) solid var(--border-color);
+  border-right: var(--border-width) solid var(--border-color);
   vertical-align: middle;
   text-align: center;
-}
-.subsidy-table td:last-child {
-  border-right: none;
 }
 .subsidy-table tbody tr:hover {
   background: #f5f7fa;
