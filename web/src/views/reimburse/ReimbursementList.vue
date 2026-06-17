@@ -91,6 +91,28 @@ function handleClear() {
   fetchList()
 }
 
+/** 业务类型树形下拉：仅叶子节点可选中，父节点只展开/收起 */
+function findNodeById(nodes: any[], id: string): any | null {
+  for (const node of nodes) {
+    if (node.value === id) return node
+    if (node.children) {
+      const found = findNodeById(node.children, id)
+      if (found) return found
+    }
+  }
+  return null
+}
+function onBusinessTypeChange(val: string) {
+  // 清空值时直接通过
+  if (!val) { filterForm.businessTypeId = ''; return }
+  const node = findNodeById(businessTypeTreeData.value, val)
+  // 仅叶子节点（无 children）允许选中
+  if (node && !node.children) {
+    filterForm.businessTypeId = val
+  }
+  // 父节点忽略，不更新 modelValue
+}
+
 /** 点击报销单号/标题 → 跳转详情页 */
 function goDetail(row: ReimburseListRow) { router.push({ name: 'reimburseEdit', params: { id: row.id } }) }
 
@@ -216,7 +238,7 @@ function fmtNo(no: string): string { return no.replace(/-/g, '') }
               </el-select>
             </el-form-item>
             <el-form-item label="业务类型">
-              <el-tree-select v-model="filterForm.businessTypeId" :data="businessTypeTreeData" placeholder="请选择" clearable check-strictly style="width:200px" />
+              <el-tree-select :model-value="filterForm.businessTypeId" :data="businessTypeTreeData" placeholder="请选择" clearable check-strictly style="width:200px" @update:model-value="onBusinessTypeChange" />
             </el-form-item>
             <!-- 按钮组：右对齐 -->
             <div class="filter-actions">

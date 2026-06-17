@@ -154,7 +154,6 @@ function mapApiTreeToTreeNode(apiNodes: BusinessTypeNode[]): TreeNode[] {
       value: node.businessTypeId,
       label: node.businessTypeName,
       children: hasChildren ? mapApiTreeToTreeNode(node.children!) : undefined,
-      disabled: hasChildren || undefined,
       _raw: node,
     }
   })
