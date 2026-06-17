@@ -422,9 +422,9 @@ async function onSave() {
   padding: 14px 0 8px 0;
 }
 .table-title {
-  font-size: 15px;
-  font-weight: 500;
-  color: #333;
+  font-size: 16px;
+  font-weight: 400;
+  color: #303133;
   margin-right: auto;
 }
 .select-all-text {
