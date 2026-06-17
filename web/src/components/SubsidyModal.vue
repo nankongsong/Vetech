@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, onBeforeMount, onBeforeUnmount } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { money, weekdayCn } from '@/utils/format'
 import { useConfirm } from '@/composables/useConfirm'
@@ -32,6 +32,16 @@ watch(
   },
   { immediate: true }
 )
+
+onBeforeMount(() => {
+  if (props.modelValue) document.documentElement.classList.add('subsidy-modal-open')
+})
+onBeforeUnmount(() => {
+  document.documentElement.classList.remove('subsidy-modal-open')
+})
+watch(() => props.modelValue, (v) => {
+  document.documentElement.classList.toggle('subsidy-modal-open', v)
+})
 
 function close() { emit('update:modelValue', false) }
 
@@ -104,7 +114,7 @@ function onAmountInput(idx: number, key: 'meal' | 'traffic' | 'comm', v: string)
 const startCity = computed(() => store.cities.find(c => c.cityNo === props.subsidy.startCity))
 const endCity = computed(() => store.cities.find(c => c.cityNo === props.subsidy.endCity))
 const subsidyCity = computed(() => store.cities.find(c => c.cityNo === props.subsidy.subsidyCity))
-const trip = computed(() => `${startCity.value ? startCity.value.cityName : ''}-${endCity.value ? endCity.value.cityName : ''}`)
+const trip = computed(() => `${startCity.value ? startCity.value.cityName : ''} - ${endCity.value ? endCity.value.cityName : ''}`)
 
 const allChecked = ['meal', 'traffic', 'comm'].every(k => checkAllColumn(k as 'meal' | 'traffic' | 'comm'))
 const partial = !allChecked && anyChecked()
@@ -132,58 +142,60 @@ async function onSave() {
 
 <template>
   <BaseModal :model-value="props.modelValue" @update:model-value="emit('update:modelValue', $event)"
-             title="补助日历" width="1200px">
+             title="补助日历" fullscreen>
     <div class="subsidy-layout">
       <!-- ===== 左侧信息面板 ===== -->
       <div class="left-panel">
         <!-- Card 1: 基础信息 -->
-        <div class="left-card">
+        <div class="left-card info-card">
           <div class="card-row">
             <span class="info-label">出差类型</span>
             <span class="biz-type">{{ props.businessTypeName || '-' }}</span>
           </div>
         </div>
 
-        <!-- Card 2: 日期 + 时间轴 -->
+        <!-- Card 2: 日期 + 补助日历图标 -->
         <div class="left-card date-card">
-          <div class="timeline">
-            <div class="tl-node-start">
-              <div class="tl-dot"></div>
-              <div class="tl-label">开始日期</div>
-              <div class="tl-date">{{ props.subsidy.startDate }}</div>
-            </div>
+          <div class="date-row">
+            <span class="date-label">开始日期</span>
+            <svg class="cal-icon" viewBox="0 0 28 78" width="18" fill="none">
+              <circle cx="14" cy="14" r="14" fill="#0089D2"/>
+              <rect x="11" y="28" width="5" height="50" fill="#259BD8"/>
+              <circle cx="14" cy="14" r="4" fill="#F9FAFA"/>
+            </svg>
+            <span class="date-value">{{ props.subsidy.startDate }}</span>
+          </div>
 
-            <div class="tl-line">
-              <div class="tl-active">
-                <div class="trip-bar">
-                  <span>行程天数</span>
-                  <span>{{ trip }}</span>
-                  <strong>{{ props.subsidy.days }}天</strong>
-                </div>
-              </div>
-            </div>
+          <div class="trip-bar">
+            <span>行程天数</span>
+            <span class="trip-text">{{ trip }}</span>
+            <strong>{{ props.subsidy.days }}天</strong>
+          </div>
 
-            <div class="tl-node-end">
-              <div class="tl-dot"></div>
-              <div class="tl-label">结束日期</div>
-              <div class="tl-date">{{ props.subsidy.endDate }}</div>
-            </div>
+          <div class="date-row">
+            <span class="date-label">结束日期</span>
+            <svg class="cal-icon flipped" viewBox="0 0 28 78" width="18" fill="none">
+              <circle cx="14" cy="14" r="14" fill="#0089D2"/>
+              <rect x="11" y="28" width="5" height="50" fill="#259BD8"/>
+              <circle cx="14" cy="14" r="4" fill="#F9FAFA"/>
+            </svg>
+            <span class="date-value">{{ props.subsidy.endDate }}</span>
           </div>
         </div>
 
         <!-- Card 3: 金额汇总 -->
-        <div class="left-card">
+        <div class="left-card summary-card">
           <div class="summary-row">
             <span class="summary-label">补助金额</span>
-            <span class="summary-amount orange">CNY {{ money(sumActual()) }}</span>
+            <span class="summary-amount orange"><span class="cny">CNY</span> <span class="num">{{ money(sumActual()) }}</span></span>
           </div>
           <div class="summary-row">
             <span class="summary-label">标准总额</span>
-            <span class="summary-amount">CNY {{ money(sumStd()) }}</span>
+            <span class="summary-amount"><span class="cny">CNY</span> <span class="num">{{ money(sumStd()) }}</span></span>
           </div>
           <div class="summary-row">
             <span class="summary-label">补助金额</span>
-            <span class="summary-amount">CNY {{ money(sumActual()) }}</span>
+            <span class="summary-amount"><span class="cny">CNY</span> <span class="num">{{ money(sumActual()) }}</span></span>
           </div>
         </div>
       </div>
@@ -196,28 +208,29 @@ async function onSave() {
           <span class="select-all-text">全选</span>
         </div>
 
-        <table class="subsidy-table">
+        <div class="table-wrapper">
+	        <table class="subsidy-table">
           <thead>
             <tr>
               <th class="col-date">出差日期</th>
               <th class="col-city">补助城市</th>
               <th class="col-amt">
+                餐费补助
                 <span class="custom-checkbox"
                       :class="{ checked: checkAllColumn('meal'), partial: !checkAllColumn('meal') && calendar.some(r => r.meal.checked) }"
                       @click="toggleCol('meal')"></span>
-                餐费补助
               </th>
               <th class="col-amt">
+                交通补助
                 <span class="custom-checkbox"
                       :class="{ checked: checkAllColumn('traffic'), partial: !checkAllColumn('traffic') && calendar.some(r => r.traffic.checked) }"
                       @click="toggleCol('traffic')"></span>
-                交通补助
               </th>
               <th class="col-amt">
+                通讯补助
                 <span class="custom-checkbox"
                       :class="{ checked: checkAllColumn('comm'), partial: !checkAllColumn('comm') && calendar.some(r => r.comm.checked) }"
                       @click="toggleCol('comm')"></span>
-                通讯补助
               </th>
             </tr>
           </thead>
@@ -225,32 +238,51 @@ async function onSave() {
             <tr v-for="(r, idx) in calendar" :key="r.date">
               <td class="col-date">
                 <div class="date-cell-content">
-                  <span class="custom-checkbox" :class="{ checked: checkAllRow(idx) }" @click="toggleRow(idx)"></span>
-                  <span>{{ r.date.slice(5) }} 星期{{ weekdayCn(r.date) }}</span>
+                  <div class="date-text">
+                    <div class="date-line">{{ r.date }}</div>
+                    <div class="date-line">星期{{ weekdayCn(r.date) }}
+                      <span class="custom-checkbox" :class="{ checked: checkAllRow(idx) }" @click="toggleRow(idx)"></span>
+                    </div>
+                  </div>
+                  <svg class="pin-icon" viewBox="0 0 21 30" width="9" height="13">
+                    <circle cx="10.5" cy="10.5" r="10.5" fill="#979797"/>
+                    <path d="M10.5 30L1.40673 16.5H19.5933L10.5 30Z" fill="#979797"/>
+                    <circle cx="10.5" cy="10.5" r="6.5" fill="white"/>
+                  </svg>
                 </div>
               </td>
               <td class="col-city">{{ subsidyCity ? subsidyCity.cityName : '-' }}</td>
               <td class="col-amt" :class="{ disabled: !r.meal.checked }">
-                <span class="std">标准 {{ money(r.meal.std) }}</span>
-                <input class="amt-input" type="number" min="0" :max="r.meal.std" step="0.01"
-                       :value="r.meal.value" :disabled="!r.meal.checked"
-                       @input="onAmountInput(idx, 'meal', ($event.target as HTMLInputElement).value)" />
+                <span class="std">CNY {{ money(r.meal.std) }} / 天</span>
+                <div class="amt-row">
+                  <span class="custom-checkbox" :class="{ checked: r.meal.checked }" @click="r.meal.checked = !r.meal.checked; r.meal.value = r.meal.checked ? r.meal.std : 0"></span>
+                  <input class="amt-input" type="number" min="0" :max="r.meal.std" step="0.01"
+                         :value="r.meal.checked ? r.meal.value : money(r.meal.std)" :disabled="!r.meal.checked"
+                         @input="onAmountInput(idx, 'meal', ($event.target as HTMLInputElement).value)" />
+                </div>
               </td>
               <td class="col-amt" :class="{ disabled: !r.traffic.checked }">
-                <span class="std">标准 {{ money(r.traffic.std) }}</span>
-                <input class="amt-input" type="number" min="0" :max="r.traffic.std" step="0.01"
-                       :value="r.traffic.value" :disabled="!r.traffic.checked"
-                       @input="onAmountInput(idx, 'traffic', ($event.target as HTMLInputElement).value)" />
+                <span class="std">CNY {{ money(r.traffic.std) }} / 天</span>
+                <div class="amt-row">
+                  <span class="custom-checkbox" :class="{ checked: r.traffic.checked }" @click="r.traffic.checked = !r.traffic.checked; r.traffic.value = r.traffic.checked ? r.traffic.std : 0"></span>
+                  <input class="amt-input" type="number" min="0" :max="r.traffic.std" step="0.01"
+                         :value="r.traffic.checked ? r.traffic.value : money(r.traffic.std)" :disabled="!r.traffic.checked"
+                         @input="onAmountInput(idx, 'traffic', ($event.target as HTMLInputElement).value)" />
+                </div>
               </td>
               <td class="col-amt" :class="{ disabled: !r.comm.checked }">
-                <span class="std">标准 {{ money(r.comm.std) }}</span>
-                <input class="amt-input" type="number" min="0" :max="r.comm.std" step="0.01"
-                       :value="r.comm.value" :disabled="!r.comm.checked"
-                       @input="onAmountInput(idx, 'comm', ($event.target as HTMLInputElement).value)" />
+                <span class="std">CNY {{ money(r.comm.std) }} / 天</span>
+                <div class="amt-row">
+                  <span class="custom-checkbox" :class="{ checked: r.comm.checked }" @click="r.comm.checked = !r.comm.checked; r.comm.value = r.comm.checked ? r.comm.std : 0"></span>
+                  <input class="amt-input" type="number" min="0" :max="r.comm.std" step="0.01"
+                         :value="r.comm.checked ? r.comm.value : money(r.comm.std)" :disabled="!r.comm.checked"
+                         @input="onAmountInput(idx, 'comm', ($event.target as HTMLInputElement).value)" />
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
     </div>
 
@@ -266,11 +298,15 @@ async function onSave() {
 .subsidy-layout {
   display: flex;
   gap: 0;
+  height: 100%;
+  padding-left: 24px;
+  --border-color: #e8e8e8;
+  --border-width: 1px;
+  --orange: #ea7814;
 }
-
 /* ===== 左侧面板 ===== */
 .left-panel {
-  width: 340px;
+  width: 300px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -291,82 +327,63 @@ async function onSave() {
   align-items: center;
 }
 
+.info-card {
+  padding-left: 0;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
 .info-label {
   width: 64px;
   flex-shrink: 0;
-  font-size: 15px;
-  color: #666;
+  font-size: 16px;
+  font-weight: 500;
+  color: #303133;
 }
 .info-value {
   font-size: 14px;
   color: #333;
 }
 .biz-type {
-  font-size: 15px;
-  color: #E6A23C;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--orange);
+  margin-left: 33px;
 }
 
-/* ===== 时间轴 ===== */
+/* ===== 日期卡片 ===== */
 .date-card {
-  padding: 0;
-  margin-top: -8px;
+  padding: 12px 16px;
+  margin-top: -20px;
   background: #fff;
-  border: 1px solid #ebeef5;
+  border: var(--border-width) solid var(--border-color);
+  border-radius: 0;
 }
 
-.timeline {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-.tl-node-start,
-.tl-node-end {
+.date-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
+  gap: 8px;
 }
 
-.tl-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #409EFF;
-  flex-shrink: 0;
-}
-
-.tl-label {
+.date-label {
   font-size: 14px;
-  color: #666;
+  color: #333;
   width: 64px;
   flex-shrink: 0;
 }
-.tl-date {
+
+.cal-icon {
+  flex-shrink: 0;
+  display: block;
+}
+.cal-icon.flipped {
+  transform: scaleY(-1);
+}
+
+.date-value {
   font-size: 14px;
   color: #333;
-}
-
-.tl-line {
-  position: relative;
-  padding-left: 37px;
-  padding-right: 16px;
-}
-
-.tl-line::before {
-  content: '';
-  position: absolute;
-  left: 20px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: #dcdfe6;
-}
-
-.tl-active {
-  position: relative;
-  z-index: 1;
-  padding: 4px 0;
+  margin-left: 16px;
 }
 
 /* 蓝色行程条 */
@@ -374,14 +391,20 @@ async function onSave() {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #409EFF;
+  background: lch(60.99% 40.66 258.29);
   color: #fff;
   font-size: 14px;
-  padding: 10px 14px;
-  border-radius: 6px;
+  padding: 6px 14px;
+  border-radius: 0;
+  margin: 10px 0;
 }
 .trip-bar strong {
-  font-size: 16px;
+  font-weight: 400;
+  font-size: 14px;
+  margin-left: 60px;
+}
+.trip-text {
+  margin-left: 5px;
 }
 
 /* ===== 金额汇总 ===== */
@@ -400,14 +423,40 @@ async function onSave() {
   font-variant-numeric: tabular-nums;
 }
 .summary-amount.orange {
-  color: #E6A23C;
+  color: var(--orange);
+}
+.summary-amount .cny {
+  margin-left: 10px;
+  color: #333;
+}
+.summary-amount .num {
+  margin-left: 70px;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--orange);
+  transform: translateX(-40px);
+}
+.summary-amount {
+  display: inline-flex;
+  align-items: center;
+}
+.summary-card {
+  border: var(--border-width) solid var(--border-color);
+  border-radius: 0;
+  flex: 0.95;
+  margin-top: 24px;
 }
 
 /* ===== 右侧表格面板 ===== */
 .right-table-panel {
   flex: 1;
-  padding-left: 14px;
+  padding-left: 20px;
+  padding-right: 40px;
   min-width: 0;
+}
+.table-wrapper {
+  border: var(--border-width) solid var(--border-color);
+  margin-top: -15px;
 }
 
 .select-all-row {
@@ -418,10 +467,14 @@ async function onSave() {
   margin-bottom: 12px;
   padding: 14px 0 8px 0;
 }
+.select-all-row .custom-checkbox,
+.select-all-row .select-all-text {
+  margin-top: -12px;
+}
 .table-title {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 500;
-  color: #333;
+  color: #303133;
   margin-right: auto;
 }
 .select-all-text {
@@ -432,21 +485,24 @@ async function onSave() {
 
 /* ===== 表格 ===== */
 .subsidy-table {
-  width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  table-layout: fixed;
+  --col-info-w: 300px;
+  --col-amt-w: 290px;
 }
 .subsidy-table th {
   text-align: center;
   padding: 8px 6px;
-  font-weight: 600;
+  font-weight: 400;
   color: #333;
-  border-bottom: 1px solid #e8e8e8;
-  border-right: 1px solid #e8e8e8;
+  border-bottom: var(--border-width) solid var(--border-color);
+  border-right: var(--border-width) solid var(--border-color);
   white-space: nowrap;
   background: #fafafa;
 }
-.subsidy-table th:last-child {
+.subsidy-table th:last-child,
+.subsidy-table td:last-child {
   border-right: none;
 }
 .subsidy-table th .custom-checkbox {
@@ -454,15 +510,12 @@ async function onSave() {
   vertical-align: middle;
 }
 .subsidy-table td {
-  padding: 10px 8px;
+  padding: 10px 4px;
   color: #333;
-  border-bottom: 1px solid #f0f0f0;
-  border-right: 1px solid #f0f0f0;
+  border-bottom: var(--border-width) solid var(--border-color);
+  border-right: var(--border-width) solid var(--border-color);
   vertical-align: middle;
   text-align: center;
-}
-.subsidy-table td:last-child {
-  border-right: none;
 }
 .subsidy-table tbody tr:hover {
   background: #f5f7fa;
@@ -470,40 +523,69 @@ async function onSave() {
 
 .col-date {
   white-space: nowrap;
-  min-width: 120px;
+  width: var(--col-info-w);
 }
 .date-cell-content {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  width: 100%;
+  gap: 4px;
+}
+.date-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.5;
+  text-align: center;
+}
+.date-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.pin-icon {
+  flex-shrink: 0;
+  transform: translateX(30px);
 }
 .col-city {
   white-space: nowrap;
-  min-width: 80px;
+  width: var(--col-info-w);
 }
 .col-amt {
-  min-width: 130px;
-}
-.col-amt.disabled {
-  opacity: 0.45;
+  width: var(--col-amt-w);
 }
 .col-amt .std {
   display: block;
   font-size: 12px;
-  color: #c0c4cc;
+  color: var(--orange);
   margin-bottom: 3px;
   white-space: nowrap;
+  text-align: right;
+  padding-right: 83px;
+}
+.amt-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 .col-amt .amt-input {
-  width: 88px;
-  height: 30px;
+  width: 75px;
+  height: 28px;
   text-align: right;
-  padding: 0 8px;
+  padding: 0 5px 0 0;
   border: 1px solid #dcdfe6;
   border-radius: 3px;
   font-size: 14px;
   outline: none;
   box-sizing: border-box;
+  -moz-appearance: textfield;
+}
+.col-amt .amt-input::-webkit-outer-spin-button,
+.col-amt .amt-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 .col-amt .amt-input:focus {
   border-color: #409eff;
@@ -518,10 +600,10 @@ async function onSave() {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  border: 1.5px solid #c0c4cc;
-  border-radius: 3px;
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid #E3E6EF;
+  border-radius: 2px;
   cursor: pointer;
   flex-shrink: 0;
   background: #fff;
@@ -560,6 +642,18 @@ async function onSave() {
 }
 
 :deep(.modal-title) {
-  font-weight: 400;
+  font-weight: 500;
+}
+</style>
+<style>
+.modal-card.modal-fullscreen .modal-title {
+  font-weight: 500;
+  padding-left: 4px;
+}
+.modal-card.modal-fullscreen .modal-footer {
+  justify-content: center;
+}
+html.subsidy-modal-open {
+  overflow: hidden !important;
 }
 </style>

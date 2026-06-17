@@ -4,6 +4,7 @@ defineProps<{
   title: string
   large?: boolean
   width?: string
+  fullscreen?: boolean
 }>()
 
 defineEmits<{
@@ -14,7 +15,7 @@ defineEmits<{
 <template>
   <Teleport to="body">
     <div v-if="modelValue" class="modal-overlay" @click.self="$emit('update:modelValue', false)">
-      <div class="modal-card" :class="{ 'modal-large': large }" :style="width ? { width } : undefined">
+      <div class="modal-card" :class="{ 'modal-large': large, 'modal-fullscreen': fullscreen }" :style="width ? { width } : undefined">
         <div class="modal-header">
           <span class="modal-title">{{ title }}</span>
           <button class="modal-close" @click="$emit('update:modelValue', false)">
@@ -46,6 +47,15 @@ defineEmits<{
   box-shadow: 0 4px 20px rgba(0,0,0,0.15);
 }
 .modal-card.modal-large { width: 900px; }
+.modal-card.modal-fullscreen {
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  border-radius: 0;
+}
+.modal-card.modal-fullscreen .modal-body {
+  padding: 0;
+}
 .modal-header {
   display: flex; justify-content: space-between; align-items: center;
   padding: 16px 20px; border-bottom: 1px solid #ebeef5;
