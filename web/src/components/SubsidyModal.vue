@@ -406,7 +406,7 @@ async function onSave() {
 /* ===== 右侧表格面板 ===== */
 .right-table-panel {
   flex: 1;
-  padding-left: 14px;
+  padding-left: 20px;
   min-width: 0;
 }
 .table-wrapper {
