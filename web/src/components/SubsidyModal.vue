@@ -104,7 +104,7 @@ function onAmountInput(idx: number, key: 'meal' | 'traffic' | 'comm', v: string)
 const startCity = computed(() => store.cities.find(c => c.cityNo === props.subsidy.startCity))
 const endCity = computed(() => store.cities.find(c => c.cityNo === props.subsidy.endCity))
 const subsidyCity = computed(() => store.cities.find(c => c.cityNo === props.subsidy.subsidyCity))
-const trip = computed(() => `${startCity.value ? startCity.value.cityName : ''}-${endCity.value ? endCity.value.cityName : ''}`)
+const trip = computed(() => `${startCity.value ? startCity.value.cityName : ''} - ${endCity.value ? endCity.value.cityName : ''}`)
 
 const allChecked = ['meal', 'traffic', 'comm'].every(k => checkAllColumn(k as 'meal' | 'traffic' | 'comm'))
 const partial = !allChecked && anyChecked()
@@ -144,30 +144,32 @@ async function onSave() {
           </div>
         </div>
 
-        <!-- Card 2: 日期 + 时间轴 -->
+        <!-- Card 2: 日期 + 补助日历图标 -->
         <div class="left-card date-card">
-          <div class="timeline">
-            <div class="tl-node-start">
-              <div class="tl-dot"></div>
-              <div class="tl-label">开始日期</div>
-              <div class="tl-date">{{ props.subsidy.startDate }}</div>
-            </div>
+          <div class="date-row">
+            <span class="date-label">开始日期</span>
+            <svg class="cal-icon" viewBox="0 0 28 78" width="18" fill="none">
+              <circle cx="14" cy="14" r="14" fill="#0089D2"/>
+              <rect x="11" y="28" width="5" height="50" fill="#259BD8"/>
+              <circle cx="14" cy="14" r="4" fill="#F9FAFA"/>
+            </svg>
+            <span class="date-value">{{ props.subsidy.startDate }}</span>
+          </div>
 
-            <div class="tl-line">
-              <div class="tl-active">
-                <div class="trip-bar">
-                  <span>行程天数</span>
-                  <span>{{ trip }}</span>
-                  <strong>{{ props.subsidy.days }}天</strong>
-                </div>
-              </div>
-            </div>
+          <div class="trip-bar">
+            <span>行程天数</span>
+            <span>{{ trip }}</span>
+            <strong>{{ props.subsidy.days }}天</strong>
+          </div>
 
-            <div class="tl-node-end">
-              <div class="tl-dot"></div>
-              <div class="tl-label">结束日期</div>
-              <div class="tl-date">{{ props.subsidy.endDate }}</div>
-            </div>
+          <div class="date-row">
+            <span class="date-label">结束日期</span>
+            <svg class="cal-icon flipped" viewBox="0 0 28 78" width="18" fill="none">
+              <circle cx="14" cy="14" r="14" fill="#0089D2"/>
+              <rect x="11" y="28" width="5" height="50" fill="#259BD8"/>
+              <circle cx="14" cy="14" r="4" fill="#F9FAFA"/>
+            </svg>
+            <span class="date-value">{{ props.subsidy.endDate }}</span>
           </div>
         </div>
 
@@ -308,70 +310,42 @@ async function onSave() {
 .biz-type {
   font-size: 15px;
   color: #E6A23C;
+  margin-left: 17px;
 }
 
-/* ===== 时间轴 ===== */
+/* ===== 日期卡片 ===== */
 .date-card {
-  padding: 0;
+  padding: 12px 16px;
   margin-top: -8px;
   background: #fff;
   border: var(--border-width) solid var(--border-color);
   border-radius: 0;
 }
 
-.timeline {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-.tl-node-start,
-.tl-node-end {
+.date-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
+  gap: 8px;
 }
 
-.tl-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #409EFF;
-  flex-shrink: 0;
-}
-
-.tl-label {
+.date-label {
   font-size: 14px;
   color: #666;
   width: 64px;
   flex-shrink: 0;
 }
-.tl-date {
+
+.cal-icon {
+  flex-shrink: 0;
+  display: block;
+}
+.cal-icon.flipped {
+  transform: scaleY(-1);
+}
+
+.date-value {
   font-size: 14px;
   color: #333;
-}
-
-.tl-line {
-  position: relative;
-  padding-left: 37px;
-  padding-right: 16px;
-}
-
-.tl-line::before {
-  content: '';
-  position: absolute;
-  left: 20px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: #dcdfe6;
-}
-
-.tl-active {
-  position: relative;
-  z-index: 1;
-  padding: 4px 0;
 }
 
 /* 蓝色行程条 */
@@ -384,6 +358,7 @@ async function onSave() {
   font-size: 14px;
   padding: 10px 14px;
   border-radius: 6px;
+  margin: 10px 0;
 }
 .trip-bar strong {
   font-size: 16px;
