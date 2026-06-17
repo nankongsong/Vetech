@@ -292,6 +292,7 @@ async function onSave() {
   padding-left: 24px;
   --border-color: #e8e8e8;
   --border-width: 1px;
+  --orange: #ea7814;
 }
 /* ===== 左侧面板 ===== */
 .left-panel {
@@ -335,7 +336,7 @@ async function onSave() {
 .biz-type {
   font-size: 16px;
   font-weight: 400;
-  color: #E6A23C;
+  color: var(--orange);
   margin-left: 33px;
 }
 
@@ -412,15 +413,17 @@ async function onSave() {
   font-variant-numeric: tabular-nums;
 }
 .summary-amount.orange {
-  color: #E6A23C;
+  color: var(--orange);
 }
 .summary-amount .cny {
   margin-left: 10px;
+  color: #333;
 }
 .summary-amount .num {
   margin-left: 70px;
   font-size: 20px;
   line-height: 1;
+  color: var(--orange);
   transform: translateX(-40px);
 }
 .summary-amount {
@@ -482,7 +485,7 @@ async function onSave() {
   text-align: center;
   padding: 8px 6px;
   font-weight: 600;
-  color: #333;
+  color: #9D9EA2;
   border-bottom: var(--border-width) solid var(--border-color);
   border-right: var(--border-width) solid var(--border-color);
   white-space: nowrap;
@@ -549,7 +552,7 @@ async function onSave() {
 .col-amt .std {
   display: block;
   font-size: 12px;
-  color: #E6A23C;
+  color: var(--orange);
   margin-bottom: 3px;
   white-space: nowrap;
   text-align: right;
