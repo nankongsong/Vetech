@@ -326,7 +326,7 @@ async function onSave() {
   width: 64px;
   flex-shrink: 0;
   font-size: 16px;
-  font-weight: 400;
+  font-weight: 500;
   color: #303133;
 }
 .info-value {
@@ -463,7 +463,7 @@ async function onSave() {
 }
 .table-title {
   font-size: 16px;
-  font-weight: 400;
+  font-weight: 500;
   color: #303133;
   margin-right: auto;
 }
@@ -636,12 +636,12 @@ async function onSave() {
 }
 
 :deep(.modal-title) {
-  font-weight: 400;
+  font-weight: 500;
 }
 </style>
 <style>
 .modal-card.modal-fullscreen .modal-title {
-  font-weight: 400;
+  font-weight: 500;
   padding-left: 4px;
 }
 </style>
