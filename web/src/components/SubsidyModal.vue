@@ -158,7 +158,7 @@ async function onSave() {
 
           <div class="trip-bar">
             <span>行程天数</span>
-            <span>{{ trip }}</span>
+            <span class="trip-text">{{ trip }}</span>
             <strong>{{ props.subsidy.days }}天</strong>
           </div>
 
@@ -362,6 +362,9 @@ async function onSave() {
 }
 .trip-bar strong {
   font-size: 16px;
+}
+.trip-text {
+  margin-left: 5px;
 }
 
 /* ===== 金额汇总 ===== */
