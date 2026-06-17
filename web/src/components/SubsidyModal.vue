@@ -407,6 +407,7 @@ async function onSave() {
 .right-table-panel {
   flex: 1;
   padding-left: 20px;
+  padding-right: 40px;
   min-width: 0;
 }
 .table-wrapper {
@@ -421,6 +422,10 @@ async function onSave() {
   gap: 6px;
   margin-bottom: 12px;
   padding: 14px 0 8px 0;
+}
+.select-all-row .custom-checkbox,
+.select-all-row .select-all-text {
+  margin-top: -12px;
 }
 .table-title {
   font-size: 16px;
@@ -461,7 +466,7 @@ async function onSave() {
   vertical-align: middle;
 }
 .subsidy-table td {
-  padding: 6px 4px;
+  padding: 10px 4px;
   color: #333;
   border-bottom: var(--border-width) solid var(--border-color);
   border-right: var(--border-width) solid var(--border-color);
