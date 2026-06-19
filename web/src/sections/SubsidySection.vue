@@ -46,7 +46,7 @@ function cityName(no: string) {
   <section class="panel" :class="{ collapsed: store.ui.collapsed.subsidy }">
     <PanelHeader @toggle="store.togglePanel('subsidy')">
       <template #title>
-        补助信息<span class="subsidy-sub" v-if="reimburserName"> {{ money(store.subsidyTotal) }}({{ reimburserName }}：{{ totalDays }}天)</span>
+        补助信息<span class="subsidy-sub" v-if="reimburserName">&nbsp;&nbsp;&nbsp;&nbsp;{{ money(store.subsidyTotal) }}&nbsp;&nbsp;({{ reimburserName }}：{{ totalDays }}天)</span>
       </template>
     </PanelHeader>
     <div class="panel-body">
