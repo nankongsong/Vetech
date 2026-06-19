@@ -142,12 +142,7 @@ const allocMatchSubsidy = computed(() => {
             <th class="right">
               分摊比例
               <span v-if="!store.ui.readonly" class="equal-split-btn" @click.stop="onEqualSplit">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21.5 2v6h-6"/>
-                  <path d="M2.5 12a9 9 0 0 1 15-6.7l4 2.7"/>
-                  <path d="M2.5 22v-6h6"/>
-                  <path d="M21.5 12a9 9 0 0 1-15 6.7l-4 2.7"/>
-                </svg>
+                <img src="@/assets/分摊图标.svg" class="split-icon" />
                 <span class="split-tooltip">均摊</span>
               </span>
               <span class="req">*</span>
@@ -247,7 +242,7 @@ const allocMatchSubsidy = computed(() => {
 }
 
 /* 必填星号 */
-.req { color: #f53f3f; }
+.req { color: #f53f3f; position: relative; top: 2px; }
 
 /* 删除图标 */
 .op-icon.danger { color: #f53f3f; }
@@ -263,7 +258,7 @@ const allocMatchSubsidy = computed(() => {
   transition: background 0.2s, color 0.2s;
 }
 .equal-split-btn:hover { background: #409eff; color: #fff; }
-.equal-split-btn svg { width: 14px; height: 14px; }
+.split-icon { width: 14px; height: 14px; }
 
 /* 蓝色悬浮气泡 */
 .split-tooltip {
