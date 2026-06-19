@@ -147,6 +147,9 @@ function mapDetailToStore(detail: BackendReimDetail) {
     calendar: [],
   }))
 
+  // 根据 trips 修复/重建 subsidies（补齐 startCity/endCity/calendar 等字段）
+  store.rebuildSubsidies()
+
   // 分摊映射（如果后端返回空数组，保持默认的一行分摊记录）
   const allocList = (detail.allocations || []).map((a): Allocation => ({
     id: String(a.id || a.companyId),

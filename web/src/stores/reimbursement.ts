@@ -231,6 +231,34 @@ export const useReimbursementStore = defineStore('reimbursement', {
       this.remark = text
     },
 
+    /**
+     * 根据 trips 重建/修复 subsidies
+     * 解决从后端加载数据后 subsidy 中 startCity/endCity 为空、calendar 为空的问题
+     */
+    rebuildSubsidies() {
+      const newSubsidies: Subsidy[] = []
+      this.trips.forEach(trip => {
+        const existing = this.subsidies.find(s => s.tripId === trip.id)
+        if (existing) {
+          // 已有 subsidy：用 trip 数据补齐缺失字段，重建日历
+          newSubsidies.push({
+            ...existing,
+            startDate: trip.startDate,
+            endDate: trip.endDate,
+            days: diffDays(trip.startDate, trip.endDate),
+            startCity: trip.startCity,
+            endCity: trip.endCity,
+            subsidyCity: trip.endCity,
+            calendar: buildDefaultCalendar(trip, (cn) => getCityType(this, cn))
+          })
+        } else {
+          // 没有 subsidy：用 trip 全新生成
+          newSubsidies.push(buildSubsidyFromTrip(trip.id, trip, this))
+        }
+      })
+      this.subsidies = newSubsidies
+    },
+
     /** 重置表单状态（进入新增/编辑新报销单前调用） */
     resetForNewForm() {
       this.basic = {
