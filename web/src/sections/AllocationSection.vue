@@ -169,16 +169,18 @@ const allocMatchSubsidy = computed(() => {
             </td>
             <td class="right">
               <div class="ratio-cell">
-                <input
-                  type="text"
-                  class="ratio-input"
-                  inputmode="decimal"
-                  :value="ratioPercent(a.ratio)"
-                  :disabled="idx === 0"
-                  :class="{ 'ratio-locked': idx === 0 }"
-                  @input="onRatioInput(idx, ($event.target as HTMLInputElement).value)"
-                />
-                <span class="ratio-unit">%</span>
+                <div class="ratio-wrapper">
+                  <input
+                    type="text"
+                    class="ratio-input"
+                    inputmode="decimal"
+                    :value="ratioPercent(a.ratio)"
+                    :disabled="idx === 0"
+                    :class="{ 'ratio-locked': idx === 0 }"
+                    @input="onRatioInput(idx, ($event.target as HTMLInputElement).value)"
+                  />
+                  <span class="ratio-unit">%</span>
+                </div>
               </div>
             </td>
             <td class="right">
@@ -234,8 +236,9 @@ const allocMatchSubsidy = computed(() => {
 .ratio-cell {
   display: flex; align-items: center; justify-content: flex-end;
 }
+.ratio-wrapper { position: relative; display: inline-flex; align-items: center; }
 .ratio-input {
-  width: 135px; height: 30px; text-align: right; padding: 0 6px;
+  width: 155px; height: 30px; text-align: right; padding: 0 22px 0 6px;
   border: 1px solid #dcdfe6; border-radius: 3px; font-size: 14px;
   -moz-appearance: textfield;
 }
@@ -250,7 +253,8 @@ const allocMatchSubsidy = computed(() => {
   background: #f5f7fa; cursor: default;
 }
 .ratio-unit {
-  margin-left: 4px; font-size: 14px; color: #606266;
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  font-size: 14px; color: #909399; pointer-events: none;
 }
 
 /* 必填星号 */
