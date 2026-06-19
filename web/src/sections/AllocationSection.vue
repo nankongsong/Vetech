@@ -185,12 +185,14 @@ const allocMatchSubsidy = computed(() => {
             <td class="col-action">
               <span
                 v-if="!store.ui.readonly"
-                class="op-icon danger"
+                class="op-icon"
                 @click="removeRow(idx)"
                 title="删除"
               >
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                  <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                <svg viewBox="0 0 24 24" width="14" height="14">
+                  <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12z" fill="#fff" stroke="#409eff" stroke-width="1.5"/>
+                  <path d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="#fff" stroke="#409eff" stroke-width="1.5"/>
+                  <path d="M9.5 10v6M12 10v6M14.5 10v6M17 10v6" stroke="#409eff" stroke-width="1" fill="none"/>
                 </svg>
               </span>
             </td>
@@ -299,9 +301,12 @@ const allocMatchSubsidy = computed(() => {
 .add-row-btn { justify-content: center; margin: 0 auto; gap: 6px; }
 .add-icon-circle {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 20px; height: 20px; border-radius: 50%;
-  background: #409eff; color: #fff;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; color: #409eff;
+  border: 1px solid #409eff;
 }
+.op-icon { color: #409eff; }
+.op-icon:hover { background: #ecf5ff; }
 .add-row-tr td { border-bottom: none !important; }
 
 /* 合计行 */
