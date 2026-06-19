@@ -388,7 +388,7 @@ export interface CalendarUpdateBody {
 export function getSubsidyCalendar(
   mainId: string,
   subsidyId: string,
-): Promise<ApiResponse<{ subsidyId: string; calendarData: SubsidyCalendar[] }>> {
+): Promise<ApiResponse<SubsidyCalendar[]>> {
   return request.get(`/reim/${mainId}/subsidy/${subsidyId}/calendar`)
 }
 
@@ -398,7 +398,7 @@ export function updateSubsidyCalendar(
   subsidyId: string,
   calendarData: CalendarUpdateBody[],
 ): Promise<ApiResponse<{ applyAmount: number; subsidyAmount: number }>> {
-  return request.put(`/reim/${mainId}/subsidy/${subsidyId}/calendar`, { calendarData })
+  return request.put(`/reim/${mainId}/subsidy/${subsidyId}/calendar`, calendarData)
 }
 
 // ==================== 五、费用分摊接口 ====================
@@ -424,7 +424,7 @@ export function updateAllocation(
   mainId: string,
   allocations: AllocationUpdateItem[],
 ): Promise<ApiResponse<null>> {
-  return request.put(`/reim/${mainId}/allocation`, { allocations })
+  return request.put(`/reim/${mainId}/allocation`, allocations)
 }
 
 /** 5.3 均摊计算 */
@@ -432,5 +432,5 @@ export function equalSplitAllocation(
   mainId: string,
   allocations: AllocationUpdateItem[],
 ): Promise<ApiResponse<{ allocations: CostAllocation[] }>> {
-  return request.put(`/reim/${mainId}/allocation/equal-split`, { allocations })
+  return request.put(`/reim/${mainId}/allocation/equal-split`, allocations)
 }

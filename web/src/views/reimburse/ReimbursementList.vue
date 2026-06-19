@@ -10,7 +10,18 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Edit, MoreFilled, Document } from '@element-plus/icons-vue'
 import zhCn from 'element-plus/dist/locale/zh-cn.mjs'
 import { getStatusLabel, getRowActions } from '@/utils/dictEnum'
-import { getReimPage, deleteReim, voidReim, type ReimburseListRow } from '@/api/reimburse'
+import {
+  getReimPage,
+  deleteReim,
+  voidReim,
+  getReimDetail,
+  createReim,
+  createTrip,
+  getSubsidyCalendar,
+  updateSubsidyCalendar,
+  updateAllocation,
+  type ReimburseListRow,
+} from '@/api/reimburse'
 import {
   initDictData,
   companyList,
@@ -151,10 +162,119 @@ function getSubmitTooltip(row: ReimburseListRow): string {
 /** 手工推送：仅已完成单据可推送 */
 function handleManualPush(row: ReimburseListRow) { router.push({ name: 'reimbursePush', params: { id: row.id }, query: { mode: 'push' } }) }
 
-/** 复制：创建副本草稿 */
-function handleCopy(row: ReimburseListRow) {
-  ElMessage.success(`已复制报销单 ${fmtNo(row.reimbursementNo)}，请前往草稿编辑`)
-  fetchList()
+/** 复制：创建副本草稿 → 跳转编辑页 */
+async function handleCopy(row: ReimburseListRow) {
+  loading.value = true
+  try {
+    // 1. 获取原报销单完整详情（主信息 + 行程 + 补助 + 分摊）
+    const detailRes = await getReimDetail(row.id)
+    const { main, trips, subsidies, allocations } = detailRes.data
+
+    // 2. 创建新报销单主记录（复制所有业务字段，不复制 id/单号/状态/版本/合计）
+    const createRes = await createReim({
+      reimbursementTitle: main.reimbursementTitle,
+      businessTripReason: main.businessTripReason,
+      reimburserId: main.reimburserId,
+      reimburserNo: main.reimburserNo,
+      reimburserName: main.reimburserName,
+      reimDepartmentId: main.reimDepartmentId,
+      reimDepartmentNo: main.reimDepartmentNo,
+      reimDepartmentName: main.reimDepartmentName,
+      reimCompanyId: main.reimCompanyId,
+      reimCompanyNo: main.reimCompanyNo,
+      reimCompanyName: main.reimCompanyName,
+      businessTypeId: main.businessTypeId,
+      businessTypeNo: main.businessTypeNo,
+      businessTypeName: main.businessTypeName,
+      remarks: main.remarks,
+    })
+    const newId = createRes.data.id
+
+    // 3. 复制行程（后端 addTrip 级联创建补助 + 默认日历）
+    const tripIdMap = new Map<string, string>() // oldTripId → newSubsidyId
+    for (const trip of trips) {
+      const tripRes = await createTrip(newId, {
+        travelerId: trip.travelerId,
+        travelerNo: trip.travelerNo,
+        travelerName: trip.travelerName,
+        originCityId: trip.originCityId,
+        originCityName: trip.originCityName,
+        destinationCityId: trip.destinationCityId,
+        destinationCityName: trip.destinationCityName,
+        startDate: trip.startDate,
+        endDate: trip.endDate,
+        tripDesc: trip.tripDesc,
+      })
+      tripIdMap.set(trip.id, tripRes.data.subsidyId)
+    }
+
+    // 4. 复制补助日历勾选数据（覆盖默认日历）
+    //    先读新日历获取新 ID，再读原日历获取勾选数据，按日期对齐后更新
+    for (const sub of subsidies) {
+      const newSubsidyId = tripIdMap.get(sub.tripId)
+      if (!newSubsidyId) continue
+      try {
+        // 并行获取新旧日历
+        const [newCalRes, oldCalRes] = await Promise.all([
+          getSubsidyCalendar(newId, newSubsidyId),
+          getSubsidyCalendar(row.id, sub.id),
+        ])
+        const newCalendars = newCalRes.data
+        const oldCalendars = oldCalRes.data
+
+        if (newCalendars && newCalendars.length > 0 && oldCalendars && oldCalendars.length > 0) {
+          // 按日期建立旧日历勾选映射（同一天只取第一条）
+          const oldByDate = new Map<string, typeof oldCalendars[0]>()
+          for (const c of oldCalendars) {
+            if (!oldByDate.has(c.subsidyDate)) {
+              oldByDate.set(c.subsidyDate, c)
+            }
+          }
+          // 将旧勾选数据覆盖到新日历条目上（保留新 ID）
+          const merged = newCalendars.map(nc => {
+            const old = oldByDate.get(nc.subsidyDate)
+            return old ? {
+              id: nc.id,
+              isMealSelected: old.isMealSelected,
+              isTransportSelected: old.isTransportSelected,
+              isPhoneSelected: old.isPhoneSelected,
+              mealApplyAmount: old.mealApplyAmount,
+              transportApplyAmount: old.transportApplyAmount,
+              phoneApplyAmount: old.phoneApplyAmount,
+            } : {
+              id: nc.id,
+              isMealSelected: nc.isMealSelected,
+              isTransportSelected: nc.isTransportSelected,
+              isPhoneSelected: nc.isPhoneSelected,
+              mealApplyAmount: nc.mealApplyAmount,
+              transportApplyAmount: nc.transportApplyAmount,
+              phoneApplyAmount: nc.phoneApplyAmount,
+            }
+          })
+          await updateSubsidyCalendar(newId, newSubsidyId, merged)
+        }
+      } catch {
+        // 日历复制失败不影响主流程，使用默认日历即可
+      }
+    }
+    // 5. 复制费用分摊
+    if (allocations && allocations.length > 0) {
+      await updateAllocation(newId, allocations.map(a => ({
+        companyId: a.companyId,
+        projectId: a.projectId,
+        allocationRatio: a.allocationRatio,
+        sortOrder: a.sortOrder,
+      })))
+    }
+
+    ElMessage.success(`已复制报销单 ${fmtNo(row.reimbursementNo)}，即将跳转到编辑页面`)
+    // 6. 跳转到新增副本的编辑页面
+    router.push({ name: 'reimburseEdit', params: { id: newId } })
+  } catch {
+    ElMessage.error('复制失败，请稍后重试')
+  } finally {
+    loading.value = false
+  }
 }
 
 /** 删除草稿 */
