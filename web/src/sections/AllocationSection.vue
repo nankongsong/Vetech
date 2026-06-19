@@ -170,9 +170,9 @@ const allocMatchSubsidy = computed(() => {
             <td class="right">
               <div class="ratio-cell">
                 <input
-                  type="number"
+                  type="text"
                   class="ratio-input"
-                  min="0" max="100" step="0.01"
+                  inputmode="decimal"
                   :value="ratioPercent(a.ratio)"
                   :disabled="idx === 0"
                   :class="{ 'ratio-locked': idx === 0 }"
@@ -181,7 +181,9 @@ const allocMatchSubsidy = computed(() => {
                 <span class="ratio-unit">%</span>
               </div>
             </td>
-            <td class="right">{{ money(a.amount) }}</td>
+            <td class="right">
+              <input type="text" class="amount-input" :value="money(a.amount)" readonly />
+            </td>
             <td class="col-action">
               <span
                 v-if="!store.ui.readonly"
@@ -233,11 +235,20 @@ const allocMatchSubsidy = computed(() => {
   display: flex; align-items: center; justify-content: flex-end;
 }
 .ratio-input {
-  width: 80px; height: 30px; text-align: right; padding: 0 6px;
+  width: 135px; height: 30px; text-align: right; padding: 0 6px;
   border: 1px solid #dcdfe6; border-radius: 3px; font-size: 14px;
+  -moz-appearance: textfield;
 }
+.ratio-input::-webkit-inner-spin-button,
+.ratio-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.ratio-input[type=text] { -moz-appearance: textfield; }
 .ratio-input:focus { border-color: #409eff; outline: none; }
 .ratio-input.ratio-locked { background: #f5f7fa; color: #909399; cursor: not-allowed; }
+.amount-input {
+  width: 150px; height: 30px; text-align: right; padding: 0 8px;
+  border: 1px solid #dcdfe6; border-radius: 3px; font-size: 14px; color: #303133;
+  background: #f5f7fa; cursor: default;
+}
 .ratio-unit {
   margin-left: 4px; font-size: 14px; color: #606266;
 }
