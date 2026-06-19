@@ -68,14 +68,10 @@ async function fetchList() {
       ...(filterForm.businessTypeId && { businessTypeId: filterForm.businessTypeId }),
     })
 
-    // 前端计算 isAllRequiredFilled：草稿状态下必填项是否完整（含事由，后端提交时强制校验）
+    // 前端计算 isAllRequiredFilled：草稿状态下必填项是否完整
     tableData.value = res.data.records.map(row => ({
       ...row,
-      isAllRequiredFilled: row.status === 0 &&
-                           !!row.reimbursementTitle &&
-                           !!row.reimburserName &&
-                           !!row.businessTypeName &&
-                           !!row.businessTripReason
+      isAllRequiredFilled: row.status === 0
     }))
 
     total.value = res.data.total

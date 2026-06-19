@@ -33,7 +33,7 @@ function onReason(v: string) { store.setBasic({ reason: v.slice(0, 500) }) }
           <div class="form-control">
             <input
               type="text"
-              placeholder="徐年年日常办公差旅报销单"
+              placeholder="例：徐年年日常办公差旅报销单"
               :value="store.basic.title"
               :disabled="store.ui.readonly"
               @input="onTitle(($event.target as HTMLInputElement).value)"

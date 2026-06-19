@@ -6,18 +6,20 @@ defineProps<{
   text: string
   okText?: string
   cancelText?: string
+  thirdText?: string
 }>()
 
 defineEmits<{
   (e: 'update:modelValue', v: boolean): void
   (e: 'ok'): void
   (e: 'cancel'): void
+  (e: 'third'): void
 }>()
 </script>
 
 <template>
   <Teleport to="body">
-    <div v-if="modelValue" class="confirm-overlay" @click.self="$emit('cancel')">
+    <div v-if="modelValue" class="confirm-overlay" @click.self="thirdText ? $emit('third') : $emit('cancel')">
       <div class="confirm-card">
         <div class="confirm-icon" :class="type || 'info'">
           <svg v-if="type === 'warning'" viewBox="0 0 24 24" width="36" height="36" fill="#e6a23c">
@@ -31,6 +33,7 @@ defineEmits<{
         <div class="confirm-text">{{ text }}</div>
         <div class="confirm-actions">
           <button v-if="cancelText" class="btn btn-default" @click="$emit('cancel')">{{ cancelText }}</button>
+          <button v-if="thirdText" class="btn btn-outline" @click="$emit('third')">{{ thirdText }}</button>
           <button class="btn btn-primary" @click="$emit('ok')">{{ okText || '确定' }}</button>
         </div>
       </div>

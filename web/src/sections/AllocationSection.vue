@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import PanelHeader from '@/components/PanelHeader.vue'
 import BaseSelect from '@/components/BaseSelect.vue'
 import { useReimbursementStore } from '@/stores/reimbursement'
@@ -8,6 +8,56 @@ import { useConfirm } from '@/composables/useConfirm'
 
 const store = useReimbursementStore()
 const confirm = useConfirm()
+
+/** 正在编辑的比例原始值（commit 前允许清空和重新输入） */
+const editingRatios = ref<Record<number, string>>({})
+
+function ratioPercent(ratio: number): string {
+  return (ratio * 100).toFixed(2)
+}
+
+/** 第 2+ 行输入时，仅记录原始值，不立即提交 */
+function onRatioInput(idx: number, raw: string) {
+  if (idx === 0) return
+  editingRatios.value[idx] = raw
+}
+
+/** 失去焦点或按 Enter 时提交，重算首行比例和金额 */
+function commitRatio(idx: number) {
+  if (idx === 0) return
+  const raw = editingRatios.value[idx]
+  delete editingRatios.value[idx]
+  if (raw === undefined) return
+
+  const inputVal = raw === '' ? 0 : Number(raw)
+  if (isNaN(inputVal)) return
+
+  const inputRatio = Math.min(1, Math.max(0, inputVal / 100))
+  const list = store.allocation.map(a => ({ ...a }))
+
+  // 计算其他第2+行的比例之和（不含当前行）
+  let otherSum = 0
+  list.forEach((a, i) => {
+    if (i !== 0 && i !== idx) otherSum += a.ratio
+  })
+
+  // 若 ∑(第2+行) > 100%，清空当前输入（归零）
+  if (otherSum + inputRatio > 1.0001) {
+    list[idx].ratio = 0
+  } else {
+    list[idx].ratio = inputRatio
+  }
+
+  // 重算第一行比例 = 1 - 所有第2+行之和
+  const allOtherSum = list.slice(1).reduce((s, a) => s + a.ratio, 0)
+  list[0].ratio = Math.max(0, Math.min(1, 1 - allOtherSum))
+
+  // 同步每行金额
+  const total = store.subsidyTotal
+  list.forEach(a => { a.amount = Math.round(a.ratio * total * 100) / 100 })
+
+  store.setAllocation(list)
+}
 
 const compOptions = computed(() =>
   store.companies.map(c => ({ id: c.reimCompanyId, name: `${c.reimCompanyName}/${c.reimCompanyNo}` }))
@@ -45,44 +95,6 @@ function onProjectChange(idx: number, val: string) {
   store.setAllocation(list)
 }
 
-/**
- * 当第 2 行及以后的比例被修改时：
- *   第一行比例 = 100% - 其余行比例之和
- *   若 ∑(第2+行) > 100%，清空当前输入值
- */
-function onRatioInput(idx: number, rawPercent: string) {
-  if (idx === 0) return // 第一行比例自动计算，不可手动编辑
-
-  const inputVal = rawPercent === '' ? 0 : Number(rawPercent)
-  if (isNaN(inputVal)) return
-
-  const inputRatio = Math.min(1, Math.max(0, inputVal / 100))
-  const list = store.allocation.map(a => ({ ...a }))
-
-  // 计算其他第2+行的比例之和（不含当前行）
-  let otherSum = 0
-  list.forEach((a, i) => {
-    if (i !== 0 && i !== idx) otherSum += a.ratio
-  })
-
-  // 若 ∑(第2+行) > 100%，清空当前输入（归零）
-  if (otherSum + inputRatio > 1.0001) {
-    list[idx].ratio = 0
-  } else {
-    list[idx].ratio = inputRatio
-  }
-
-  // 重算第一行比例 = 1 - 所有第2+行之和
-  const allOtherSum = list.slice(1).reduce((s, a) => s + a.ratio, 0)
-  list[0].ratio = Math.max(0, Math.min(1, 1 - allOtherSum))
-
-  // 同步每行金额（四舍五入到分）
-  const total = store.subsidyTotal
-  list.forEach(a => { a.amount = Math.round(a.ratio * total * 100) / 100 })
-
-  store.setAllocation(list)
-}
-
 /** 均摊：总额平均分配给所有行，误差放首行 */
 function onEqualSplit() {
   const n = store.allocation.length
@@ -105,10 +117,6 @@ function onEqualSplit() {
   store.setAllocation(list)
 }
 
-function ratioPercent(ratio: number): string {
-  return (ratio * 100).toFixed(2)
-}
-
 const ratioSumPercent = computed(() => {
   const sum = store.allocation.reduce((s, r) => s + Number(r.ratio || 0), 0)
   return (sum * 100).toFixed(2)
@@ -127,10 +135,7 @@ const allocMatchSubsidy = computed(() => {
 <template>
   <section class="panel" :class="{ collapsed: store.ui.collapsed.allocation }">
     <PanelHeader @toggle="store.togglePanel('allocation')">
-      <template #title>费用归属及分摊</template>
-      <template #extra>
-        <span class="alloc-sub-title">(补助总金额: {{ money(store.subsidyTotal) }})</span>
-      </template>
+      <template #title>费用归属及分摊<span class="alloc-sub-title">&nbsp;&nbsp;(分摊金额: {{ money(store.subsidyTotal) }})</span></template>
     </PanelHeader>
     <div class="panel-body">
       <table v-if="store.allocation.length > 0" class="table">
@@ -142,12 +147,7 @@ const allocMatchSubsidy = computed(() => {
             <th class="right">
               分摊比例
               <span v-if="!store.ui.readonly" class="equal-split-btn" @click.stop="onEqualSplit">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21.5 2v6h-6"/>
-                  <path d="M2.5 12a9 9 0 0 1 15-6.7l4 2.7"/>
-                  <path d="M2.5 22v-6h6"/>
-                  <path d="M21.5 12a9 9 0 0 1-15 6.7l-4 2.7"/>
-                </svg>
+                <img src="@/assets/分摊图标.svg" class="split-icon" />
                 <span class="split-tooltip">均摊</span>
               </span>
               <span class="req">*</span>
@@ -164,6 +164,7 @@ const allocMatchSubsidy = computed(() => {
                 :model-value="a.company"
                 :options="compOptions"
                 placeholder="请选择公司"
+                icon-type="x"
                 @update:model-value="(v: string) => onCompanyChange(idx, v)"
               />
             </td>
@@ -177,28 +178,36 @@ const allocMatchSubsidy = computed(() => {
             </td>
             <td class="right">
               <div class="ratio-cell">
-                <input
-                  type="number"
-                  class="ratio-input"
-                  min="0" max="100" step="0.01"
-                  :value="ratioPercent(a.ratio)"
-                  :disabled="idx === 0"
-                  :class="{ 'ratio-locked': idx === 0 }"
-                  @input="onRatioInput(idx, ($event.target as HTMLInputElement).value)"
-                />
-                <span class="ratio-unit">%</span>
+                <div class="ratio-wrapper">
+                  <input
+                    type="number"
+                    class="ratio-input"
+                    min="0" max="100" step="0.01"
+                    :value="idx in editingRatios ? editingRatios[idx] : ratioPercent(a.ratio)"
+                    :disabled="idx === 0"
+                    :class="{ 'ratio-locked': idx === 0 }"
+                    @input="onRatioInput(idx, ($event.target as HTMLInputElement).value)"
+                    @blur="commitRatio(idx)"
+                    @keydown.enter="commitRatio(idx)"
+                  />
+                  <span class="ratio-unit">%</span>
+                </div>
               </div>
             </td>
-            <td class="right">{{ money(a.amount) }}</td>
+            <td class="right">
+              <input type="text" class="amount-input" :value="money(a.amount)" readonly />
+            </td>
             <td class="col-action">
               <span
                 v-if="!store.ui.readonly"
-                class="op-icon danger"
+                class="op-icon"
                 @click="removeRow(idx)"
                 title="删除"
               >
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                  <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                <svg viewBox="0 0 24 24" width="14" height="14">
+                  <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12z" fill="#fff" stroke="#409eff" stroke-width="1.5"/>
+                  <path d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="#fff" stroke="#409eff" stroke-width="1.5"/>
+                  <path d="M9.5 10v6M12 10v6M14.5 10v6M17 10v6" stroke="#409eff" stroke-width="1" fill="none"/>
                 </svg>
               </span>
             </td>
@@ -208,20 +217,22 @@ const allocMatchSubsidy = computed(() => {
           <tr v-if="!store.ui.readonly" class="add-row-tr">
             <td colspan="6" style="text-align: center; padding: 8px 0;">
               <button class="btn-text add-row-btn" @click="addRow">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                  <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/>
-                </svg>
+                <span class="add-icon-circle">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                    <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/>
+                  </svg>
+                </span>
                 添加一行
               </button>
             </td>
           </tr>
           <tr class="summary-row">
-            <td colspan="3"><strong class="summary-label">合计</strong></td>
+            <td colspan="3"><span class="summary-label">合计</span></td>
             <td class="right" :class="{ 'text-danger': !ratioValid }">
-              <strong class="summary-num">{{ ratioSumPercent }}%</strong>
+              <span class="summary-num">{{ ratioSumPercent }}%</span>
             </td>
             <td class="right" :class="{ 'text-danger': !allocMatchSubsidy }">
-              <strong class="summary-num">CNY {{ money(store.allocTotal) }}</strong>
+              <span class="summary-num">CNY {{ money(store.allocTotal) }}</span>
             </td>
             <td></td>
           </tr>
@@ -236,18 +247,29 @@ const allocMatchSubsidy = computed(() => {
 .ratio-cell {
   display: flex; align-items: center; justify-content: flex-end;
 }
+.ratio-wrapper { position: relative; display: inline-flex; align-items: center; }
 .ratio-input {
-  width: 80px; height: 30px; text-align: right; padding: 0 6px;
+  width: 155px; height: 30px; text-align: right; padding: 0 22px 0 6px;
   border: 1px solid #dcdfe6; border-radius: 3px; font-size: 14px;
+  -moz-appearance: textfield;
 }
+.ratio-input::-webkit-inner-spin-button,
+.ratio-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.ratio-input[type=number] { -moz-appearance: textfield; }
 .ratio-input:focus { border-color: #409eff; outline: none; }
 .ratio-input.ratio-locked { background: #f5f7fa; color: #909399; cursor: not-allowed; }
+.amount-input {
+  width: 150px; height: 30px; text-align: right; padding: 0 8px;
+  border: 1px solid #dcdfe6; border-radius: 3px; font-size: 14px; color: #303133;
+  background: #f5f7fa; cursor: default;
+}
 .ratio-unit {
-  margin-left: 4px; font-size: 14px; color: #606266;
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  font-size: 14px; color: #909399; pointer-events: none;
 }
 
 /* 必填星号 */
-.req { color: #f53f3f; }
+.req { color: #FF7673; font-weight: 400; position: relative; top: 2px; }
 
 /* 删除图标 */
 .op-icon.danger { color: #f53f3f; }
@@ -262,8 +284,7 @@ const allocMatchSubsidy = computed(() => {
   margin-left: 6px; font-size: 12px; vertical-align: middle;
   transition: background 0.2s, color 0.2s;
 }
-.equal-split-btn:hover { background: #409eff; color: #fff; }
-.equal-split-btn svg { width: 14px; height: 14px; }
+.split-icon { width: 14px; height: 14px; }
 
 /* 蓝色悬浮气泡 */
 .split-tooltip {
@@ -301,9 +322,19 @@ const allocMatchSubsidy = computed(() => {
 .invalid-hint { font-weight: 400; font-size: 12px; color: #f56c6c; margin-left: 4px; }
 .empty-hint { text-align: center; color: #c0c4cc; padding: 24px 0; font-size: 14px; }
 .alloc-sub-title {
-  font-size: 13px; color: #606266; font-weight: 400;
+  color: #4e5b70; font-weight: 400; font-size: 14px;
 }
-.add-row-btn { justify-content: center; margin: 0 auto; }
+.add-row-btn { justify-content: center; margin: 0 auto; gap: 6px; }
+.add-icon-circle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #fff; color: #409eff;
+  border: 1px solid #409eff;
+}
+.op-icon { color: #409eff; }
+.op-icon:hover { background: #ecf5ff; }
+/* 操作列左对齐 */
+.col-action { text-align: left !important; }
 .add-row-tr td { border-bottom: none !important; }
 
 /* 合计行 */
@@ -311,6 +342,6 @@ const allocMatchSubsidy = computed(() => {
   background: #fdf6ec; font-size: 14px;
   border-top: 1px solid #ebeef5;
 }
-.summary-label { color: #c0c4cc; }
-.summary-num { color: #e6a23c; }
+.summary-label { color: #4e5b70; font-weight: 400; font-size: 14px; }
+.summary-num { color: #e6a23c; font-weight: 400; }
 </style>

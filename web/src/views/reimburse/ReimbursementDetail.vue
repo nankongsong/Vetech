@@ -147,6 +147,9 @@ function mapDetailToStore(detail: BackendReimDetail) {
     calendar: [],
   }))
 
+  // 根据 trips 修复/重建 subsidies（补齐 startCity/endCity/calendar 等字段）
+  store.rebuildSubsidies()
+
   // 分摊映射（如果后端返回空数组，保持默认的一行分摊记录）
   const allocList = (detail.allocations || []).map((a): Allocation => ({
     id: String(a.id || a.companyId),
@@ -168,25 +171,40 @@ const pageTitle = computed(() => {
   return '新增报销单'
 })
 
-/** 关闭页面 / 返回列表：统一弹窗 → 保存草稿 → 跳转列表 */
+/** 关闭页面 / 返回列表：统一弹窗 → 保存草稿／放弃修改／继续编辑 */
 async function handleCloseOrBack() {
   // 只读查看页面：直接退出，不保存
   if (isView.value) {
     router.push({ name: 'reimburseList' })
     return
   }
-  const ok = await confirm.confirm({
-    type: 'warning',
-    title: '提示',
-    text: '确认关闭页面？当前已填写内容将自动保存为草稿',
-  })
-  if (ok) {
-    // 调用 DocFooter 的 saveDraft 方法保存草稿
-    if (docFooterRef.value) {
-      await docFooterRef.value.saveDraft()
-    }
-    router.push({ name: 'reimburseList' })
+  // 显示三按钮确认弹窗
+  confirm.state.visible = true
+  confirm.state.type = 'warning'
+  confirm.state.title = '提示'
+  confirm.state.text = '是否保存当前内容？'
+  confirm.state.okText = '保存草稿'
+  confirm.state.cancelText = '放弃修改'
+}
+
+/** 保存草稿并返回列表 */
+async function onCloseSave() {
+  confirm.state.visible = false
+  if (docFooterRef.value) {
+    await docFooterRef.value.saveDraft()
   }
+  router.push({ name: 'reimburseList' })
+}
+
+/** 放弃修改，直接返回列表 */
+function onCloseDiscard() {
+  confirm.state.visible = false
+  router.push({ name: 'reimburseList' })
+}
+
+/** 继续编辑，关闭弹窗留在当前页 */
+function onCloseContinue() {
+  confirm.state.visible = false
 }
 </script>
 
@@ -215,7 +233,7 @@ async function handleCloseOrBack() {
     </main>
     <DocFooter ref="docFooterRef" :mode="isEdit ? 'edit' : 'add'" :reim-id="isEdit ? Number(route.params.id) : null" :edit-version="editVersion" :edit-status="editStatus" :readonly="isView" @close="handleCloseOrBack" />
 
-    <!-- 确认对话框（兼容 useConfirm v-model 模式） -->
+    <!-- 确认对话框 -->
     <ConfirmModal
       :model-value="confirm.state.visible"
       :type="confirm.state.type"
@@ -223,8 +241,10 @@ async function handleCloseOrBack() {
       :text="confirm.state.text"
       :ok-text="confirm.state.okText"
       :cancel-text="confirm.state.cancelText"
-      @ok="confirm.ok"
-      @cancel="confirm.cancel"
+      third-text="继续编辑"
+      @ok="onCloseSave"
+      @cancel="onCloseDiscard"
+      @third="onCloseContinue"
     />
   </div>
 </template>
@@ -270,7 +290,7 @@ async function handleCloseOrBack() {
 .table th, .table td {
   padding: 10px 12px; border-bottom: 1px solid #ebeef5; text-align: left;
 }
-.table th { background: #fafafa; color: #606266; font-weight: 600; font-size: 14px; }
+.table th { background: #fafafa; color: #4e5b70; font-weight: 400; font-size: 14px; }
 .table td { color: #303133; font-size: 14px; }
 .table .col-index { width: 50px; text-align: center; }
 .table .col-action { width: 100px; text-align: center; }
