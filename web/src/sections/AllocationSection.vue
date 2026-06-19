@@ -242,7 +242,7 @@ const allocMatchSubsidy = computed(() => {
 }
 
 /* 必填星号 */
-.req { color: #f53f3f; position: relative; top: 2px; }
+.req { color: #FF7673; font-weight: 400; position: relative; top: 2px; }
 
 /* 删除图标 */
 .op-icon.danger { color: #f53f3f; }
@@ -257,7 +257,6 @@ const allocMatchSubsidy = computed(() => {
   margin-left: 6px; font-size: 12px; vertical-align: middle;
   transition: background 0.2s, color 0.2s;
 }
-.equal-split-btn:hover { background: #409eff; color: #fff; }
 .split-icon { width: 14px; height: 14px; }
 
 /* 蓝色悬浮气泡 */
