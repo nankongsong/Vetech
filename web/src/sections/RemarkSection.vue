@@ -27,8 +27,10 @@ async function onClear() {
       <template #title>备注信息</template>
       <template #extra>
         <button v-if="!store.ui.readonly" class="btn-text delete-remark-btn" @click.stop="onClear">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-            <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+          <svg viewBox="0 0 24 24" width="14" height="14">
+            <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12z" fill="#fff" stroke="#409eff" stroke-width="1.5"/>
+            <path d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="#fff" stroke="#409eff" stroke-width="1.5"/>
+            <path d="M9.5 10v6M12 10v6M14.5 10v6M17 10v6" stroke="#409eff" stroke-width="1" fill="none"/>
           </svg>
           删除备注
         </button>

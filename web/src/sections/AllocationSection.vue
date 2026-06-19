@@ -333,6 +333,8 @@ const allocMatchSubsidy = computed(() => {
 }
 .op-icon { color: #409eff; }
 .op-icon:hover { background: #ecf5ff; }
+/* 操作列左对齐 */
+.col-action { text-align: left !important; }
 .add-row-tr td { border-bottom: none !important; }
 
 /* 合计行 */
