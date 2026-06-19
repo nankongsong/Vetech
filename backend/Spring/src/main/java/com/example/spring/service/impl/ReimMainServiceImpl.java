@@ -168,6 +168,11 @@ public class ReimMainServiceImpl implements ReimMainService {
         List<ReimCostAllocation> allocations = allocationMapper.selectList(
                 new LambdaQueryWrapper<ReimCostAllocation>().eq(ReimCostAllocation::getMainId, id));
         if (allocations.isEmpty()) throw new BizException(40007, "请配置费用分摊信息");
+        for (int i = 0; i < allocations.size(); i++) {
+            if (!StringUtils.hasText(allocations.get(i).getCompanyId())) {
+                throw new BizException(40007, "第" + (i + 1) + "行分摊费用归属未选择，请补充");
+            }
+        }
         validateAllocationRatio(allocations);
         validateAllocationAmount(main.getSubsidyTotal(), allocations);
 
@@ -571,10 +576,6 @@ public class ReimMainServiceImpl implements ReimMainService {
 
     /** 必填字段校验 */
     private void validateRequiredFields(ReimMain main) {
-        if (!StringUtils.hasText(main.getReimbursementTitle())) throw new BizException(40007, "报销标题不能为空");
-        if (!StringUtils.hasText(main.getBusinessTripReason())) throw new BizException(40007, "出差事由不能为空");
-        if (!StringUtils.hasText(main.getReimburserId())) throw new BizException(40007, "报销人不能为空");
-        if (!StringUtils.hasText(main.getReimDepartmentId())) throw new BizException(40007, "报销部门不能为空");
         if (!StringUtils.hasText(main.getReimCompanyId())) throw new BizException(40007, "费用归属公司不能为空");
         if (!StringUtils.hasText(main.getBusinessTypeId())) throw new BizException(40007, "业务类型不能为空");
     }

@@ -257,7 +257,7 @@ async function onSave() {
                 <div class="amt-row">
                   <span class="custom-checkbox" :class="{ checked: r.meal.checked }" @click="r.meal.checked = !r.meal.checked; r.meal.value = r.meal.checked ? r.meal.std : 0"></span>
                   <input class="amt-input" type="number" min="0" :max="r.meal.std" step="0.01"
-                         :value="r.meal.checked ? r.meal.value : money(r.meal.std)" :disabled="!r.meal.checked"
+                         :value="r.meal.checked ? (r.meal.value).toFixed(2) : money(r.meal.std)" :disabled="!r.meal.checked"
                          @input="onAmountInput(idx, 'meal', ($event.target as HTMLInputElement).value)" />
                 </div>
               </td>
@@ -266,7 +266,7 @@ async function onSave() {
                 <div class="amt-row">
                   <span class="custom-checkbox" :class="{ checked: r.traffic.checked }" @click="r.traffic.checked = !r.traffic.checked; r.traffic.value = r.traffic.checked ? r.traffic.std : 0"></span>
                   <input class="amt-input" type="number" min="0" :max="r.traffic.std" step="0.01"
-                         :value="r.traffic.checked ? r.traffic.value : money(r.traffic.std)" :disabled="!r.traffic.checked"
+                         :value="r.traffic.checked ? (r.traffic.value).toFixed(2) : money(r.traffic.std)" :disabled="!r.traffic.checked"
                          @input="onAmountInput(idx, 'traffic', ($event.target as HTMLInputElement).value)" />
                 </div>
               </td>
@@ -275,7 +275,7 @@ async function onSave() {
                 <div class="amt-row">
                   <span class="custom-checkbox" :class="{ checked: r.comm.checked }" @click="r.comm.checked = !r.comm.checked; r.comm.value = r.comm.checked ? r.comm.std : 0"></span>
                   <input class="amt-input" type="number" min="0" :max="r.comm.std" step="0.01"
-                         :value="r.comm.checked ? r.comm.value : money(r.comm.std)" :disabled="!r.comm.checked"
+                         :value="r.comm.checked ? (r.comm.value).toFixed(2) : money(r.comm.std)" :disabled="!r.comm.checked"
                          @input="onAmountInput(idx, 'comm', ($event.target as HTMLInputElement).value)" />
                 </div>
               </td>
@@ -574,6 +574,7 @@ async function onSave() {
   width: 75px;
   height: 28px;
   text-align: right;
+  color: #616D86;
   padding: 0 5px 0 0;
   border: 1px solid #dcdfe6;
   border-radius: 3px;

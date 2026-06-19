@@ -142,12 +142,14 @@ async function onSubmit() {
   const s = store
 
   // ── 1. 基础信息必填校验 ──
-  if (!s.basic.title.trim()) { await confirm.alert('请填写报销标题'); return }
-  if (!s.basic.reimbursement) { await confirm.alert('请选择报销人'); return }
-  if (!s.basic.department) { await confirm.alert('请选择报销部门'); return }
   if (!s.basic.reimCompany) { await confirm.alert('请选择费用归属公司'); return }
   if (!s.basic.businessType) { await confirm.alert('请选择业务类型'); return }
-  if (!s.basic.reason.trim()) { await confirm.alert('请填写出差事由'); return }
+  // 费用归属及分摊：每行需选择费用归属公司
+  for (let i = 0; i < s.allocation.length; i++) {
+    if (!s.allocation[i].company) {
+      await confirm.alert(`第 ${i + 1} 行分摊费用归属未选择，请补充`); return
+    }
+  }
 
   // ── 2. 行程校验 ──
   if (s.trips.length === 0) { await confirm.alert('请至少补录一条行程'); return }
