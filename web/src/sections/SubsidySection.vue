@@ -19,6 +19,11 @@ const reimburserName = computed(() => {
   const emp = store.employees.find(e => e.reimbursementId === store.basic.reimbursement)
   return emp ? emp.reimbursementName : ''
 })
+const totalDays = computed(() => {
+  return store.subsidies
+    .filter(s => s.reimbursementId === store.basic.reimbursement)
+    .reduce((sum, s) => sum + s.days, 0)
+})
 
 function openEdit(s: Subsidy) {
   currentSub.value = s
@@ -41,7 +46,7 @@ function cityName(no: string) {
   <section class="panel" :class="{ collapsed: store.ui.collapsed.subsidy }">
     <PanelHeader @toggle="store.togglePanel('subsidy')">
       <template #title>
-        补助信息<span class="subsidy-sub" v-if="reimburserName">&nbsp;&nbsp;{{ reimburserName }} {{ money(store.subsidyTotal) }}</span>
+        补助信息<span class="subsidy-sub" v-if="reimburserName"> {{ money(store.subsidyTotal) }}({{ reimburserName }}：{{ totalDays }}天)</span>
       </template>
     </PanelHeader>
     <div class="panel-body">
