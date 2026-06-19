@@ -94,10 +94,10 @@ function flatten(): Array<{ node: TreeNode; depth: number; parents: string[] }> 
       <input type="text" readonly :value="displayValue" :placeholder="placeholder || '请选择'"
              style="cursor: pointer; background: transparent;" />
       <span class="arrow">
-        <svg viewBox="0 0 24 24" width="14" height="14">
-          <circle cx="12" cy="12" r="10" fill="none" stroke="#c0c4cc" stroke-width="1.5"/>
-          <line x1="8" y1="8" x2="16" y2="16" stroke="#c0c4cc" stroke-width="1.5" stroke-linecap="round"/>
-          <line x1="16" y1="8" x2="8" y2="16" stroke="#c0c4cc" stroke-width="1.5" stroke-linecap="round"/>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="8" y1="8" x2="16" y2="16"/>
+          <line x1="16" y1="8" x2="8" y2="16"/>
         </svg>
       </span>
     </div>

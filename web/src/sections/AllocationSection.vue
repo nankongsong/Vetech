@@ -164,6 +164,7 @@ const allocMatchSubsidy = computed(() => {
                 :model-value="a.company"
                 :options="compOptions"
                 placeholder="请选择公司"
+                icon-type="x"
                 @update:model-value="(v: string) => onCompanyChange(idx, v)"
               />
             </td>
