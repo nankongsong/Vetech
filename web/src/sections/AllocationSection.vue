@@ -127,10 +127,7 @@ const allocMatchSubsidy = computed(() => {
 <template>
   <section class="panel" :class="{ collapsed: store.ui.collapsed.allocation }">
     <PanelHeader @toggle="store.togglePanel('allocation')">
-      <template #title>费用归属及分摊</template>
-      <template #extra>
-        <span class="alloc-sub-title">(补助总金额: {{ money(store.subsidyTotal) }})</span>
-      </template>
+      <template #title><span class="title-text">费用归属及分摊</span><span class="alloc-sub-title">分摊金额: {{ money(store.subsidyTotal) }}</span></template>
     </PanelHeader>
     <div class="panel-body">
       <table v-if="store.allocation.length > 0" class="table">
@@ -296,6 +293,7 @@ const allocMatchSubsidy = computed(() => {
 .empty-hint { text-align: center; color: #c0c4cc; padding: 24px 0; font-size: 14px; }
 .alloc-sub-title {
   font-size: 13px; color: #606266; font-weight: 400;
+  margin-left: auto; margin-right: 12px;
 }
 .add-row-btn { justify-content: center; margin: 0 auto; }
 .add-row-tr td { border-bottom: none !important; }
