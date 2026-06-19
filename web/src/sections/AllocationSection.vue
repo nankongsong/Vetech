@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import PanelHeader from '@/components/PanelHeader.vue'
 import BaseSelect from '@/components/BaseSelect.vue'
 import { useReimbursementStore } from '@/stores/reimbursement'
@@ -8,6 +8,56 @@ import { useConfirm } from '@/composables/useConfirm'
 
 const store = useReimbursementStore()
 const confirm = useConfirm()
+
+/** 正在编辑的比例原始值（commit 前允许清空和重新输入） */
+const editingRatios = ref<Record<number, string>>({})
+
+function ratioPercent(ratio: number): string {
+  return (ratio * 100).toFixed(2)
+}
+
+/** 第 2+ 行输入时，仅记录原始值，不立即提交 */
+function onRatioInput(idx: number, raw: string) {
+  if (idx === 0) return
+  editingRatios.value[idx] = raw
+}
+
+/** 失去焦点或按 Enter 时提交，重算首行比例和金额 */
+function commitRatio(idx: number) {
+  if (idx === 0) return
+  const raw = editingRatios.value[idx]
+  delete editingRatios.value[idx]
+  if (raw === undefined) return
+
+  const inputVal = raw === '' ? 0 : Number(raw)
+  if (isNaN(inputVal)) return
+
+  const inputRatio = Math.min(1, Math.max(0, inputVal / 100))
+  const list = store.allocation.map(a => ({ ...a }))
+
+  // 计算其他第2+行的比例之和（不含当前行）
+  let otherSum = 0
+  list.forEach((a, i) => {
+    if (i !== 0 && i !== idx) otherSum += a.ratio
+  })
+
+  // 若 ∑(第2+行) > 100%，清空当前输入（归零）
+  if (otherSum + inputRatio > 1.0001) {
+    list[idx].ratio = 0
+  } else {
+    list[idx].ratio = inputRatio
+  }
+
+  // 重算第一行比例 = 1 - 所有第2+行之和
+  const allOtherSum = list.slice(1).reduce((s, a) => s + a.ratio, 0)
+  list[0].ratio = Math.max(0, Math.min(1, 1 - allOtherSum))
+
+  // 同步每行金额
+  const total = store.subsidyTotal
+  list.forEach(a => { a.amount = Math.round(a.ratio * total * 100) / 100 })
+
+  store.setAllocation(list)
+}
 
 const compOptions = computed(() =>
   store.companies.map(c => ({ id: c.reimCompanyId, name: `${c.reimCompanyName}/${c.reimCompanyNo}` }))
@@ -45,44 +95,6 @@ function onProjectChange(idx: number, val: string) {
   store.setAllocation(list)
 }
 
-/**
- * 当第 2 行及以后的比例被修改时：
- *   第一行比例 = 100% - 其余行比例之和
- *   若 ∑(第2+行) > 100%，清空当前输入值
- */
-function onRatioInput(idx: number, rawPercent: string) {
-  if (idx === 0) return // 第一行比例自动计算，不可手动编辑
-
-  const inputVal = rawPercent === '' ? 0 : Number(rawPercent)
-  if (isNaN(inputVal)) return
-
-  const inputRatio = Math.min(1, Math.max(0, inputVal / 100))
-  const list = store.allocation.map(a => ({ ...a }))
-
-  // 计算其他第2+行的比例之和（不含当前行）
-  let otherSum = 0
-  list.forEach((a, i) => {
-    if (i !== 0 && i !== idx) otherSum += a.ratio
-  })
-
-  // 若 ∑(第2+行) > 100%，清空当前输入（归零）
-  if (otherSum + inputRatio > 1.0001) {
-    list[idx].ratio = 0
-  } else {
-    list[idx].ratio = inputRatio
-  }
-
-  // 重算第一行比例 = 1 - 所有第2+行之和
-  const allOtherSum = list.slice(1).reduce((s, a) => s + a.ratio, 0)
-  list[0].ratio = Math.max(0, Math.min(1, 1 - allOtherSum))
-
-  // 同步每行金额（四舍五入到分）
-  const total = store.subsidyTotal
-  list.forEach(a => { a.amount = Math.round(a.ratio * total * 100) / 100 })
-
-  store.setAllocation(list)
-}
-
 /** 均摊：总额平均分配给所有行，误差放首行 */
 function onEqualSplit() {
   const n = store.allocation.length
@@ -103,10 +115,6 @@ function onEqualSplit() {
   })
 
   store.setAllocation(list)
-}
-
-function ratioPercent(ratio: number): string {
-  return (ratio * 100).toFixed(2)
 }
 
 const ratioSumPercent = computed(() => {
@@ -171,13 +179,15 @@ const allocMatchSubsidy = computed(() => {
               <div class="ratio-cell">
                 <div class="ratio-wrapper">
                   <input
-                    type="text"
+                    type="number"
                     class="ratio-input"
-                    inputmode="decimal"
-                    :value="ratioPercent(a.ratio)"
+                    min="0" max="100" step="0.01"
+                    :value="idx in editingRatios ? editingRatios[idx] : ratioPercent(a.ratio)"
                     :disabled="idx === 0"
                     :class="{ 'ratio-locked': idx === 0 }"
                     @input="onRatioInput(idx, ($event.target as HTMLInputElement).value)"
+                    @blur="commitRatio(idx)"
+                    @keydown.enter="commitRatio(idx)"
                   />
                   <span class="ratio-unit">%</span>
                 </div>
@@ -244,7 +254,7 @@ const allocMatchSubsidy = computed(() => {
 }
 .ratio-input::-webkit-inner-spin-button,
 .ratio-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-.ratio-input[type=text] { -moz-appearance: textfield; }
+.ratio-input[type=number] { -moz-appearance: textfield; }
 .ratio-input:focus { border-color: #409eff; outline: none; }
 .ratio-input.ratio-locked { background: #f5f7fa; color: #909399; cursor: not-allowed; }
 .amount-input {
