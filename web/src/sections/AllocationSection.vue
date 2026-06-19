@@ -200,20 +200,22 @@ const allocMatchSubsidy = computed(() => {
           <tr v-if="!store.ui.readonly" class="add-row-tr">
             <td colspan="6" style="text-align: center; padding: 8px 0;">
               <button class="btn-text add-row-btn" @click="addRow">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                  <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/>
-                </svg>
+                <span class="add-icon-circle">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                    <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/>
+                  </svg>
+                </span>
                 添加一行
               </button>
             </td>
           </tr>
           <tr class="summary-row">
-            <td colspan="3"><strong class="summary-label">合计</strong></td>
+            <td colspan="3"><span class="summary-label">合计</span></td>
             <td class="right" :class="{ 'text-danger': !ratioValid }">
-              <strong class="summary-num">{{ ratioSumPercent }}%</strong>
+              <span class="summary-num">{{ ratioSumPercent }}%</span>
             </td>
             <td class="right" :class="{ 'text-danger': !allocMatchSubsidy }">
-              <strong class="summary-num">CNY {{ money(store.allocTotal) }}</strong>
+              <span class="summary-num">CNY {{ money(store.allocTotal) }}</span>
             </td>
             <td></td>
           </tr>
@@ -294,7 +296,12 @@ const allocMatchSubsidy = computed(() => {
 .alloc-sub-title {
   color: #4e5b70; font-weight: 400; font-size: 14px;
 }
-.add-row-btn { justify-content: center; margin: 0 auto; }
+.add-row-btn { justify-content: center; margin: 0 auto; gap: 6px; }
+.add-icon-circle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #409eff; color: #fff;
+}
 .add-row-tr td { border-bottom: none !important; }
 
 /* 合计行 */
@@ -302,6 +309,6 @@ const allocMatchSubsidy = computed(() => {
   background: #fdf6ec; font-size: 14px;
   border-top: 1px solid #ebeef5;
 }
-.summary-label { color: #c0c4cc; }
-.summary-num { color: #e6a23c; }
+.summary-label { color: #4e5b70; font-weight: 400; font-size: 14px; }
+.summary-num { color: #e6a23c; font-weight: 400; }
 </style>
