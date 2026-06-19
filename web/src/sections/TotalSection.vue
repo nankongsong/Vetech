@@ -42,6 +42,6 @@ const store = useReimbursementStore()
   flex: 1;
   display: flex; align-items: center; gap: 8px;
 }
-.total-lbl { font-size: 14px; color: #606266; white-space: nowrap; }
+.total-lbl { font-size: 14px; color: #4e5b70; font-weight: 400; white-space: nowrap; }
 .total-val { font-size: 14px; color: #303133; }
 </style>

@@ -290,7 +290,7 @@ function onCloseContinue() {
 .table th, .table td {
   padding: 10px 12px; border-bottom: 1px solid #ebeef5; text-align: left;
 }
-.table th { background: #fafafa; color: #606266; font-weight: 600; font-size: 14px; }
+.table th { background: #fafafa; color: #4e5b70; font-weight: 400; font-size: 14px; }
 .table td { color: #303133; font-size: 14px; }
 .table .col-index { width: 50px; text-align: center; }
 .table .col-action { width: 100px; text-align: center; }
