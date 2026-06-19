@@ -15,11 +15,9 @@ const btName = computed(() => {
   return bt ? bt.businessTypeName : ''
 })
 
-const tipText = computed(() => {
-  return store.subsidies.map(s => {
-    const e = store.employees.find(x => x.reimbursementId === s.reimbursementId)
-    return `${e ? e.reimbursementName : ''}${s.days}天`
-  }).join(' ')
+const reimburserName = computed(() => {
+  const emp = store.employees.find(e => e.reimbursementId === store.basic.reimbursement)
+  return emp ? emp.reimbursementName : ''
 })
 
 function openEdit(s: Subsidy) {
@@ -43,8 +41,7 @@ function cityName(no: string) {
   <section class="panel" :class="{ collapsed: store.ui.collapsed.subsidy }">
     <PanelHeader @toggle="store.togglePanel('subsidy')">
       <template #title>
-        补助信息 <span class="title-sub">{{ money(store.subsidyTotal) }}</span>
-        <span class="title-tip" v-if="tipText">({{ tipText }})</span>
+        补助信息<span class="subsidy-sub" v-if="reimburserName">&nbsp;&nbsp;{{ reimburserName }} {{ money(store.subsidyTotal) }}</span>
       </template>
     </PanelHeader>
     <div class="panel-body">
@@ -91,3 +88,9 @@ function cityName(no: string) {
     <SubsidyModal v-if="currentSub" v-model="modalVisible" :subsidy="currentSub" :business-type-name="btName" @save="onSave" />
   </section>
 </template>
+
+<style scoped>
+.subsidy-sub {
+  color: #4e5b70; font-weight: 400; font-size: 14px;
+}
+</style>
