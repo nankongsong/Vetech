@@ -105,10 +105,12 @@ function toggleRow(idx: number) {
 }
 
 function onAmountInput(idx: number, key: 'meal' | 'traffic' | 'comm', v: string) {
-  let n = Number(v || 0)
-  if (n < 0) n = 0
-  if (n > calendar.value[idx][key].std) n = calendar.value[idx][key].std
-  calendar.value[idx][key].value = n
+  calendar.value[idx][key].value = Number(v || 0)
+}
+function isAmountValid(r: SubsidyRow, k: 'meal' | 'traffic' | 'comm'): boolean {
+  if (!r[k].checked) return true
+  const v = Number(r[k].value)
+  return v >= 0 && v <= r[k].std
 }
 
 const startCity = computed(() => store.cities.find(c => c.cityNo === props.subsidy.startCity))
@@ -122,17 +124,35 @@ const partial = !allChecked && anyChecked()
 async function onSave() {
   for (let i = 0; i < calendar.value.length; i++) {
     const r = calendar.value[i]
-    if (r.meal.checked && Number(r.meal.value) > r.meal.std) {
-      await confirm.alert(`第 ${i + 1} 行 餐费补助金额不能超过标准 ${money(r.meal.std)}`)
-      return
+    if (r.meal.checked) {
+      if (Number(r.meal.value) < 0) {
+        await confirm.alert(`第 ${i + 1} 行 餐费补助金额不能为负数`)
+        return
+      }
+      if (Number(r.meal.value) > r.meal.std) {
+        await confirm.alert(`第 ${i + 1} 行 餐费补助金额不能超过标准 ${money(r.meal.std)}`)
+        return
+      }
     }
-    if (r.traffic.checked && Number(r.traffic.value) > r.traffic.std) {
-      await confirm.alert(`第 ${i + 1} 行 交通补助金额不能超过标准 ${money(r.traffic.std)}`)
-      return
+    if (r.traffic.checked) {
+      if (Number(r.traffic.value) < 0) {
+        await confirm.alert(`第 ${i + 1} 行 交通补助金额不能为负数`)
+        return
+      }
+      if (Number(r.traffic.value) > r.traffic.std) {
+        await confirm.alert(`第 ${i + 1} 行 交通补助金额不能超过标准 ${money(r.traffic.std)}`)
+        return
+      }
     }
-    if (r.comm.checked && Number(r.comm.value) > r.comm.std) {
-      await confirm.alert(`第 ${i + 1} 行 通讯补助金额不能超过标准 ${money(r.comm.std)}`)
-      return
+    if (r.comm.checked) {
+      if (Number(r.comm.value) < 0) {
+        await confirm.alert(`第 ${i + 1} 行 通讯补助金额不能为负数`)
+        return
+      }
+      if (Number(r.comm.value) > r.comm.std) {
+        await confirm.alert(`第 ${i + 1} 行 通讯补助金额不能超过标准 ${money(r.comm.std)}`)
+        return
+      }
     }
   }
   emit('save', calendar.value)
@@ -252,7 +272,7 @@ async function onSave() {
                 </div>
               </td>
               <td class="col-city">{{ subsidyCity ? subsidyCity.cityName : '-' }}</td>
-              <td class="col-amt" :class="{ disabled: !r.meal.checked }">
+              <td class="col-amt" :class="{ disabled: !r.meal.checked, error: r.meal.checked && !isAmountValid(r, 'meal') }">
                 <span class="std">CNY {{ money(r.meal.std) }} / 天</span>
                 <div class="amt-row">
                   <span class="custom-checkbox" :class="{ checked: r.meal.checked }" @click="r.meal.checked = !r.meal.checked; r.meal.value = r.meal.checked ? r.meal.std : 0"></span>
@@ -260,8 +280,9 @@ async function onSave() {
                          :value="r.meal.checked ? (r.meal.value).toFixed(2) : money(r.meal.std)" :disabled="!r.meal.checked"
                          @input="onAmountInput(idx, 'meal', ($event.target as HTMLInputElement).value)" />
                 </div>
+                <span v-if="r.meal.checked && !isAmountValid(r, 'meal')" class="error-msg">金额应在 0 ~ {{ money(r.meal.std) }} 元之间</span>
               </td>
-              <td class="col-amt" :class="{ disabled: !r.traffic.checked }">
+              <td class="col-amt" :class="{ disabled: !r.traffic.checked, error: r.traffic.checked && !isAmountValid(r, 'traffic') }">
                 <span class="std">CNY {{ money(r.traffic.std) }} / 天</span>
                 <div class="amt-row">
                   <span class="custom-checkbox" :class="{ checked: r.traffic.checked }" @click="r.traffic.checked = !r.traffic.checked; r.traffic.value = r.traffic.checked ? r.traffic.std : 0"></span>
@@ -269,8 +290,9 @@ async function onSave() {
                          :value="r.traffic.checked ? (r.traffic.value).toFixed(2) : money(r.traffic.std)" :disabled="!r.traffic.checked"
                          @input="onAmountInput(idx, 'traffic', ($event.target as HTMLInputElement).value)" />
                 </div>
+                <span v-if="r.traffic.checked && !isAmountValid(r, 'traffic')" class="error-msg">金额应在 0 ~ {{ money(r.traffic.std) }} 元之间</span>
               </td>
-              <td class="col-amt" :class="{ disabled: !r.comm.checked }">
+              <td class="col-amt" :class="{ disabled: !r.comm.checked, error: r.comm.checked && !isAmountValid(r, 'comm') }">
                 <span class="std">CNY {{ money(r.comm.std) }} / 天</span>
                 <div class="amt-row">
                   <span class="custom-checkbox" :class="{ checked: r.comm.checked }" @click="r.comm.checked = !r.comm.checked; r.comm.value = r.comm.checked ? r.comm.std : 0"></span>
@@ -278,6 +300,7 @@ async function onSave() {
                          :value="r.comm.checked ? (r.comm.value).toFixed(2) : money(r.comm.std)" :disabled="!r.comm.checked"
                          @input="onAmountInput(idx, 'comm', ($event.target as HTMLInputElement).value)" />
                 </div>
+                <span v-if="r.comm.checked && !isAmountValid(r, 'comm')" class="error-msg">金额应在 0 ~ {{ money(r.comm.std) }} 元之间</span>
               </td>
             </tr>
           </tbody>
@@ -590,6 +613,20 @@ async function onSave() {
 }
 .col-amt .amt-input:focus {
   border-color: #409eff;
+}
+.col-amt.error .amt-input {
+  border-color: #f56c6c;
+}
+.col-amt.error .amt-input:focus {
+  border-color: #f56c6c;
+}
+.error-msg {
+  display: block;
+  font-size: 11px;
+  color: #f56c6c;
+  line-height: 1.4;
+  margin-top: 2px;
+  text-align: center;
 }
 .col-amt.disabled .amt-input {
   background: #f5f7fa;
