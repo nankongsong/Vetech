@@ -29,6 +29,7 @@ import {
   employeeList,
   businessTypeTreeData,
 } from '@/composables/useReimDictData'
+import * as XLSX from 'xlsx'
 
 const router = useRouter()
 
@@ -333,6 +334,27 @@ function formatDate(dateTime: string): string {
 /** 报销单号去横线：BX-20260612-0007 → BX202606120007 */
 function fmtNo(no: string): string { return no.replace(/-/g, '') }
 
+function handleExport() {
+  const data = tableData.value.map((row, idx) => ({
+    '序号': (currentPage.value - 1) * pageSize.value + idx + 1,
+    报销单号: fmtNo(row.reimbursementNo),
+    单据状态: getStatusLabel(row.status),
+    报销人: row.reimburserName,
+    工号: row.reimburserNo,
+    报销部门: row.reimDepartmentName,
+    费用归属公司: row.reimCompanyName,
+    业务类型: row.businessTypeName,
+    报销标题: row.reimbursementTitle,
+    报销事由: row.businessTripReason,
+    补助金额: (row.subsidyTotal ?? 0).toFixed(2),
+    创建时间: formatDate(row.creationTime),
+  }))
+  const ws = XLSX.utils.json_to_sheet(data)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, '报销单列表')
+  XLSX.writeFile(wb, `报销单列表_${new Date().toISOString().slice(0, 10)}.xlsx`)
+}
+
 </script>
 
 <template>
@@ -371,6 +393,7 @@ function fmtNo(no: string): string { return no.replace(/-/g, '') }
             <div class="filter-actions">
               <el-button type="primary" plain @click="handleAdd">新增</el-button>
               <el-button type="primary" plain @click="handleClear">清除</el-button>
+              <el-button type="primary" plain @click="handleExport">导出</el-button>
               <el-button type="primary" @click="handleSearch">搜索</el-button>
             </div>
           </div>
