@@ -104,8 +104,28 @@ function toggleRow(idx: number) {
   })
 }
 
+// 跟踪编辑中的原始输入字符串，防止 :value 绑定覆盖用户输入
+const editingAmounts = ref<Record<string, string>>({})
+
+function editingKey(idx: number, key: string) { return `${idx}-${key}` }
+
 function onAmountInput(idx: number, key: 'meal' | 'traffic' | 'comm', v: string) {
-  calendar.value[idx][key].value = Number(v || 0)
+  editingAmounts.value[editingKey(idx, key)] = v
+}
+
+function commitAmount(idx: number, key: 'meal' | 'traffic' | 'comm') {
+  const k = editingKey(idx, key)
+  const raw = editingAmounts.value[k]
+  if (raw !== undefined) {
+    calendar.value[idx][key].value = Number(raw || 0)
+    delete editingAmounts.value[k]
+  }
+}
+
+function displayVal(r: SubsidyRow, key: 'meal' | 'traffic' | 'comm', idx: number): string {
+  if (!r[key].checked) return money(r[key].std)
+  const ek = editingKey(idx, key)
+  return ek in editingAmounts.value ? editingAmounts.value[ek] : (r[key].value).toFixed(2)
 }
 function isAmountValid(r: SubsidyRow, k: 'meal' | 'traffic' | 'comm'): boolean {
   if (!r[k].checked) return true
@@ -277,8 +297,10 @@ async function onSave() {
                 <div class="amt-row">
                   <span class="custom-checkbox" :class="{ checked: r.meal.checked }" @click="r.meal.checked = !r.meal.checked; r.meal.value = r.meal.checked ? r.meal.std : 0"></span>
                   <input class="amt-input" type="number" min="0" :max="r.meal.std" step="0.01"
-                         :value="r.meal.checked ? (r.meal.value).toFixed(2) : money(r.meal.std)" :disabled="!r.meal.checked"
-                         @input="onAmountInput(idx, 'meal', ($event.target as HTMLInputElement).value)" />
+                         :value="displayVal(r, 'meal', idx)" :disabled="!r.meal.checked"
+                         @input="onAmountInput(idx, 'meal', ($event.target as HTMLInputElement).value)"
+                         @blur="commitAmount(idx, 'meal')"
+                         @keydown.enter="commitAmount(idx, 'meal')" />
                 </div>
                 <span v-if="r.meal.checked && !isAmountValid(r, 'meal')" class="error-msg">金额应在 0 ~ {{ money(r.meal.std) }} 元之间</span>
               </td>
@@ -287,8 +309,10 @@ async function onSave() {
                 <div class="amt-row">
                   <span class="custom-checkbox" :class="{ checked: r.traffic.checked }" @click="r.traffic.checked = !r.traffic.checked; r.traffic.value = r.traffic.checked ? r.traffic.std : 0"></span>
                   <input class="amt-input" type="number" min="0" :max="r.traffic.std" step="0.01"
-                         :value="r.traffic.checked ? (r.traffic.value).toFixed(2) : money(r.traffic.std)" :disabled="!r.traffic.checked"
-                         @input="onAmountInput(idx, 'traffic', ($event.target as HTMLInputElement).value)" />
+                         :value="displayVal(r, 'traffic', idx)" :disabled="!r.traffic.checked"
+                         @input="onAmountInput(idx, 'traffic', ($event.target as HTMLInputElement).value)"
+                         @blur="commitAmount(idx, 'traffic')"
+                         @keydown.enter="commitAmount(idx, 'traffic')" />
                 </div>
                 <span v-if="r.traffic.checked && !isAmountValid(r, 'traffic')" class="error-msg">金额应在 0 ~ {{ money(r.traffic.std) }} 元之间</span>
               </td>
@@ -297,8 +321,10 @@ async function onSave() {
                 <div class="amt-row">
                   <span class="custom-checkbox" :class="{ checked: r.comm.checked }" @click="r.comm.checked = !r.comm.checked; r.comm.value = r.comm.checked ? r.comm.std : 0"></span>
                   <input class="amt-input" type="number" min="0" :max="r.comm.std" step="0.01"
-                         :value="r.comm.checked ? (r.comm.value).toFixed(2) : money(r.comm.std)" :disabled="!r.comm.checked"
-                         @input="onAmountInput(idx, 'comm', ($event.target as HTMLInputElement).value)" />
+                         :value="displayVal(r, 'comm', idx)" :disabled="!r.comm.checked"
+                         @input="onAmountInput(idx, 'comm', ($event.target as HTMLInputElement).value)"
+                         @blur="commitAmount(idx, 'comm')"
+                         @keydown.enter="commitAmount(idx, 'comm')" />
                 </div>
                 <span v-if="r.comm.checked && !isAmountValid(r, 'comm')" class="error-msg">金额应在 0 ~ {{ money(r.comm.std) }} 元之间</span>
               </td>
