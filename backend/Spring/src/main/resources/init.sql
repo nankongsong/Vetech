@@ -4,6 +4,7 @@
 -- 字符集：utf8mb4  引擎：InnoDB
 -- ============================================================
 
+SET NAMES utf8mb4;
 CREATE DATABASE IF NOT EXISTS vetech_reim DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE vetech_reim;
 
@@ -17,7 +18,7 @@ CREATE TABLE reim_company (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     company_id VARCHAR(32) NOT NULL COMMENT '公司业务ID',
     company_no VARCHAR(20) NOT NULL COMMENT '公司编号',
-    company_name VARCHAR(50) NOT NULL COMMENT '公司名称',
+    company_name VARCHAR(100) NOT NULL COMMENT '公司名称',
     creation_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='公司基础数据表';
@@ -226,11 +227,12 @@ CREATE TABLE reim_audit_log (
 DROP TABLE IF EXISTS reim_attachment;
 CREATE TABLE reim_attachment (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    main_id BIGINT NOT NULL COMMENT '报销单主表ID',
+    main_id BIGINT DEFAULT NULL COMMENT '报销单主表ID（临时附件为空）',
     file_name VARCHAR(255) NOT NULL COMMENT '原始文件名',
     file_path VARCHAR(500) NOT NULL COMMENT '服务器存储相对路径',
     file_size BIGINT NOT NULL DEFAULT 0 COMMENT '文件大小（字节）',
     content_type VARCHAR(100) DEFAULT NULL COMMENT 'MIME类型',
+    status TINYINT(1) NOT NULL DEFAULT 1 COMMENT '状态：0-临时，1-已确认',
     creation_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '上传时间',
     PRIMARY KEY (id),
     KEY idx_main_id (main_id)

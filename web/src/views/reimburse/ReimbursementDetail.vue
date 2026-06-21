@@ -10,7 +10,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useReimbursementStore } from '@/stores/reimbursement'
-import { fetchReimDetail } from '@/api/service'
+import { fetchReimDetail, deleteTempAttachment } from '@/api/service'
 import type { BackendReimDetail } from '@/api/types'
 import type { Allocation, Trip } from '@/types/models'
 import DocHeader from '@/sections/DocHeader.vue'
@@ -21,6 +21,7 @@ import SubsidySection from '@/sections/SubsidySection.vue'
 import TotalSection from '@/sections/TotalSection.vue'
 import AllocationSection from '@/sections/AllocationSection.vue'
 import RemarkSection from '@/sections/RemarkSection.vue'
+import AttachmentSection from '@/sections/AttachmentSection.vue'
 import ConfirmModal from '@/components/ConfirmModal.vue'
 import { useConfirm } from '@/composables/useConfirm'
 
@@ -171,6 +172,12 @@ const pageTitle = computed(() => {
   return '新增报销单'
 })
 
+/** 当前报销单主键ID（编辑/查看/推送模式有值，新增模式为 null） */
+const reimId = computed(() => {
+  const id = route.params.id
+  return id && typeof id === 'string' ? Number(id) : null
+})
+
 /** 关闭页面 / 返回列表：统一弹窗 → 保存草稿／放弃修改／继续编辑 */
 async function handleCloseOrBack() {
   // 只读查看页面：直接退出，不保存
@@ -196,9 +203,15 @@ async function onCloseSave() {
   router.push({ name: 'reimburseList' })
 }
 
-/** 放弃修改，直接返回列表 */
-function onCloseDiscard() {
+/** 放弃修改，直接返回列表（清理临时附件） */
+async function onCloseDiscard() {
   confirm.state.visible = false
+  // 逐个删除临时附件
+  const ids = [...store.tempAttachmentIds]
+  store.clearTempAttachmentIds()
+  for (const id of ids) {
+    try { await deleteTempAttachment(id) } catch { /* 忽略 */ }
+  }
   router.push({ name: 'reimburseList' })
 }
 
@@ -230,6 +243,7 @@ function onCloseContinue() {
       <TotalSection />
       <AllocationSection />
       <RemarkSection />
+      <AttachmentSection :main-id="reimId" />
     </main>
     <DocFooter ref="docFooterRef" :mode="isEdit ? 'edit' : 'add'" :reim-id="isEdit ? Number(route.params.id) : null" :edit-version="editVersion" :edit-status="editStatus" :readonly="isView" @close="handleCloseOrBack" />
 

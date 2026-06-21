@@ -1,11 +1,4 @@
-import { get, post, put, del } from './client'
-import type {
-  Company,
-  Department,
-  Employee,
-  City,
-  Project
-} from '@/types/models'
+import { get, post, put, del, uploadFile } from './client'
 import type {
   BackendReimMain,
   BackendReimDetail,
@@ -19,7 +12,15 @@ import type {
   BusinessTypeNode,
   CityItem,
   ProjectItem,
+  AttachmentItem,
 } from './types'
+import type {
+  Company,
+  Department,
+  Employee,
+  City,
+  Project
+} from '@/types/models'
 
 // ── 基础数据 ──
 
@@ -109,4 +110,37 @@ export function updateAllocation(mainId: number, list: BackendAllocationDTO[]): 
 
 export function equalSplit(mainId: number, list: BackendAllocationDTO[]): Promise<BackendAllocationDTO[]> {
   return put<BackendAllocationDTO[]>(`/reim/${mainId}/allocation/equal-split`, list)
+}
+
+// ── 附件管理 ──
+
+export function fetchAttachments(mainId: number): Promise<AttachmentItem[]> {
+  return get<AttachmentItem[]>(`/reim/${mainId}/attachments`)
+}
+
+export function uploadAttachment(mainId: number, file: File): Promise<AttachmentItem> {
+  const formData = new FormData()
+  formData.append('file', file)
+  return uploadFile<AttachmentItem>(`/reim/${mainId}/attachment`, formData)
+}
+
+export function deleteAttachment(mainId: number, attachId: number): Promise<void> {
+  return del<void>(`/reim/${mainId}/attachment/${attachId}`)
+}
+
+/** 上传到临时区（status=0，不关联报销单） */
+export function uploadTempAttachment(file: File): Promise<AttachmentItem> {
+  const formData = new FormData()
+  formData.append('file', file)
+  return uploadFile<AttachmentItem>('/reim/attachment/temp', formData)
+}
+
+/** 确认临时附件（设置 mainId + status=1） */
+export function confirmAttachments(mainId: number, ids: number[]): Promise<void> {
+  return put<void>(`/reim/${mainId}/attachment/confirm`, ids)
+}
+
+/** 删除临时附件 */
+export function deleteTempAttachment(attachId: number): Promise<void> {
+  return del<void>(`/reim/attachment/temp/${attachId}`)
 }

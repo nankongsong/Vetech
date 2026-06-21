@@ -12,6 +12,7 @@ import {
   getCalendar,
   updateCalendar,
   updateAllocation,
+  confirmAttachments,
 } from '@/api/service'
 import type { BackendTripDTO, BackendCalendarDTO, BackendAllocationDTO, BackendSubsidyCalendar } from '@/api/types'
 
@@ -74,6 +75,15 @@ function onClose() {
   emit('close')
 }
 
+// ==================== 确认临时附件 ====================
+
+async function confirmTempAttachments(mainId: number) {
+  const ids = store.tempAttachmentIds
+  if (ids.length === 0) return
+  await confirmAttachments(mainId, ids)
+  store.clearTempAttachmentIds()
+}
+
 // ==================== 保存草稿（不提交） ====================
 
 async function saveDraft(): Promise<boolean> {
@@ -85,8 +95,10 @@ async function saveDraft(): Promise<boolean> {
     if (props.mode === 'add') {
       const res = await createReim(mainData)
       mainId = res.id
+      await confirmTempAttachments(mainId)
     } else {
       mainId = props.reimId!
+      await confirmTempAttachments(mainId)
       await updateReim(mainId, mainData)
     }
 
@@ -225,8 +237,10 @@ async function doSaveAndSubmit() {
     if (props.mode === 'add') {
       const res = await createReim(mainData)
       mainId = res.id
+      await confirmTempAttachments(mainId)
     } else {
       mainId = props.reimId!
+      await confirmTempAttachments(mainId)
       await updateReim(mainId, mainData)
     }
 
