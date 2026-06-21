@@ -1,17 +1,20 @@
 <script setup lang="ts">
 /**
  * 附件区域组件
- * 与后端 reim_attachment 表对齐，支持上传/列表/下载/删除
  *
- * 新建页面：选文件 → 暂存浏览器内存 → 保存草稿后自动上传到后端
- * 编辑页面：选文件 → 直接上传到后端
+ * 上传即走后端 temp（status=0），保存/提交时确认（status=1）
  * 附件不参与任何表单校验
  */
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PanelHeader from '@/components/PanelHeader.vue'
 import { useReimbursementStore } from '@/stores/reimbursement'
-import { fetchAttachments, uploadAttachment, deleteAttachment } from '@/api/service'
+import {
+  fetchAttachments,
+  uploadTempAttachment,
+  deleteAttachment,
+  deleteTempAttachment,
+} from '@/api/service'
 import type { AttachmentItem } from '@/api/types'
 
 const props = defineProps<{
@@ -20,20 +23,31 @@ const props = defineProps<{
 
 const store = useReimbursementStore()
 
-const attachments = ref<AttachmentItem[]>([])
-const pendingFiles = ref<File[]>([])
+const confirmedList = ref<AttachmentItem[]>([])
+const tempList = ref<AttachmentItem[]>([])
 const loading = ref(false)
 const uploading = ref(false)
 const fileInput = ref<HTMLInputElement>()
 
-/** 加载已关联附件列表 */
-async function loadList() {
-  if (!props.mainId) return
+/** 混合列表：已确认 + 临时附件混排 */
+const displayList = computed(() => {
+  const items: { type: 'confirmed' | 'temp'; data: AttachmentItem }[] = []
+  confirmedList.value.forEach(a => items.push({ type: 'confirmed', data: a }))
+  tempList.value.forEach(a => items.push({ type: 'temp', data: a }))
+  return items
+})
+
+/** 加载已确认附件 */
+async function loadConfirmed() {
+  if (!props.mainId) {
+    confirmedList.value = []
+    return
+  }
   loading.value = true
   try {
-    attachments.value = await fetchAttachments(props.mainId)
+    confirmedList.value = await fetchAttachments(props.mainId)
   } catch {
-    attachments.value = []
+    confirmedList.value = []
   } finally {
     loading.value = false
   }
@@ -47,54 +61,52 @@ async function handleUpload(file: File) {
     return
   }
 
-  if (props.mainId) {
-    // 已有主键 → 直接上传
-    uploading.value = true
+  uploading.value = true
+  try {
+    const result = await uploadTempAttachment(file)
+    tempList.value.push(result)
+    store.addTempAttachmentId(result.id)
+  } catch {
+    // 错误已由拦截器处理
+  } finally {
+    uploading.value = false
+  }
+}
+
+/** 删除附件（临时或已确认） */
+async function handleRemove(item: { type: string; data: AttachmentItem }) {
+  if (item.type === 'confirmed') {
     try {
-      await uploadAttachment(props.mainId, file)
-      ElMessage.success('上传成功')
-      await loadList()
+      await ElMessageBox.confirm(`确定删除附件「${item.data.fileName}」？`, '提示', {
+        type: 'warning',
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      })
+      if (!props.mainId) return
+      await deleteAttachment(props.mainId, item.data.id)
+      confirmedList.value = confirmedList.value.filter(a => a.id !== item.data.id)
     } catch {
-      // 错误已由拦截器处理
-    } finally {
-      uploading.value = false
+      // 取消或错误
     }
   } else {
-    // 新建页面 → 暂存到浏览器内存，保存后自动上传
-    pendingFiles.value.push(file)
+    // 临时附件：直接删除
+    try {
+      await deleteTempAttachment(item.data.id)
+    } catch {
+      // 忽略后端删除失败
+    }
+    store.removeTempAttachmentId(item.data.id)
+    tempList.value = tempList.value.filter(a => a.id !== item.data.id)
   }
 }
 
-/** 删除已关联附件 */
-async function handleDelete(attachId: number, fileName: string) {
-  try {
-    await ElMessageBox.confirm(`确定删除附件「${fileName}」？`, '提示', {
-      type: 'warning',
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-    })
-    if (!props.mainId) return
-    await deleteAttachment(props.mainId, attachId)
-    ElMessage.success('删除成功')
-    await loadList()
-  } catch {
-    // 取消或错误
-  }
-}
-
-/** 移除暂存文件 */
-function removePendingFile(idx: number) {
-  pendingFiles.value.splice(idx, 1)
-}
-
-/** 下载附件 */
+/** 下载已确认附件 */
 function handleDownload(attachId: number) {
   if (!props.mainId) return
   const baseUrl = import.meta.env.VITE_API_BASE_URL || '/api'
   window.open(`${baseUrl}/reim/${props.mainId}/attachment/${attachId}`, '_blank')
 }
 
-/** 触发文件选择 */
 function triggerUpload() {
   fileInput.value?.click()
 }
@@ -106,28 +118,11 @@ function onFileSelected(event: Event) {
   input.value = ''
 }
 
-/** 提交所有暂存文件（保存草稿后由 mainId 变化触发） */
-async function flushPendingFiles() {
-  if (!props.mainId || pendingFiles.value.length === 0) return
-  uploading.value = true
-  const list = [...pendingFiles.value]
-  pendingFiles.value = []
-  let successCount = 0
-  for (const file of list) {
-    try {
-      await uploadAttachment(props.mainId, file)
-      successCount++
-    } catch {
-      // 单个失败继续传下一个
-    }
-  }
-  uploading.value = false
-  if (successCount > 0) ElMessage.success(`已上传 ${successCount} 个附件`)
-  if (successCount < list.length) ElMessage.warning(`${list.length - successCount} 个上传失败`)
-  await loadList()
+/** 保存成功后由父组件调用，刷新已确认列表 */
+function refreshConfirmed() {
+  loadConfirmed()
 }
 
-/** 格式化文件大小 */
 function formatSize(bytes: number): string {
   if (bytes === 0) return '0 B'
   const units = ['B', 'KB', 'MB', 'GB']
@@ -137,20 +132,9 @@ function formatSize(bytes: number): string {
   return (bytes / Math.pow(k, idx)).toFixed(idx > 0 ? 1 : 0) + ' ' + units[idx]
 }
 
-onMounted(loadList)
+defineExpose({ refreshConfirmed })
 
-watch(() => props.mainId, async (newVal, oldVal) => {
-  if (newVal && !oldVal) {
-    // mainId 从 null → 有值（保存草稿后路由跳转触发）
-    await flushPendingFiles()
-  } else if (newVal) {
-    attachments.value = []
-    await loadList()
-  } else {
-    attachments.value = []
-    pendingFiles.value = []
-  }
-})
+onMounted(loadConfirmed)
 </script>
 
 <template>
@@ -173,58 +157,36 @@ watch(() => props.mainId, async (newVal, oldVal) => {
       </template>
     </PanelHeader>
     <div class="panel-body">
-      <!-- 加载中 -->
       <div v-if="loading" class="no-data">加载中…</div>
 
-      <!-- 暂存文件列表（浏览器内存，未保存） -->
-      <table v-if="pendingFiles.length > 0" class="table pending-table">
+      <table v-if="displayList.length > 0" class="table">
         <thead>
           <tr>
             <th>文件名</th>
             <th style="width:100px">文件大小</th>
-            <th style="width:100px">状态</th>
-            <th v-if="!store.ui.readonly" style="width:50px;text-align:center">操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(file, idx) in pendingFiles" :key="'p_' + idx">
-            <td>
-              <span class="pending-name" :title="file.name">{{ file.name }}</span>
-            </td>
-            <td>{{ formatSize(file.size) }}</td>
-            <td><span class="pending-badge">待上传</span></td>
-            <td v-if="!store.ui.readonly" class="col-action">
-              <span class="op-icon danger" @click="removePendingFile(idx)" title="移除">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                  <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zM8 9h8v10H8V9zm.5-5l-1-1h5l-1 1H5v2h14V4h-3.5z"/>
-                </svg>
-              </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- 已上传附件列表 -->
-      <table v-if="attachments.length > 0" class="table">
-        <thead>
-          <tr>
-            <th>文件名</th>
-            <th style="width:100px">文件大小</th>
-            <th style="width:170px">上传时间</th>
             <th v-if="!store.ui.readonly" style="width:70px;text-align:center">操作</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="att in attachments" :key="att.id">
-            <td>
-              <span class="file-link" @click="handleDownload(att.id)" :title="att.fileName">
-                {{ att.fileName }}
-              </span>
-            </td>
-            <td>{{ formatSize(att.fileSize) }}</td>
-            <td class="date-cell">{{ att.creationTime }}</td>
+          <tr v-for="item in displayList" :key="item.data.id">
+            <!-- 已确认附件：可下载 -->
+            <template v-if="item.type === 'confirmed'">
+              <td>
+                <span class="file-link" @click="handleDownload(item.data.id)" :title="item.data.fileName">
+                  {{ item.data.fileName }}
+                </span>
+              </td>
+              <td>{{ formatSize(item.data.fileSize) }}</td>
+            </template>
+            <!-- 临时附件：不可下载 -->
+            <template v-else>
+              <td>
+                <span class="temp-name" :title="item.data.fileName">{{ item.data.fileName }}</span>
+              </td>
+              <td>{{ formatSize(item.data.fileSize) }}</td>
+            </template>
             <td v-if="!store.ui.readonly" class="col-action">
-              <span class="op-icon danger" @click="handleDelete(att.id, att.fileName)" title="删除">
+              <span class="op-icon danger" @click="handleRemove(item)" title="删除">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
                   <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zM8 9h8v10H8V9zm.5-5l-1-1h5l-1 1H5v2h14V4h-3.5z"/>
                 </svg>
@@ -234,12 +196,8 @@ watch(() => props.mainId, async (newVal, oldVal) => {
         </tbody>
       </table>
 
-      <!-- 空状态 -->
-      <div v-if="attachments.length === 0 && pendingFiles.length === 0 && !loading" class="no-data">
-        暂无附件
-      </div>
+      <div v-if="displayList.length === 0 && !loading" class="no-data">暂无附件</div>
 
-      <!-- 上传进度指示 -->
       <div v-if="uploading" class="upload-indicator">
         <span class="upload-spinner"></span>
         正在上传…
@@ -255,10 +213,6 @@ watch(() => props.mainId, async (newVal, oldVal) => {
   padding: 24px 0;
   font-size: 14px;
 }
-.date-cell {
-  color: #909399;
-  font-size: 13px;
-}
 .file-link {
   color: #409eff;
   cursor: pointer;
@@ -267,23 +221,9 @@ watch(() => props.mainId, async (newVal, oldVal) => {
 .file-link:hover {
   text-decoration: underline;
 }
-.pending-table {
-  margin-bottom: 0;
-}
-.pending-table tbody tr:last-child td {
-  border-bottom: none;
-}
-.pending-name {
+.temp-name {
   color: #606266;
   word-break: break-all;
-}
-.pending-badge {
-  display: inline-block;
-  padding: 1px 8px;
-  font-size: 12px;
-  color: #e6a23c;
-  background: #fdf6ec;
-  border-radius: 3px;
 }
 .upload-indicator {
   display: flex;

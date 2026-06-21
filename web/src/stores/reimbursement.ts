@@ -13,7 +13,7 @@ import type {
   Employee,
   City,
   Project,
-  BusinessType
+  BusinessType,
 } from '@/types/models'
 import { cityMealStandard, cityTrafficStandard, cityCommStandard } from '@/data/mock'
 import { dateRange, diffDays } from '@/utils/format'
@@ -42,6 +42,8 @@ interface ReimbursementState {
   allocation: Allocation[]
   remark: string
   ui: UiState
+  /** 临时附件ID列表（status=0，保存/提交后确认） */
+  tempAttachmentIds: number[]
   // 基础数据
   companies: Company[]
   departments: Department[]
@@ -129,6 +131,7 @@ export const useReimbursementStore = defineStore('reimbursement', {
       ],
       remark: '',
       ui: { collapsed: { basic: false, trip: false, subsidy: false, total: false, allocation: false, remark: false, attachment: false }, readonly: false },
+      tempAttachmentIds: [],
       // 基础数据（初始为空，由 loadBaseData 填充）
       companies: [],
       departments: [],
@@ -277,10 +280,28 @@ export const useReimbursementStore = defineStore('reimbursement', {
       this.remark = ''
       this.meta = { title: '差旅费用报销单', submitDate: '' }
       this.ui.readonly = false
+      this.clearTempAttachmentIds()
     },
 
     togglePanel(key: string) {
       this.ui.collapsed[key] = !this.ui.collapsed[key]
+    },
+
+    /** 添加临时附件ID */
+    addTempAttachmentId(id: number) {
+      if (!this.tempAttachmentIds.includes(id)) {
+        this.tempAttachmentIds.push(id)
+      }
+    },
+
+    /** 移除临时附件ID */
+    removeTempAttachmentId(id: number) {
+      this.tempAttachmentIds = this.tempAttachmentIds.filter(x => x !== id)
+    },
+
+    /** 清空临时附件ID */
+    clearTempAttachmentIds() {
+      this.tempAttachmentIds = []
     },
 
     /** 并行加载所有基础数据 */

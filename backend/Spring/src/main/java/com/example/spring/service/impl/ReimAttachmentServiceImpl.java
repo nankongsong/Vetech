@@ -74,6 +74,7 @@ public class ReimAttachmentServiceImpl implements ReimAttachmentService {
             attachment.setFilePath(storedName);
             attachment.setFileSize(file.getSize());
             attachment.setContentType(file.getContentType());
+            attachment.setStatus(1);
             attachment.setCreationTime(LocalDateTime.now());
 
             attachmentMapper.insert(attachment);
@@ -84,6 +85,63 @@ public class ReimAttachmentServiceImpl implements ReimAttachmentService {
         } catch (Exception e) {
             log.error("文件上传失败：", e);
             throw new BizException("文件上传失败：" + e.getMessage());
+        }
+    }
+
+    @Override
+    public ReimAttachment uploadTemp(MultipartFile file) {
+        if (file.isEmpty()) throw new BizException("上传文件不能为空");
+
+        String originalName = file.getOriginalFilename();
+        if (originalName == null || originalName.isBlank()) {
+            originalName = "unknown";
+        }
+
+        String ext = "";
+        int dot = originalName.lastIndexOf('.');
+        if (dot > 0) ext = originalName.substring(dot);
+
+        String storedName = UUID.randomUUID().toString().replace("-", "") + ext;
+
+        try {
+            if (!Files.exists(resolvedUploadDir)) Files.createDirectories(resolvedUploadDir);
+
+            Path target = resolvedUploadDir.resolve(storedName);
+            file.transferTo(target.toFile());
+
+            ReimAttachment attachment = new ReimAttachment();
+            attachment.setMainId(null);
+            attachment.setFileName(originalName);
+            attachment.setFilePath(storedName);
+            attachment.setFileSize(file.getSize());
+            attachment.setContentType(file.getContentType());
+            attachment.setStatus(0);
+            attachment.setCreationTime(LocalDateTime.now());
+
+            attachmentMapper.insert(attachment);
+            return attachment;
+
+        } catch (BizException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("临时文件上传失败：", e);
+            throw new BizException("临时文件上传失败：" + e.getMessage());
+        }
+    }
+
+    @Override
+    public void confirmAttachments(Long mainId, List<Long> attachmentIds) {
+        if (mainId == null) throw new BizException("报销单ID不能为空");
+        if (attachmentIds == null || attachmentIds.isEmpty()) return;
+
+        for (Long id : attachmentIds) {
+            ReimAttachment att = attachmentMapper.selectById(id);
+            if (att == null) continue;
+            if (att.getStatus() != null && att.getStatus() == 1) continue; // 已经是正式附件
+
+            att.setMainId(mainId);
+            att.setStatus(1);
+            attachmentMapper.updateById(att);
         }
     }
 
@@ -116,6 +174,7 @@ public class ReimAttachmentServiceImpl implements ReimAttachmentService {
         return attachmentMapper.selectList(
                 new LambdaQueryWrapper<ReimAttachment>()
                         .eq(ReimAttachment::getMainId, mainId)
+                        .eq(ReimAttachment::getStatus, 1)
                         .orderByAsc(ReimAttachment::getId));
     }
 

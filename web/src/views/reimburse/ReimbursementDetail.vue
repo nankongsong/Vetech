@@ -10,7 +10,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useReimbursementStore } from '@/stores/reimbursement'
-import { fetchReimDetail } from '@/api/service'
+import { fetchReimDetail, deleteTempAttachment } from '@/api/service'
 import type { BackendReimDetail } from '@/api/types'
 import type { Allocation, Trip } from '@/types/models'
 import DocHeader from '@/sections/DocHeader.vue'
@@ -203,9 +203,15 @@ async function onCloseSave() {
   router.push({ name: 'reimburseList' })
 }
 
-/** 放弃修改，直接返回列表 */
-function onCloseDiscard() {
+/** 放弃修改，直接返回列表（清理临时附件） */
+async function onCloseDiscard() {
   confirm.state.visible = false
+  // 逐个删除临时附件
+  const ids = [...store.tempAttachmentIds]
+  store.clearTempAttachmentIds()
+  for (const id of ids) {
+    try { await deleteTempAttachment(id) } catch { /* 忽略 */ }
+  }
   router.push({ name: 'reimburseList' })
 }
 

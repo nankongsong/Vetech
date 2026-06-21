@@ -127,3 +127,20 @@ export function uploadAttachment(mainId: number, file: File): Promise<Attachment
 export function deleteAttachment(mainId: number, attachId: number): Promise<void> {
   return del<void>(`/reim/${mainId}/attachment/${attachId}`)
 }
+
+/** 上传到临时区（status=0，不关联报销单） */
+export function uploadTempAttachment(file: File): Promise<AttachmentItem> {
+  const formData = new FormData()
+  formData.append('file', file)
+  return uploadFile<AttachmentItem>('/reim/attachment/temp', formData)
+}
+
+/** 确认临时附件（设置 mainId + status=1） */
+export function confirmAttachments(mainId: number, ids: number[]): Promise<void> {
+  return put<void>(`/reim/${mainId}/attachment/confirm`, ids)
+}
+
+/** 删除临时附件 */
+export function deleteTempAttachment(attachId: number): Promise<void> {
+  return del<void>(`/reim/attachment/temp/${attachId}`)
+}

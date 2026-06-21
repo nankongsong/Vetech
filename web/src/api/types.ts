@@ -156,11 +156,13 @@ export interface BackendAllocationDTO {
 
 export interface AttachmentItem {
   id: number
-  mainId: number
+  mainId: number | null
   fileName: string
   filePath: string
   fileSize: number
   contentType: string
+  /** 0-临时，1-已确认 */
+  status: number
   creationTime: string
 }
 

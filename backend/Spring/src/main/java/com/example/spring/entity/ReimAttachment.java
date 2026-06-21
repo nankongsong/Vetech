@@ -24,5 +24,8 @@ public class ReimAttachment {
 
     private String contentType;
 
+    /** 状态：0-临时（未关联报销单），1-已确认（已关联） */
+    private Integer status;
+
     private LocalDateTime creationTime;
 }
