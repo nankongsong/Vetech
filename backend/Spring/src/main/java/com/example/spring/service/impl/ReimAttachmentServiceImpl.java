@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.annotation.PostConstruct;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.OutputStream;
@@ -33,6 +34,18 @@ public class ReimAttachmentServiceImpl implements ReimAttachmentService {
     @Value("${vetech.upload.path:./uploads}")
     private String uploadPath;
 
+    private Path resolvedUploadDir;
+
+    @PostConstruct
+    public void init() {
+        Path p = Paths.get(uploadPath);
+        if (!p.isAbsolute()) {
+            p = Paths.get(System.getProperty("user.dir"), uploadPath);
+        }
+        resolvedUploadDir = p.normalize();
+        log.info("附件存储路径：{}", resolvedUploadDir);
+    }
+
     @Override
     public ReimAttachment upload(Long mainId, MultipartFile file) {
         if (mainId == null) throw new BizException("报销单ID不能为空");
@@ -50,10 +63,9 @@ public class ReimAttachmentServiceImpl implements ReimAttachmentService {
         String storedName = UUID.randomUUID().toString().replace("-", "") + ext;
 
         try {
-            Path dir = Paths.get(uploadPath);
-            if (!Files.exists(dir)) Files.createDirectories(dir);
+            if (!Files.exists(resolvedUploadDir)) Files.createDirectories(resolvedUploadDir);
 
-            Path target = dir.resolve(storedName);
+            Path target = resolvedUploadDir.resolve(storedName);
             file.transferTo(target.toFile());
 
             ReimAttachment attachment = new ReimAttachment();
@@ -80,7 +92,7 @@ public class ReimAttachmentServiceImpl implements ReimAttachmentService {
         ReimAttachment attachment = attachmentMapper.selectById(attachId);
         if (attachment == null) throw new BizException(404, "附件不存在");
 
-        Path filePath = Paths.get(uploadPath, attachment.getFilePath());
+        Path filePath = resolvedUploadDir.resolve(attachment.getFilePath());
         File file = filePath.toFile();
         if (!file.exists()) throw new BizException(404, "附件文件已丢失");
 
@@ -113,7 +125,7 @@ public class ReimAttachmentServiceImpl implements ReimAttachmentService {
         if (attachment == null) throw new BizException(404, "附件不存在");
 
         try {
-            Path filePath = Paths.get(uploadPath, attachment.getFilePath());
+            Path filePath = resolvedUploadDir.resolve(attachment.getFilePath());
             Files.deleteIfExists(filePath);
         } catch (Exception e) {
             log.warn("删除附件文件失败：{}", e.getMessage());
