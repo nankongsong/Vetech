@@ -41,3 +41,10 @@ export function put<T>(url: string, data?: unknown): Promise<T> {
 export function del<T>(url: string): Promise<T> {
   return http.delete<T>(url).then(r => r.data)
 }
+
+/** FormData 文件上传（Content-Type: multipart/form-data） */
+export function uploadFile<T>(url: string, formData: FormData): Promise<T> {
+  return http.post<T>(url, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }).then(r => r.data)
+}

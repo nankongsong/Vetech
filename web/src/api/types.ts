@@ -152,6 +152,18 @@ export interface BackendAllocationDTO {
   sortOrder: number
 }
 
+// ── 附件 ──
+
+export interface AttachmentItem {
+  id: number
+  mainId: number
+  fileName: string
+  filePath: string
+  fileSize: number
+  contentType: string
+  creationTime: string
+}
+
 // ── 报销详情聚合 VO ──
 
 export interface BackendReimDetail {

@@ -1,11 +1,4 @@
-import { get, post, put, del } from './client'
-import type {
-  Company,
-  Department,
-  Employee,
-  City,
-  Project
-} from '@/types/models'
+import { get, post, put, del, uploadFile } from './client'
 import type {
   BackendReimMain,
   BackendReimDetail,
@@ -19,7 +12,15 @@ import type {
   BusinessTypeNode,
   CityItem,
   ProjectItem,
+  AttachmentItem,
 } from './types'
+import type {
+  Company,
+  Department,
+  Employee,
+  City,
+  Project
+} from '@/types/models'
 
 // ── 基础数据 ──
 
@@ -109,4 +110,20 @@ export function updateAllocation(mainId: number, list: BackendAllocationDTO[]): 
 
 export function equalSplit(mainId: number, list: BackendAllocationDTO[]): Promise<BackendAllocationDTO[]> {
   return put<BackendAllocationDTO[]>(`/reim/${mainId}/allocation/equal-split`, list)
+}
+
+// ── 附件管理 ──
+
+export function fetchAttachments(mainId: number): Promise<AttachmentItem[]> {
+  return get<AttachmentItem[]>(`/reim/${mainId}/attachments`)
+}
+
+export function uploadAttachment(mainId: number, file: File): Promise<AttachmentItem> {
+  const formData = new FormData()
+  formData.append('file', file)
+  return uploadFile<AttachmentItem>(`/reim/${mainId}/attachment`, formData)
+}
+
+export function deleteAttachment(mainId: number, attachId: number): Promise<void> {
+  return del<void>(`/reim/${mainId}/attachment/${attachId}`)
 }

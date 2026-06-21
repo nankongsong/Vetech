@@ -128,7 +128,7 @@ export const useReimbursementStore = defineStore('reimbursement', {
         { id: 'a_1', company: '成本中心-管理层类', project: '', ratio: 1.0, amount: 0 }
       ],
       remark: '',
-      ui: { collapsed: { basic: false, trip: false, subsidy: false, total: false, allocation: false, remark: false }, readonly: false },
+      ui: { collapsed: { basic: false, trip: false, subsidy: false, total: false, allocation: false, remark: false, attachment: false }, readonly: false },
       // 基础数据（初始为空，由 loadBaseData 填充）
       companies: [],
       departments: [],
