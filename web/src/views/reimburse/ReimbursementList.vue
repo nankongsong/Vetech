@@ -360,15 +360,15 @@ function handleExport() {
 <template>
   <el-config-provider :locale="zhCn">
     <div class="reimburse-list-container">
-      <!-- ===== 筛选栏：两行左对齐，按钮与第一行费用归属公司右对齐 ===== -->
+      <!-- ===== 筛选栏：两行 Grid，第1列左对齐、第2-3列右对齐、第4列右对齐 ===== -->
       <el-card shadow="never" class="filter-card">
         <el-form :model="filterForm" class="filter-form">
-          <!-- 两行 Grid：4列，最后一列1fr填充 → 字段靠左、按钮靠右，与表格左右对齐 -->
+          <!-- 两行 Grid：4列，auto 1fr 1fr 1fr → 第1列左对齐、第2-3列右对齐、第4列右对齐 -->
           <div class="filter-grid">
             <!-- 第一行 -->
-            <el-form-item label="报销单号"><el-input v-model="filterForm.reimbursementNo" placeholder="请输入" clearable style="width:160px" @keyup.enter="handleSearch" /></el-form-item>
-            <el-form-item label="标题"><el-input v-model="filterForm.title" placeholder="请输入" clearable style="width:160px" @keyup.enter="handleSearch" /></el-form-item>
-            <el-form-item label="事由"><el-input v-model="filterForm.reason" placeholder="请输入" clearable style="width:160px" @keyup.enter="handleSearch" /></el-form-item>
+            <el-form-item label="报销单号"><el-input v-model="filterForm.reimbursementNo" placeholder="请输入" clearable style="width:200px" @keyup.enter="handleSearch" /></el-form-item>
+            <el-form-item label="标题" class="cell-right"><el-input v-model="filterForm.title" placeholder="请输入" clearable style="width:200px" @keyup.enter="handleSearch" /></el-form-item>
+            <el-form-item label="事由" class="cell-right"><el-input v-model="filterForm.reason" placeholder="请输入" clearable style="width:200px" @keyup.enter="handleSearch" /></el-form-item>
             <el-form-item label="费用归属公司" class="cell-right">
               <el-select v-model="filterForm.companyId" placeholder="请选择" clearable style="width:200px">
                 <el-option v-for="item in companyList" :key="item.companyId" :label="item.companyName" :value="item.companyId" />
@@ -377,16 +377,16 @@ function handleExport() {
 
             <!-- 第二行 -->
             <el-form-item label="报销部门">
-              <el-select v-model="filterForm.departmentId" placeholder="请选择" clearable style="width:160px">
+              <el-select v-model="filterForm.departmentId" placeholder="请选择" clearable style="width:200px">
                 <el-option v-for="item in departmentList" :key="item.departmentId" :label="item.departmentName" :value="item.departmentId" />
               </el-select>
             </el-form-item>
-            <el-form-item label="报销人">
-              <el-select v-model="filterForm.reimburserId" placeholder="请选择" clearable style="width:160px">
+            <el-form-item label="报销人" class="cell-right">
+              <el-select v-model="filterForm.reimburserId" placeholder="请选择" clearable style="width:200px">
                 <el-option v-for="item in employeeList" :key="item.employeeId" :label="item.employeeName" :value="item.employeeId" />
               </el-select>
             </el-form-item>
-            <el-form-item label="业务类型">
+            <el-form-item label="业务类型" class="cell-right">
               <el-tree-select :model-value="filterForm.businessTypeId" :data="businessTypeTreeData" placeholder="请选择" clearable check-strictly style="width:200px" @update:model-value="onBusinessTypeChange" />
             </el-form-item>
             <!-- 按钮组：右对齐 -->
@@ -508,11 +508,11 @@ function handleExport() {
   width: 100%;
 }
 
-/* ---- CSS Grid 两行筛选：前3列均分左区、第4列auto右对齐 ---- */
+/* ---- CSS Grid 两行筛选：第1列左对齐、第2-3列右对齐、第4列右对齐 ---- */
 .filter-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr auto;
-  gap: 0 60px;
+  grid-template-columns: auto 1fr 1fr 1fr;
+  gap: 0 32px;
   align-items: center;
 }
 
@@ -520,7 +520,7 @@ function handleExport() {
   margin-bottom: 12px;
 }
 
-/* 费用归属公司（列4）右对齐 */
+/* 第2-4列 form-item 整体右对齐（标题/事由/报销人/业务类型/费用归属公司） */
 .cell-right {
   justify-self: end;
 }
