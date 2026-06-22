@@ -165,6 +165,7 @@ const allocMatchSubsidy = computed(() => {
                 :options="compOptions"
                 placeholder="请选择公司"
                 icon-type="x"
+                :disabled="store.ui.readonly"
                 @update:model-value="(v: string) => onCompanyChange(idx, v)"
               />
             </td>
@@ -173,6 +174,7 @@ const allocMatchSubsidy = computed(() => {
                 :model-value="a.project"
                 :options="projOptions"
                 placeholder="请选择项目"
+                :disabled="store.ui.readonly"
                 @update:model-value="(v: string) => onProjectChange(idx, v)"
               />
             </td>
@@ -184,8 +186,8 @@ const allocMatchSubsidy = computed(() => {
                     class="ratio-input"
                     min="0" max="100" step="0.01"
                     :value="idx in editingRatios ? editingRatios[idx] : ratioPercent(a.ratio)"
-                    :disabled="idx === 0"
-                    :class="{ 'ratio-locked': idx === 0 }"
+                    :disabled="idx === 0 || store.ui.readonly"
+                    :class="{ 'ratio-locked': idx === 0 || store.ui.readonly }"
                     @input="onRatioInput(idx, ($event.target as HTMLInputElement).value)"
                     @blur="commitRatio(idx)"
                     @keydown.enter="commitRatio(idx)"
