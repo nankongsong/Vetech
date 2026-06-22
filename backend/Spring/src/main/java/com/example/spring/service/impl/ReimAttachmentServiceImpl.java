@@ -1,6 +1,7 @@
 package com.example.spring.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.example.spring.entity.ReimAttachment;
 import com.example.spring.exception.BizException;
 import com.example.spring.mapper.ReimAttachmentMapper;
@@ -134,15 +135,11 @@ public class ReimAttachmentServiceImpl implements ReimAttachmentService {
         if (mainId == null) throw new BizException("报销单ID不能为空");
         if (attachmentIds == null || attachmentIds.isEmpty()) return;
 
-        for (Long id : attachmentIds) {
-            ReimAttachment att = attachmentMapper.selectById(id);
-            if (att == null) continue;
-            if (att.getStatus() != null && att.getStatus() == 1) continue; // 已经是正式附件
-
-            att.setMainId(mainId);
-            att.setStatus(1);
-            attachmentMapper.updateById(att);
-        }
+        attachmentMapper.update(null, new LambdaUpdateWrapper<ReimAttachment>()
+                .in(ReimAttachment::getId, attachmentIds)
+                .ne(ReimAttachment::getStatus, 1)
+                .set(ReimAttachment::getMainId, mainId)
+                .set(ReimAttachment::getStatus, 1));
     }
 
     @Override
