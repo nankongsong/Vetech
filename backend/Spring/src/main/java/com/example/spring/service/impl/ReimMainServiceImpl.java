@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
  *
  * 关键技术点：
  * 1. @Transactional 事务控制 — 确保级联操作（主表+行程+补助+日历+分摊）的数据一致性
- * 2. @Version 乐观锁 — 防止并发修改冲突
+ * 2. 手动version乐观锁 — 提交/作废时递增，防止并发修改冲突
  * 3. 行程唯一性校验 — 同一报销单内出行人员+日期范围不可重叠
  * 4. 分摊比例100%校验 — 提交时必须精确核对
  */
@@ -144,9 +144,8 @@ public class ReimMainServiceImpl implements ReimMainService {
             throw new BizException(40002, "仅草稿状态可提交");
         }
 
-        // 草稿单据不校验版本号：本人草稿编辑无并发修改场景，跳过乐观锁拦截
-        // 仅当后台检测到外部修改（version传非0且不匹配）才触发冲突提示
-        if (version != null && version != 0 && !main.getVersion().equals(version)) {
+        // 乐观锁校验：前端传入的version必须等于数据库当前version
+        if (version != null && !main.getVersion().equals(version)) {
             throw new BizException(40006, "数据已被他人修改，请刷新后重试");
         }
 
@@ -176,10 +175,13 @@ public class ReimMainServiceImpl implements ReimMainService {
         validateAllocationRatio(allocations);
         validateAllocationAmount(main.getSubsidyTotal(), allocations);
 
-        // 6. 更新状态（@Version 自动处理乐观锁版本号递增）
-        main.setStatus(1);
-        main.setUpdateTime(LocalDateTime.now());
-        int rows = mainMapper.updateById(main);
+        // 6. 更新状态（乐观锁：WHERE version=旧值，防止并发覆盖）
+        int rows = mainMapper.update(null, new LambdaUpdateWrapper<ReimMain>()
+                .eq(ReimMain::getId, id)
+                .eq(ReimMain::getVersion, main.getVersion())
+                .set(ReimMain::getVersion, main.getVersion() + 1)
+                .set(ReimMain::getStatus, 1)
+                .set(ReimMain::getUpdateTime, LocalDateTime.now()));
         if (rows == 0) throw new BizException(40006, "数据已被他人修改，请刷新后重试");
 
         // 7. 记录异动日志
@@ -196,9 +198,13 @@ public class ReimMainServiceImpl implements ReimMainService {
         if (main == null) throw new BizException(40001, "报销单不存在");
         if (!main.getVersion().equals(version)) throw new BizException(40006, "数据已被他人修改，请刷新后重试");
         if (main.getStatus() != 1) throw new BizException(40002, "仅已完成状态可作废");
-        main.setStatus(2);
-        main.setUpdateTime(LocalDateTime.now());
-        mainMapper.updateById(main);
+        int rows = mainMapper.update(null, new LambdaUpdateWrapper<ReimMain>()
+                .eq(ReimMain::getId, id)
+                .eq(ReimMain::getVersion, main.getVersion())
+                .set(ReimMain::getVersion, main.getVersion() + 1)
+                .set(ReimMain::getStatus, 2)
+                .set(ReimMain::getUpdateTime, LocalDateTime.now()));
+        if (rows == 0) throw new BizException(40006, "数据已被他人修改，请刷新后重试");
         auditLog(main, "VOID", 1, 2, "作废报销单");
         log.info("报销单作废：id={}, no={}", id, main.getReimbursementNo());
     }
@@ -228,8 +234,8 @@ public class ReimMainServiceImpl implements ReimMainService {
             calendarMapper.batchDeleteBySubsidyIds(subsidyIds);
         }
         // 批量删除补助（1次SQL）
-        for (Long subId : subsidyIds) {
-            subsidyMapper.deleteById(subId);
+        if (!subsidyIds.isEmpty()) {
+            subsidyMapper.deleteBatchIds(subsidyIds);
         }
         // 批量删除行程（1次SQL per trip，已是最优）
         List<Long> tripIds = trips.stream().map(ReimTrip::getId).collect(Collectors.toList());
