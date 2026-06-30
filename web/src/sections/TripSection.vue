@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/**
+ * 补录行程组件
+ * 管理出差行程记录，支持新增、编辑、复制、删除操作
+ */
 import { ref, computed } from 'vue'
 import PanelHeader from '@/components/PanelHeader.vue'
 import TripModal from '@/components/TripModal.vue'
@@ -10,23 +14,38 @@ import type { Trip, TripMode } from '@/types/models'
 const store = useReimbursementStore()
 const confirm = useConfirm()
 
+// 模态框状态
 const modalVisible = ref(false)
 const modalMode = ref<TripMode>('add')
 const modalData = ref<Partial<Trip>>({})
 const modalExcludeId = ref<string | null>(null)
 
+/**
+ * 打开发新增模态框
+ * 自动填入当前报销人
+ */
 function openAdd() {
   modalMode.value = 'add'
   modalData.value = { reimbursementId: store.basic.reimbursement }
   modalExcludeId.value = null
   modalVisible.value = true
 }
+
+/**
+ * 打开编辑行程模态框
+ * 排除自身日期冲突
+ */
 function openEdit(trip: Trip) {
   modalMode.value = 'edit'
   modalData.value = { ...trip }
   modalExcludeId.value = trip.id
   modalVisible.value = true
 }
+
+/**
+ * 打开复制行程模态框
+ * 复制行程数据但生成新ID
+ */
 function openCopy(trip: Trip) {
   modalMode.value = 'copy'
   modalData.value = { ...trip }
@@ -34,16 +53,25 @@ function openCopy(trip: Trip) {
   modalVisible.value = true
 }
 
+/**
+ * 删除行程
+ * 需用户确认
+ */
 async function onDelete(trip: Trip) {
   const ok = await confirm.confirm({ type: 'warning', title: '确认删除', text: '确定要删除该行程吗？' })
   if (ok) store.deleteTrip(trip.id)
 }
 
+/**
+ * 保存行程（新增/编辑/复制）
+ * 保存前校验：同报销人、同日期范围内不可重复
+ */
 async function onSave(data: Omit<Trip, 'id'>) {
   // 人员+日期范围重复校验
   const conflict = store.trips.find(t => {
     if (t.id === modalExcludeId.value) return false
     if (t.reimbursementId !== data.reimbursementId) return false
+    // 日期区间重叠检测
     return !(parseDate(data.endDate)! < parseDate(t.startDate)! || parseDate(data.startDate)! > parseDate(t.endDate)!)
   })
   if (conflict) {
@@ -58,10 +86,17 @@ async function onSave(data: Omit<Trip, 'id'>) {
   }
 }
 
+/**
+ * 根据出行人ID获取显示名称（姓名/工号）
+ */
 const empLabel = computed(() => (id: string) => {
   const e = store.employees.find(x => x.reimbursementId === id)
   return e ? `${e.reimbursementName}/${e.reimbursementNo}` : '-'
 })
+
+/**
+ * 根据城市编号获取城市名称
+ */
 const cityName = computed(() => (no: string) => {
   const c = store.cities.find(x => x.cityNo === no)
   return c ? c.cityName : '-'
@@ -69,9 +104,11 @@ const cityName = computed(() => (no: string) => {
 </script>
 
 <template>
+  <!-- 补录行程面板（可折叠） -->
   <section class="panel" :class="{ collapsed: store.ui.collapsed.trip }">
     <PanelHeader @toggle="store.togglePanel('trip')">
       <template #title>补录行程</template>
+      <!-- 新增行程按钮（非只读模式） -->
       <template #extra>
         <button v-if="!store.ui.readonly" class="btn-text" @click.stop="openAdd">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
@@ -81,6 +118,7 @@ const cityName = computed(() => (no: string) => {
         </button>
       </template>
     </PanelHeader>
+    <!-- 行程列表 -->
     <div class="panel-body">
       <table class="table">
         <thead>
@@ -94,9 +132,11 @@ const cityName = computed(() => (no: string) => {
           </tr>
         </thead>
         <tbody>
+          <!-- 无数据提示 -->
           <tr v-if="store.trips.length === 0">
             <td colspan="6" class="no-data">暂无数据</td>
           </tr>
+          <!-- 行程行 -->
           <tr v-for="(t, i) in store.trips" :key="t.id">
             <td class="col-index">{{ i + 1 }}</td>
             <td>{{ empLabel(t.reimbursementId) }}</td>
@@ -104,7 +144,9 @@ const cityName = computed(() => (no: string) => {
             <td>{{ cityName(t.startCity) }}-{{ cityName(t.endCity) }}</td>
             <td>{{ t.description }}</td>
             <td class="col-action">
+              <!-- 操作按钮（非只读模式） -->
               <template v-if="!store.ui.readonly">
+                <!-- 删除按钮 -->
                 <span class="op-icon" @click="onDelete(t)" title="删除">
                   <svg viewBox="0 0 24 24" width="14" height="14">
                     <path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12z" fill="#fff" stroke="#409eff" stroke-width="1.5"/>
@@ -112,9 +154,11 @@ const cityName = computed(() => (no: string) => {
                     <path d="M9.5 10v6M12 10v6M14.5 10v6M17 10v6" stroke="#409eff" stroke-width="1" fill="none"/>
                   </svg>
                 </span>
+                <!-- 编辑按钮 -->
                 <span class="op-icon" @click="openEdit(t)" title="编辑">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
                 </span>
+                <!-- 复制按钮 -->
                 <span class="op-icon" @click="openCopy(t)" title="复制">
                   <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M16 1H4a2 2 0 00-2 2v14h2V3h12V1zm3 4H8a2 2 0 00-2 2v14a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2zm0 16H8V7h11v14z"/></svg>
                 </span>
@@ -124,10 +168,12 @@ const cityName = computed(() => (no: string) => {
         </tbody>
       </table>
     </div>
+    <!-- 行程编辑模态框 -->
     <TripModal v-model="modalVisible" :mode="modalMode" :data="modalData" :exclude-id="modalExcludeId" @save="onSave" />
   </section>
 </template>
 
 <style scoped>
+/* 日期范围不换行 */
 .date-range { white-space: nowrap; }
 </style>

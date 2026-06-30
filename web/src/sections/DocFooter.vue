@@ -395,12 +395,15 @@ function buildAllocationDtos(): BackendAllocationDTO[] {
 </script>
 
 <template>
+  <!-- 单据底部操作栏：关闭 + 提交按钮 -->
   <footer class="doc-footer">
+    <!-- 关闭按钮：返回列表 -->
     <button class="btn btn-outline" @click="onClose">关闭</button>
+    <!-- 提交按钮（非只读模式显示） -->
     <button v-if="!readonly" class="btn btn-primary" @click="onSubmit">提交</button>
   </footer>
 </template>
 
 <style scoped>
-/* 样式由全局 .doc-footer 控制 */
+/* 样式由全局 .doc-footer 控制（位于 ReimbursementDetail.vue 未 scoped 样式中） */
 </style>

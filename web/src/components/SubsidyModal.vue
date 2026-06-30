@@ -349,6 +349,7 @@ async function onSave() {
   gap: 0;
   height: 100%;
   padding-left: 24px;
+  align-items: flex-start;
   --border-color: #e8e8e8;
   --border-width: 1px;
   --orange: #ea7814;

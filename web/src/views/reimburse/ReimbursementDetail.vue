@@ -222,9 +222,11 @@ function onCloseContinue() {
 </script>
 
 <template>
+  <!-- 单据页面根容器 -->
   <div class="doc-page" v-loading="pageLoading">
-    <!-- 固定表头区域（返回列表 + 单据标题 + 提单日） -->
+    <!-- 固定在顶部的导航栏 + 单据头部 -->
     <div class="doc-sticky-header">
+      <!-- 页面导航栏：标题 + 返回按钮 -->
       <div class="page-nav">
         <span class="page-nav-title">{{ pageTitle }}</span>
         <span class="page-nav-back" @click="handleCloseOrBack">
@@ -234,20 +236,40 @@ function onCloseContinue() {
           返回列表
         </span>
       </div>
+      <!-- 单据头部：标题 + 提单日期 -->
       <DocHeader :mode="isEdit ? 'edit' : 'add'" />
     </div>
+
+    <!-- 单据主体内容区域 -->
     <main class="doc-main">
+      <!-- 基础信息 -->
       <BasicInfo />
+      <!-- 补录行程 -->
       <TripSection />
+      <!-- 补助信息 -->
       <SubsidySection />
+      <!-- 费用合计 -->
       <TotalSection />
+      <!-- 费用归属及分摊 -->
       <AllocationSection />
+      <!-- 备注信息 -->
       <RemarkSection />
+      <!-- 附件 -->
       <AttachmentSection :main-id="reimId" />
     </main>
-    <DocFooter ref="docFooterRef" :mode="isEdit ? 'edit' : 'add'" :reim-id="isEdit ? Number(route.params.id) : null" :edit-version="editVersion" :edit-status="editStatus" :readonly="isView" @close="handleCloseOrBack" />
 
-    <!-- 确认对话框 -->
+    <!-- 单据底部操作栏 -->
+    <DocFooter
+      ref="docFooterRef"
+      :mode="isEdit ? 'edit' : 'add'"
+      :reim-id="isEdit ? Number(route.params.id) : null"
+      :edit-version="editVersion"
+      :edit-status="editStatus"
+      :readonly="isView"
+      @close="handleCloseOrBack"
+    />
+
+    <!-- 三按钮确认对话框：保存草稿 / 放弃修改 / 继续编辑 -->
     <ConfirmModal
       :model-value="confirm.state.visible"
       :type="confirm.state.type"
@@ -264,40 +286,49 @@ function onCloseContinue() {
 </template>
 
 <style scoped>
+/* 单据页面根容器 */
 .doc-page {
   min-height: 100vh; background: #f0f2f5;
 }
+/* 固定顶部导航栏 */
 .doc-sticky-header {
   position: fixed; top: 0; left: 0; right: 0; z-index: 99;
 }
+/* 页面导航栏样式 */
 .page-nav {
   display: flex; justify-content: space-between; align-items: center;
   padding: 12px 20px; background: #fff; border-bottom: 1px solid #ebeef5;
 }
+/* 页面标题 */
 .page-nav-title { font-size: 20px; font-weight: 700; color: #303133; }
+/* 返回按钮 */
 .page-nav-back {
   display: flex; align-items: center; gap: 4px;
   font-size: 14px; color: #409eff; cursor: pointer;
 }
 .page-nav-back:hover { text-decoration: underline; }
+/* 主体内容区：固定顶部导航 + 底部操作栏的间距 */
 .doc-main {
   max-width: 1200px; margin: 0 auto; padding: 114px 20px 80px;
 }
 </style>
 
-<!-- 共享全局样式（未 scoped，供所有子 section/组件使用） -->
+<!-- ========== 全局样式（未 scoped，供所有子 section/组件使用） ========== -->
 <style>
-/* ===== Panel 面板 ===== */
+/* ===== 面板（Panel）组件 ===== */
 .panel {
   background: #fff; border: none; border-radius: 4px;
   margin-bottom: 0; overflow: visible;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
+/* 折叠状态隐藏面板内容 */
 .panel.collapsed .panel-body { display: none; }
+/* 折叠图标旋转 */
 .panel.collapsed .panel-header .toggle-icon { transform: rotate(180deg); }
+/* 面板内容内边距 */
 .panel-body { padding: 20px 24px; }
 
-/* ===== 表格 ===== */
+/* ===== 表格通用样式 ===== */
 .table {
   width: 100%; border-collapse: collapse; font-size: 14px;
 }
@@ -312,7 +343,7 @@ function onCloseContinue() {
 .table .no-data { text-align: center; color: #c0c4cc; padding: 24px 0; }
 .table tbody tr:hover { background: #f5f7fa; }
 
-/* ===== 操作图标 ===== */
+/* ===== 操作图标按钮 ===== */
 .op-icon {
   display: inline-flex; align-items: center; justify-content: center;
   width: 22px; height: 22px; cursor: pointer; color: #409eff;
@@ -322,7 +353,7 @@ function onCloseContinue() {
 .op-icon.danger { color: #f56c6c; }
 .op-icon.danger:hover { background: #fef0f0; }
 
-/* ===== 按钮 ===== */
+/* ===== 按钮通用样式 ===== */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
   height: 34px; padding: 0 20px; border: 1px solid #dcdfe6;
@@ -344,7 +375,7 @@ function onCloseContinue() {
 }
 .btn-text:hover { text-decoration: underline; }
 
-/* ===== 表单行 ===== */
+/* ===== 表单行布局 ===== */
 .form-row {
   display: flex; gap: 20px; margin-bottom: 16px;
 }
@@ -374,7 +405,7 @@ function onCloseContinue() {
   height: auto; padding: 8px 10px; resize: vertical;
 }
 
-/* ===== 模态表单 ===== */
+/* ===== 模态表单布局 ===== */
 .modal-form-row {
   display: flex; align-items: center; margin-bottom: 14px;
 }
